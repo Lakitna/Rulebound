@@ -1,0 +1,67 @@
+{
+  "name": "lawful",
+  "version": "0.0.0",
+  "description": "A simple rule based testing framework",
+  "license": "MIT",
+  "main": "dist/lawful.js",
+  "module": "dist/lawful.mjs",
+  "types": "dist/lawful.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "start": "rollup -cw",
+    "test": "nyc mocha",
+    "prepublishOnly": "npm test -- --forbid-only && npm run build"
+  },
+  "author": {
+    "name": "Sander van Beek"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Lakitna/lawful.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Lakitna/lawful/issues"
+  },
+  "keywords": [
+    "rule",
+    "test",
+    "testing",
+    "rulebased"
+  ],
+  "devDependencies": {
+    "@types/chai": "^4.1.7",
+    "@types/chai-as-promised": "^7.1.0",
+    "@types/is-glob": "^4.0.1",
+    "@types/lodash": "^4.14.134",
+    "@types/micromatch": "^3.1.0",
+    "@types/minimatch": "^3.0.3",
+    "@types/mocha": "^5.2.7",
+    "@types/node": "^12.0.8",
+    "@types/sinon": "^7.0.13",
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "mocha": "^6.1.4",
+    "nyc": "^14.1.1",
+    "rollup": "^1.15.6",
+    "rollup-plugin-cleanup": "^3.1.1",
+    "rollup-plugin-delete": "^1.0.0",
+    "rollup-plugin-dts": "^1.1.1",
+    "rollup-plugin-tslint": "^0.2.2",
+    "rollup-plugin-typescript2": "^0.21.2",
+    "sinon": "^7.3.2",
+    "ts-node": "^8.3.0",
+    "tslib": "^1.10.0",
+    "tslint": "^5.17.0",
+    "typescript": "^3.5.2"
+  },
+  "dependencies": {
+    "ansi-colors": "^3.2.4",
+    "consola": "^2.7.1",
+    "is-glob": "^4.0.1",
+    "lodash": "^4.17.11",
+    "micromatch": "^4.0.2"
+  }
+}
