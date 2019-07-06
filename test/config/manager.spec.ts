@@ -31,12 +31,12 @@ describe('The class ConfigManager', function() {
         describe('getter generic', function() {
             it('returns the config for everything except the laws', function() {
                 expect(this.manager.generic).to.deep.equal({
-                    verboseness: 'log',
+                    verboseness: 'info',
                     severity: {
                         must: 'error',
                         should: 'warn',
-                        may: 'log',
-                        optional: null,
+                        may: 'info',
+                        optional: 'info',
                     },
                 });
             });
@@ -49,7 +49,7 @@ describe('The class ConfigManager', function() {
         });
 
         it('overwrites the config after initialization', function() {
-            expect(this.manager.generic.verboseness).to.equal('log');
+            expect(this.manager.generic.verboseness).to.equal('info');
 
             this.manager.set({ verboseness: 'error' });
 

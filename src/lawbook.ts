@@ -3,7 +3,7 @@ import isGlob from 'is-glob';
 
 import { ConfigManager } from './config/manager';
 import Law from './law';
-import { log } from './log';
+import { logger, Logger } from './log';
 import { LawbookConfig, LawConfig } from './config/types';
 import { LawbookError } from './errors/index';
 
@@ -14,10 +14,13 @@ import { LawbookError } from './errors/index';
 export default class Lawbook {
     public config: ConfigManager;
     public laws: Law[];
+    private log: Logger;
 
     constructor(config?: LawbookConfig) {
         this.config = new ConfigManager(config);
         this.laws = [];
+
+        this.log = logger.child({});
     }
 
     get length() {
@@ -107,7 +110,7 @@ export default class Lawbook {
      */
     public async enforce(globPattern: string, ...input: any[]) {
         if (this.length === 0) {
-            log.warn('No laws to enforce. Book is empty');
+            this.log.warn('No laws to enforce. Book is empty');
             return this;
         }
 
@@ -117,7 +120,7 @@ export default class Lawbook {
             .sort((a, b) => a.specificity - b.specificity);
 
         if (subSet.length === 0) {
-            log.warn(`No laws to enforce for name pattern '${globPattern}'`);
+            this.log.warn(`No laws to enforce for name pattern '${globPattern}'`);
             return this;
         }
 

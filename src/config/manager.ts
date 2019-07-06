@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import * as micromatch from 'micromatch';
 import isGlob from 'is-glob';
 
-import { log, setLogLevel } from '../log';
+import { logger, Logger } from '../log';
 import { lawbookConfigDefault } from './defaults';
 import { LawbookConfig, LawConfig } from './types';
 import { specificity } from '../utils';
@@ -13,11 +13,13 @@ import { specificity } from '../utils';
  */
 export class ConfigManager {
     public config: LawbookConfig;
+    private log: Logger;
 
     constructor(config?: LawbookConfig) {
         config = _.defaultsDeep(config, lawbookConfigDefault) as LawbookConfig;
 
-        setLogLevel(config.verboseness);
+        logger.level = config.verboseness;
+        this.log = logger.child({});
 
         this.config = this.parse(config);
     }
@@ -65,11 +67,11 @@ export class ConfigManager {
     public parse(config: LawbookConfig) {
         if (Object.keys(config.laws).length === 0) {
             // There is nothing to parse
-            log.debug('No unparsed configuration found. Will not parse.');
+            this.log.debug('No unparsed configuration found. Will not parse.');
             return config;
         }
 
-        log.debug('Unparsed configuration found. Parsing now...');
+        this.log.debug('Unparsed configuration found. Parsing now...');
 
         // Map from `laws` to `_laws`
         Object.entries(config.laws)

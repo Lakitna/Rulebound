@@ -1,12 +1,12 @@
 import { LawbookConfig } from './types';
 
 export const lawbookConfigDefault: LawbookConfig = {
-    verboseness: 'log',
+    verboseness: 'info',
     severity: {
         must: 'error',
         should: 'warn',
-        may: 'log',
-        optional: 'log',
+        may: 'info',
+        optional: 'info',
     },
     laws: {},
     _laws: [],

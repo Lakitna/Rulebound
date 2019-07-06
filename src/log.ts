@@ -1,26 +1,47 @@
 /* istanbul ignore file */
-import consola from 'consola';
+import { createLogger, format, transports, Logger } from 'winston';
+import c from 'ansi-colors';
 
-const log = consola
-    .create({})
-    .withTag('lawful');
-
-/**
- * A convenience function that enables setting log level via its name
- * @param level Name of the log level
- */
-const setLogLevel = (level: string) => {
-    // @ts-ignore log._types is a private constant and is not included in consola.d.ts
-    const logTypes = log._types;
-
-    const type = logTypes[level];
-    if (type === undefined) {
-        throw new Error(`Unkown log level ${level}`);
-    }
-
-    // @ts-ignore log.level is a public that's not included in consola.d.ts
-    log.level = type.level;
+const levelMarkers = {
+    debug: () => c.grey('»'),
+    info: () => c.blueBright('i'),
+    warn: () => '\n' + c.bgYellow.black(` WARN `),
+    error: () => '\n' + c.bgRed.black(` ERROR `),
 };
 
 
-export { log, setLogLevel };
+function fullWidthLine(left: string, right: string) {
+    const leftWidth = c.stripColor(left.trim()).length;
+    const rightWidth = c.stripColor(right.trim()).length;
+    const consoleWidth = process.stdout.columns || 0;
+
+    let spaceCount = 1;
+    if (consoleWidth > 0) {
+        spaceCount = consoleWidth - leftWidth - rightWidth - 1;
+        while (spaceCount <= 0) {
+            spaceCount += consoleWidth;
+        }
+    }
+
+    return left + ' '.repeat(spaceCount) + right;
+}
+
+function logFormat(info: any) {
+    return fullWidthLine(
+        `${levelMarkers[info.level]()} ${info.message}`,
+        c.grey(`${info.law}`));
+}
+
+const logger = createLogger({
+    level: 'info',
+    exitOnError: false,
+    transports: [
+        new transports.Console({
+            format: format.combine(
+                format.printf(logFormat),
+            ),
+        }),
+    ],
+});
+
+export { logger, Logger };
