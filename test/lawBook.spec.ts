@@ -1,7 +1,7 @@
 import * as sinon from 'sinon';
 import * as _ from 'lodash';
 
-import LawBook from '../src/lawBook';
+import LawBook from '../src/lawbook';
 import { expect } from 'chai';
 import Law from '../src/law';
 import { lawbookConfigDefault } from '../src/config/defaults';
