@@ -29,11 +29,11 @@ export class LawError extends Error {
 
         this.law = law;
         this.severity = (this.law.config.severity || '').toUpperCase() as severityLevel;
-        this.name = `LawError | ${this.severity} | ${this.law.name}`;
+        this.name = `LawError | ${this.severity} ${this.law.name}`;
         this.warnMessage = warnMessage;
     }
 
     public toString() {
-        return `${this.name}: ${this.warnMessage}`;
+        return `${c.grey(this.severity!)} ${this.warnMessage}`;
     }
 }

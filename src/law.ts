@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 
-import { log } from './log';
+import { logger, Logger } from './log';
 import { LawError, ConfigError } from './errors/index';
 import { LawConfig } from './config/types';
 import Lawbook from './lawbook';
@@ -32,6 +32,7 @@ export default class Law {
     public specificity: number;
     public lawbook: Lawbook;
     private _config: LawConfig;
+    private log: Logger;
     private on: {
         enforce: (this: Law, ...input: any) => boolean|any,
         pass: (this: Law, input: any[]) => void,
@@ -42,6 +43,8 @@ export default class Law {
         this.name = name;
         this.lawbook = lawbook;
         this.specificity = specificity(name);
+
+        this.log = logger.child({ law: name });
 
         this._config = {
             severity: 'must',
@@ -118,7 +121,7 @@ export default class Law {
      * });
      */
     public define(fn: (...input: any) => boolean|any) {
-        log.withScope(this.name).debug(`Law defined`);
+        this.log.debug(`Law defined`);
 
         Object.defineProperty(fn, 'name', { value: 'definition' });
 
@@ -141,7 +144,7 @@ export default class Law {
      * });
      */
     public punishment(fn: (input: any, err: any) => void) {
-        log.withScope(this.name).debug(`Punishment defined`);
+        this.log.debug(`Punishment defined`);
 
         Object.defineProperty(fn, 'name', { value: 'punishment' });
 
@@ -159,7 +162,7 @@ export default class Law {
      * });
      */
     public reward(fn: (input: any[]) => void) {
-        log.withScope(this.name).debug(`Reward defined`);
+        this.log.debug(`Reward defined`);
 
         Object.defineProperty(fn, 'name', { value: 'reward' });
 
@@ -201,7 +204,7 @@ export default class Law {
             return this;
         }
 
-        log.withScope(this.name).debug(`Enforcing`);
+        this.log.debug(`Enforcing`);
 
         let result = null;
         try {
@@ -216,7 +219,7 @@ export default class Law {
         }
 
         if (result === true) {
-            log.withScope(this.name).debug(`Law passed. Rewarding`);
+            this.log.debug(`Law passed. Rewarding`);
 
             try {
                 this.on.pass.call(this, input);
@@ -229,7 +232,7 @@ export default class Law {
             }
         }
         else {
-            log.withScope(this.name).debug(`Law failed. Punishing`);
+            this.log.debug(`Law failed. Punishing`);
 
             try {
                 this.on.fail.call(this, input, result);
@@ -253,7 +256,7 @@ export default class Law {
      * Law.throw('An error has occured');
      */
     public throw(...message: string[]) {
-        log.withScope(this.name).debug(`Throwing error`);
+        this.log.debug(`Throwing error`);
 
         message = message.map((msg: any) => {
             if (msg instanceof Error) {
@@ -268,11 +271,11 @@ export default class Law {
             throw lawError;
         }
         if (this._config._throw === 'warn') {
-            log.withScope(this.name).warn(lawError.toString());
+            this.log.warn(lawError.toString());
             return;
         }
-        if (this._config._throw === 'log') {
-            log.withScope(this.name).log(lawError.toString());
+        if (this._config._throw === 'info') {
+            this.log.info(lawError.toString());
             return;
         }
     }

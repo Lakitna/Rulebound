@@ -3,7 +3,8 @@ import * as sinon from 'sinon';
 import Law from '../src/law';
 import { expect } from 'chai';
 import Lawbook from '../src/lawbook';
-import { log } from '../src/log';
+import c from 'ansi-colors';
+
 
 describe('The class Law', function() {
     it('initializes', function() {
@@ -318,12 +319,10 @@ describe('The class Law', function() {
         });
     });
 
-    describe.only('Throw', function() {
+    describe('Throw', function() {
         beforeEach(function() {
             this.law = new Law('foo', {} as Lawbook)
                 .define(() => false);
-
-            this.log = log.withTag('foo');
         });
 
         it('throws an error when the option throw=error', function() {
@@ -334,36 +333,27 @@ describe('The class Law', function() {
         });
 
         it('logs an error when the options throw=warn', function(done) {
-            // TODO Find out how to test logging
-
-            this.log.mock((typeName: string) => typeName === 'warn' && sinon.mock());
-            const logStub = this.log.warn as any;
+            const logStub = sinon.stub(this.law.log, 'warn');
 
             this.law.config = { _throw: 'warn' };
             this.law.throw('bar');
 
-            console.log(logStub);
-            console.log(logStub.callCount);
-
             expect(logStub.callCount).to.equal(1);
-            expect(logStub.getCall(0).lastArg).to.equal('LawError | MUST | foo: bar');
+            expect(c.stripColor(logStub.getCall(0).lastArg)).to.equal('MUST bar');
 
             logStub.restore();
-
-            // console.log(this.log);
             done();
         });
 
         it('logs when the options throw=log', function(done) {
-            log.mock((typeName: string) => typeName === 'log' && sinon.stub());
+            const logStub = sinon.stub(this.law.log, 'info');
 
-            this.law.config = { _throw: 'log' };
+            this.law.config = { _throw: 'info' };
             this.law.throw('bar');
 
-            // expect(logStub.callCount).to.equal(1);
-            // expect(logStub.getCall(0).lastArg).to.equal('LawError | MUST | foo: bar');
+            expect(logStub.callCount).to.equal(1);
+            expect(c.stripColor(logStub.getCall(0).lastArg)).to.equal('MUST bar');
 
-            // logStub.restore();
             done();
         });
     });

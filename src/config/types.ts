@@ -12,7 +12,7 @@ export interface LawConfig {
      * Define the behaviour of a failure.
      * @private
      */
-    _throw?: 'error'|'warn'|'log'|null;
+    _throw?: 'error'|'warn'|'info'|null;
 
     /**
      * @private
@@ -26,14 +26,14 @@ export interface LawConfig {
     _specificity?: number;
 }
 
-export type severityLevel = 'error'|'warn'|'log'|null;
+export type severityLevel = 'error'|'warn'|'info'|null;
 
 export interface LawbookConfig {
     /**
      * Define what log level you want to output
      * @default log
      */
-    verboseness: 'error'|'warn'|'log'|'debug';
+    verboseness: 'error'|'warn'|'info'|'debug';
 
     /**
      * Describe the effect a failure has in a given severity category

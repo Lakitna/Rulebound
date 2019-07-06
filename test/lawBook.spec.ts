@@ -5,7 +5,6 @@ import LawBook from '../src/lawBook';
 import { expect } from 'chai';
 import Law from '../src/law';
 import { lawbookConfigDefault } from '../src/config/defaults';
-import { log } from '../src/log';
 
 
 describe('The class LawBook', function() {
@@ -200,7 +199,7 @@ describe('The class LawBook', function() {
         });
 
         it('logs a warning when there are no laws in the set', async function() {
-            const logStub = sinon.stub(log, 'warn');
+            const logStub = sinon.stub(this.lawBook.log, 'warn');
 
             await this.lawBook.enforce('foo');
 
@@ -212,7 +211,7 @@ describe('The class LawBook', function() {
         });
 
         it('logs a warning when no laws match the law name pattern', async function() {
-            const logStub = sinon.stub(log, 'warn');
+            const logStub = sinon.stub(this.lawBook.log, 'warn');
 
             this.lawBook.add('fizz');
             await this.lawBook.enforce('untraceable');
