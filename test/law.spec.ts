@@ -22,20 +22,21 @@ describe('The class Law', function() {
         it('initializes with defaults', function() {
             expect(this.law._config).to.deep.equal({
                 severity: 'must',
+                _name: '*',
                 _throw: 'error',
                 _specificity: 0,
             });
         });
 
         it('sets the config', function() {
-            const conf = {
+            const config = {
                 severity: null,
                 foo: 'bar',
             };
 
-            this.law.config = Object.assign({}, conf);
+            this.law.config = Object.assign({}, config);
 
-            expect(this.law.config).to.deep.equal(conf);
+            expect(this.law.config).to.deep.equal(config);
         });
 
         it('does not remove existing config when setting other values', function() {
@@ -91,8 +92,8 @@ describe('The class Law', function() {
         });
 
         it('returns the law object instance', function() {
-            const ret = this.law.define(() => {});
-            expect(ret).to.equal(this.law);
+            const returnValue = this.law.define(() => {});
+            expect(returnValue).to.equal(this.law);
         });
     });
 
@@ -128,8 +129,8 @@ describe('The class Law', function() {
             try {
                 await this.law.enforce();
             }
-            catch (err) {
-                expect(err.message).to.include('awesome description');
+            catch (error) {
+                expect(error.message).to.include('awesome description');
             }
         });
     });
@@ -162,8 +163,8 @@ describe('The class Law', function() {
         });
 
         it('returns the law object instance', function() {
-            const ret = this.law.punishment(() => {});
-            expect(ret).to.equal(this.law);
+            const returnValue = this.law.punishment(() => {});
+            expect(returnValue).to.equal(this.law);
         });
     });
 
@@ -188,8 +189,8 @@ describe('The class Law', function() {
         });
 
         it('returns the law object instance', function() {
-            const ret = this.law.reward(() => {});
-            expect(ret).to.equal(this.law);
+            const returnValue = this.law.reward(() => {});
+            expect(returnValue).to.equal(this.law);
         });
     });
 
@@ -239,7 +240,7 @@ describe('The class Law', function() {
         it('punishes when the definition throws an error', function(done) {
             this.law
                 .define(() => {
-                    throw new Error();
+                    throw new Error('Some error');
                 })
                 .punishment((input: any[], result: Error) => {
                     expect(input).to.be.lengthOf(0);
@@ -269,7 +270,7 @@ describe('The class Law', function() {
         it('punishes when the definition returns a promise resolving to false', function(done) {
             this.law
                 .define(() => {
-                    return new Promise((resolve, reject) => {
+                    return new Promise((resolve) => {
                         resolve(false);
                     });
                 })
@@ -287,8 +288,8 @@ describe('The class Law', function() {
         it('punishes when the definition returns a promise that throws an error', function(done) {
             this.law
                 .define(() => {
-                    return new Promise((resolve, reject) => {
-                        throw new Error();
+                    return new Promise(() => {
+                        throw new Error('Some error');
                     });
                 })
                 .punishment((input: any[], result: Error) => {
@@ -305,7 +306,7 @@ describe('The class Law', function() {
         it('punishes when the definition returns a promise resolving in an error message', function(done) {
             this.law
                 .define(() => {
-                    return new Promise((resolve, reject) => {
+                    return new Promise((resolve) => {
                         resolve('foo');
                     });
                 })
@@ -335,7 +336,7 @@ describe('The class Law', function() {
         it('rewards when the definitions returns a promise resolving true', function(done) {
             this.law
                 .define(() => {
-                    return new Promise((resolve, reject) => {
+                    return new Promise((resolve) => {
                         resolve(true);
                     });
                 })
@@ -352,8 +353,8 @@ describe('The class Law', function() {
             this.law
                 .define(() => true)
                 .enforce(true)
-                .then((ret: Law) => {
-                    expect(ret).to.equal(this.law);
+                .then((returnValue: Law) => {
+                    expect(returnValue).to.equal(this.law);
                 });
         });
 
@@ -368,8 +369,8 @@ describe('The class Law', function() {
                 await this.law.enforce();
                 throw new Error('Expected error to be thrown')
             }
-            catch (err) {
-                expect(err.message).to.equal('Reward error');
+            catch (error) {
+                expect(error.message).to.equal('Reward error');
             }
         });
 
@@ -384,8 +385,8 @@ describe('The class Law', function() {
                 await this.law.enforce();
                 throw new Error('Expected error to be thrown')
             }
-            catch (err) {
-                expect(err.message).to.equal('Punishment error');
+            catch (error) {
+                expect(error.message).to.equal('Punishment error');
             }
         });
 
@@ -396,8 +397,8 @@ describe('The class Law', function() {
                         .define(() => false)
                         .enforce();
                 })
-                .punishment((input: undefined, err: Error) => {
-                    throw err;
+                .punishment((input: undefined, error: Error) => {
+                    throw error;
                 })
                 .reward(() => {
                     throw new Error('Enforce should not reward');
@@ -407,8 +408,8 @@ describe('The class Law', function() {
                 .then(() => {
                     throw new Error('Expected error to be thrown')
                 })
-                .catch((err: any) => {
-                    expect(err.law.name).to.equal('bar');
+                .catch((error: any) => {
+                    expect(error.law.name).to.equal('bar');
                     done();
                 });
         });
@@ -426,9 +427,9 @@ describe('The class Law', function() {
                     await this.lawbook.enforce('foo');
                     throw new Error('Expected error to be thrown')
                 }
-                catch (err) {
-                    expect(err.law.name).to.equal('foo');
-                    expect(err.message).to.equal('alias failed');
+                catch (error) {
+                    expect(error.law.name).to.equal('foo');
+                    expect(error.message).to.equal('alias failed');
                 }
             });
 
@@ -439,8 +440,8 @@ describe('The class Law', function() {
                     await this.lawbook.enforce('foo');
                     throw new Error('Expected error to be thrown')
                 }
-                catch (err) {
-                    expect(err.message).to.equal(`Could not find alias named 'bar'`);
+                catch (error) {
+                    expect(error.message).to.equal(`Could not find alias named 'bar'`);
                 }
             });
 
@@ -460,9 +461,9 @@ describe('The class Law', function() {
                         await this.lawbook.enforce('foo');
                         throw new Error('Expected error to be thrown')
                     }
-                    catch (err) {
-                        expect(err.law.name).to.equal('foo');
-                        expect(err.message).to.equal('alias failed');
+                    catch (error) {
+                        expect(error.law.name).to.equal('foo');
+                        expect(error.message).to.equal('alias failed');
                     }
                 });
 
@@ -474,9 +475,9 @@ describe('The class Law', function() {
                         await this.lawbook.enforce('foo');
                         throw new Error('Expected error to be thrown')
                     }
-                    catch (err) {
-                        expect(err.law.name).to.equal('foo');
-                        expect(err.message).to.equal('alias failed');
+                    catch (error) {
+                        expect(error.law.name).to.equal('foo');
+                        expect(error.message).to.equal('alias failed');
                     }
                 });
             });

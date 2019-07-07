@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import { defaultsDeep, omit, isUndefined } from 'lodash';
 import * as micromatch from 'micromatch';
 import isGlob from 'is-glob';
 
@@ -15,8 +15,8 @@ export class ConfigManager {
     public config: LawbookConfig;
     private log: Logger;
 
-    constructor(config?: LawbookConfig) {
-        config = _.defaultsDeep(config, lawbookConfigDefault) as LawbookConfig;
+    public constructor(config?: LawbookConfig) {
+        config = defaultsDeep(config, lawbookConfigDefault) as LawbookConfig;
 
         logger.level = config.verboseness;
         this.log = logger.child({});
@@ -24,20 +24,20 @@ export class ConfigManager {
         this.config = this.parse(config);
     }
 
-    get full() {
+    public get full() {
         return this.config;
     }
 
-    get laws() {
+    public get laws() {
         return this.config._laws;
     }
 
-    get generic() {
-        return _.omit(this.config, ['_laws', 'laws']);
+    public get generic() {
+        return omit(this.config, ['_laws', 'laws']);
     }
 
     public set(config: LawbookConfig) {
-        config = _.defaultsDeep(config, this.config);
+        config = defaultsDeep(config, this.config);
         this.config = this.parse(config);
     }
 
@@ -45,16 +45,16 @@ export class ConfigManager {
      * Find the most specific config for a law
      */
     public get(lawName: string) {
-        let config: LawConfig = {
+        let config: Partial<LawConfig> = {
             _name: '*',
             _specificity: 0,
         };
 
-        this.config._laws.forEach((conf) => {
-            if (micromatch.isMatch(lawName, conf._name)
-                    && typeof config._specificity !== 'undefined'
-                    && config._specificity < conf._specificity) {
-                config = conf;
+        this.config._laws.forEach((lawConfig) => {
+            if (micromatch.isMatch(lawName, lawConfig._name)
+                    && !isUndefined(config._specificity)
+                    && config._specificity < lawConfig._specificity) {
+                config = lawConfig;
             }
         });
 
@@ -86,7 +86,7 @@ export class ConfigManager {
                 if (existingIndex >= 0) {
                     // Update existing law config
                     config._laws[existingIndex] =
-                        _.defaultsDeep(law, config._laws[existingIndex]);
+                        defaultsDeep(law, config._laws[existingIndex]);
                 }
                 else {
                     // Add new law config
@@ -102,9 +102,9 @@ export class ConfigManager {
                 // more specific target laws matching the name pattern
                 for (let targetI = sourceI; targetI < laws.length; targetI++) {
                     let targetLaw = laws[targetI];
-                    if (micromatch.isMatch(targetLaw._name, sourceLaw._name)
-                            && targetLaw._specificity > sourceLaw._specificity) {
-                        targetLaw = _.defaultsDeep(targetLaw, sourceLaw);
+                    if (micromatch.isMatch(targetLaw._name!, sourceLaw._name!)
+                            && targetLaw._specificity! > sourceLaw._specificity!) {
+                        targetLaw = defaultsDeep(targetLaw, sourceLaw);
                     }
                 }
             }
@@ -118,8 +118,8 @@ export class ConfigManager {
      * Sort a list of objects by the specificity of the provided key
      * @private
      */
-    private _sortBySpecificity(targets: any[], patternKey: string) {
-        const sorted: any[] = [];
+    private _sortBySpecificity(targets: LawConfig[], patternKey: string) {
+        const sorted: LawConfig[] = [];
 
         targets.forEach((target) => {
             target._specificity = specificity(target[patternKey]);
@@ -127,6 +127,6 @@ export class ConfigManager {
         });
 
         return sorted
-            .sort((a, b) => a._specificity - b._specificity);
+            .sort((a, b) => a._specificity! - b._specificity!);
     }
 }

@@ -1,12 +1,12 @@
 export interface LawConfig {
-    [config: string]: any,
+    [config: string]: any;
 
     /**
      * Define the severity of the law.
      * note: `omit` will always result in the law not being enforced
      * @default must
      */
-    severity?: 'must'|'should'|'may'|'optional'|'omit';
+    severity: 'must'|'should'|'may'|'optional'|'omit';
 
     /**
      * Define the behaviour of a failure.
@@ -17,13 +17,13 @@ export interface LawConfig {
     /**
      * @private
      */
-    _name?: string;
+    _name: string;
 
     /**
      * Specificity level used to cascase configurations
      * @private
      */
-    _specificity?: number;
+    _specificity: number;
 }
 
 export type severityLevel = 'error'|'warn'|'info'|null;
@@ -42,22 +42,22 @@ export interface LawbookConfig {
         /**
          * @default error
          */
-        must: severityLevel,
+        must: severityLevel;
 
         /**
          * @default warn
          */
-        should: severityLevel,
+        should: severityLevel;
 
         /**
-         * @default log
+         * @default info
          */
-        may: severityLevel,
+        may: severityLevel;
 
         /**
-         * @default log
+         * @default info
          */
-        optional: severityLevel,
+        optional: severityLevel;
     };
 
     /**
@@ -71,5 +71,5 @@ export interface LawbookConfig {
      * @private
      * List of laws and their parsed configurations.
      */
-    _laws: any[];
+    _laws: LawConfig[];
 }

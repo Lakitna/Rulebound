@@ -75,36 +75,36 @@ describe('The class ConfigManager', function() {
 
     describe('get', function() {
         beforeEach(function() {
-            const conf = lawbookConfigDefault;
-            conf.laws['bar-*'] = { bar: 2 };
-            conf.laws['foo-bar'] = { bar: 4 };
-            conf.laws['foo-bar-*'] = { bar: 8 };
-            conf.laws['foo-bar-fizz-buzz'] = { bar: 16 };
+            const config = lawbookConfigDefault;
+            config.laws['bar-*'] = { bar: 2 } as any;
+            config.laws['foo-bar'] = { bar: 4 } as any;
+            config.laws['foo-bar-*'] = { bar: 8 } as any;
+            config.laws['foo-bar-fizz-buzz'] = { bar: 16 } as any;
 
-            this.manager = new ConfigManager(conf);
+            this.manager = new ConfigManager(config);
         });
 
         it('gets the config of a specific law with its own config', function() {
-            const conf = this.manager.get('foo-bar');
-            expect(conf.bar).to.equal(4);
-            expect(conf._name).to.equal('foo-bar');
+            const config = this.manager.get('foo-bar');
+            expect(config.bar).to.equal(4);
+            expect(config._name).to.equal('foo-bar');
         });
 
         it('gets the config of a specific law with a shared config', function() {
-            const conf = this.manager.get('bar-fizz-buzz');
-            expect(conf.bar).to.equal(2);
-            expect(conf._name).to.equal('bar-*');
+            const config = this.manager.get('bar-fizz-buzz');
+            expect(config.bar).to.equal(2);
+            expect(config._name).to.equal('bar-*');
         });
 
         it('gets the most specific config available', function() {
-            const conf = this.manager.get('foo-bar-fizz-buzz');
-            expect(conf.bar).to.equal(16);
-            expect(conf._name).to.equal('foo-bar-fizz-buzz');
+            const config = this.manager.get('foo-bar-fizz-buzz');
+            expect(config.bar).to.equal(16);
+            expect(config._name).to.equal('foo-bar-fizz-buzz');
         });
 
         it('gets an empty config where there is none available', function() {
-            const conf = this.manager.get('lorum-ipsum');
-            expect(conf).to.deep.equal({
+            const config = this.manager.get('lorum-ipsum');
+            expect(config).to.deep.equal({
                 _name: '*',
                 _specificity: 0,
             });
@@ -133,7 +133,7 @@ describe('The class ConfigManager', function() {
 
             const sorted = this.manager._sortBySpecificity(unordered, 'key');
 
-            sorted.forEach((o:any, i:number) => {
+            sorted.forEach((o: any, i: number) => {
                 expect(o.key).to.equal(expectedOrder[i]);
             });
         });

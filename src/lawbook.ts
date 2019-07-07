@@ -5,7 +5,7 @@ import { ConfigManager } from './config/manager';
 import { Law } from './law';
 import { logger, Logger } from './log';
 import { LawbookConfig, LawConfig } from './config/types';
-import { LawbookError } from './errors/index';
+import { LawbookError } from './errors';
 
 
 /**
@@ -16,22 +16,22 @@ export class Lawbook {
     public laws: Law[];
     private log: Logger;
 
-    constructor(config?: LawbookConfig) {
+    public constructor(config?: LawbookConfig) {
         this.config = new ConfigManager(config);
         this.laws = [];
 
         this.log = logger.child({});
     }
 
-    get length() {
+    public get length() {
         return this.laws.length;
     }
 
     /**
      * Loop over the laws in the set
      */
-    public forEach(fn: (value: Law, index: number, array: Law[]) => void, thisArg?: any) {
-        this.laws.forEach(fn, thisArg);
+    public forEach(fn: (value: Law, index: number, array: Law[]) => void, thisArgument?: any) {
+        this.laws.forEach(fn, thisArgument);
     }
 
     /**
@@ -131,3 +131,5 @@ export class Lawbook {
         return this;
     }
 }
+
+export default Lawbook;

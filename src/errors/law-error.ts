@@ -18,7 +18,7 @@ export class LawError extends Error {
      */
     public severity: severityLevel;
 
-    constructor(law: Law, ...message: string[]) {
+    public constructor(law: Law, ...message: string[]) {
         const _message = message.join(' ');
 
         if (law.description) {

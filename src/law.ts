@@ -1,7 +1,7 @@
-import * as _ from 'lodash';
+import { omitBy, defaultsDeep, keys, isError, has } from 'lodash';
 
 import { logger, Logger } from './log';
-import { LawError, ConfigError } from './errors/index';
+import { LawError, ConfigError } from './errors';
 import { LawConfig } from './config/types';
 import { Lawbook } from './lawbook';
 import { specificity } from './utils';
@@ -35,12 +35,12 @@ export class Law {
     private _config: LawConfig;
     private log: Logger;
     private on: {
-        enforce: (this: Law, ...input: any) => boolean|any,
-        pass: (this: Law, input: any[]) => void,
-        fail: (this: Law, input: any[], err: any|Error) => void,
+        enforce: (this: Law, ...input: any) => boolean|any;
+        pass: (this: Law, input: any[]) => void;
+        fail: (this: Law, input: any[], result: any|Error) => void;
     };
 
-    constructor(name: string, lawbook: Lawbook) {
+    public constructor(name: string, lawbook: Lawbook) {
         this.name = name;
         this._alias = null;
         this.lawbook = lawbook;
@@ -50,19 +50,23 @@ export class Law {
 
         this._config = {
             severity: 'must',
+            _name: '*',
             _throw: 'error',
             _specificity: 0,
         };
 
         this.on = {
-            enforce: function undefined(...input) {
+            // eslint-disable-next-line no-shadow-restricted-names
+            enforce: function undefined() {
                 throw new LawError(this, 'Law is undefined');
             },
 
-            pass: function undefined(input) { return; },
+            // eslint-disable-next-line no-shadow-restricted-names
+            pass: function undefined() { return; },
 
-            fail: function undefined(input, err) {
-                this.throw(err);
+            // eslint-disable-next-line no-shadow-restricted-names
+            fail: function undefined(_, result) {
+                this.throw(result);
             },
         };
     }
@@ -70,17 +74,17 @@ export class Law {
     /**
      * Get config, omitting keys that start with `_`
      */
-    get config() {
-        return _.omitBy(this._config, (val, key) => {
+    public get config() {
+        return omitBy(this._config, (_, key) => {
             return key.startsWith('_');
-        });
+        }) as Partial<LawConfig>;
     }
 
     /**
      * Set config while treating existing config as defaults
      */
-    set config(config: LawConfig) {
-        this._config = _.defaultsDeep(config, this._config);
+    public set config(config: Partial<LawConfig>) {
+        this._config = defaultsDeep(config, this._config);
 
         if (this._config.severity === null) {
             this._config._throw = null;
@@ -92,14 +96,14 @@ export class Law {
         if (this.lawbook.config) {
             const lawbookConfig = this.lawbook.config.generic;
 
-            if (!lawbookConfig.severity.hasOwnProperty(this._config.severity!)) {
+            if (!has(lawbookConfig.severity, this._config.severity)) {
                 throw new ConfigError(
                     `Found unkown severity '${this._config.severity}' in the`,
                     `configuration for law '${this.name}'. Expected one of`,
-                    `['${_.keys(lawbookConfig.severity).join(`', '`)}', null]`);
+                    `['${keys(lawbookConfig.severity).join(`', '`)}', null]`);
             }
 
-            this._config._throw = lawbookConfig.severity[this._config.severity!];
+            this._config._throw = lawbookConfig.severity[this._config.severity];
         }
     }
 
@@ -232,16 +236,16 @@ export class Law {
                 // not reward.
                 return this;
             }
-            catch (err) {
-                result = err;
+            catch (error) {
+                result = error;
             }
         }
         else {
             try {
                 result = await this.on.enforce.call(this, ...input);
             }
-            catch (err) {
-                result = err;
+            catch (error) {
+                result = error;
             }
         }
 
@@ -259,11 +263,11 @@ export class Law {
     public throw(...message: string[]) {
         this.log.debug(`Throwing error`);
 
-        message = message.map((msg: any) => {
-            if (msg instanceof Error) {
-                return msg.message;
+        message = message.map((partialMessage: any) => {
+            if (isError(partialMessage)) {
+                return partialMessage.message;
             }
-            return msg;
+            return partialMessage;
         });
 
         const lawError = new LawError(this, ...message);
@@ -308,10 +312,10 @@ export class Law {
             await aliased.enforce(aliasName, ...input);
             this.log.debug('Alias passed');
         }
-        catch (err) {
+        catch (error) {
             this.log.debug(`Alias threw error. Punishing in own name`);
-            this.description = err.law.description;
-            throw new Error(err._message);
+            this.description = error.law.description;
+            throw new Error(error._message);
         }
         finally {
             aliased.forEach((law) => {
@@ -330,11 +334,11 @@ export class Law {
             try {
                 this.on.pass.call(this, input);
             }
-            catch (err) {
-                if (err instanceof LawError) {
-                    throw err;
+            catch (error) {
+                if (error instanceof LawError) {
+                    throw error;
                 }
-                this.throw(err.message);
+                this.throw(error.message);
             }
         }
         else {
@@ -343,11 +347,11 @@ export class Law {
             try {
                 this.on.fail.call(this, input, result);
             }
-            catch (err) {
-                if (err instanceof LawError) {
-                    throw err;
+            catch (error) {
+                if (error instanceof LawError) {
+                    throw error;
                 }
-                this.throw(err.message);
+                this.throw(error.message);
             }
         }
     }
