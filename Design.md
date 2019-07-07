@@ -5,7 +5,7 @@ One or multiple points of failure with documentation and some logic baked in.
 - Testable (yes, you can test your tests)
 - Maintainable
 - Flexible
-- Unopinionated?
+- Unopinionated -- Is it?
 
 <!-- TODO: Describe test pattern -->
 
@@ -19,17 +19,17 @@ lawbook
     .describe(description: string)
     .define((...input: any) => {
         return true // will call reward
-        return new Promise((resolve) => {resolve(true)}) // will call reward
+        return new Promise((resolve) => {resolve(true)}) // will reward
         // Note that this also means that an async define function will work
 
-        // Every other return (including `undefined`) will call punish. Some examples:
+        // Every other return (including `undefined`) will punish. Some examples:
         return false
         return
         return 'Some message'
 
-        throw new Error() // will call punish
-        throw new AnyTypeOfError() // will call punish
-        expect(true).to.be.false; // will call punish
+        throw new Error() // will punish
+        throw new AnyTypeOfError() // will punish
+        expect(true).to.be.false; // will punish
     })
     .punishment((input: any[], error: Error) => {
         throw new Error() // throw or log error according to config
@@ -55,10 +55,18 @@ lawbook
     .describe(description: string)
     .define((...input: any) => {
     })
-    .on('pass', (input: any[], error: Error) => {
+
+    // Option A
+    .on('fail', (input: any[], error: Error) => {
     })
-    .on('fail', (input: any[]) => {
-    });
+    .on('pass', (input: any[]) => {
+    })
+
+    // Option B
+    .onFail((input: any[], error: Error) => {
+    })
+    .onPass((input: any[]) => {
+    })
 
 lawbook.enforce(namePattern: globString, ...input: any[]);
 ```

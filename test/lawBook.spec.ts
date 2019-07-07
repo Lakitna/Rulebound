@@ -1,24 +1,24 @@
 import * as sinon from 'sinon';
 import * as _ from 'lodash';
 
-import LawBook from '../src/lawbook';
+import { Lawbook } from '../src/lawbook';
 import { expect } from 'chai';
-import Law from '../src/law';
+import { Law } from '../src/law';
 import { lawbookConfigDefault } from '../src/config/defaults';
 
 
-describe('The class LawBook', function() {
+describe('The class Lawbook', function() {
     it('initializes', function() {
-        const lawBook = new LawBook();
+        const lawBook = new Lawbook();
 
-        expect(lawBook).to.be.instanceOf(LawBook);
+        expect(lawBook).to.be.instanceOf(Lawbook);
         expect(lawBook.laws).to.be.lengthOf(0);
         expect(lawBook.config.full).to.deep.equal(lawbookConfigDefault);
     });
 
     describe('forEach', function() {
         beforeEach(function() {
-            this.lawBook = new LawBook(lawbookConfigDefault);
+            this.lawBook = new Lawbook(lawbookConfigDefault);
 
             this.lawBook.laws = [
                 'foo',
@@ -39,7 +39,7 @@ describe('The class LawBook', function() {
 
     describe('add', function() {
         beforeEach(function() {
-            this.lawBook = new LawBook(lawbookConfigDefault);
+            this.lawBook = new Lawbook(lawbookConfigDefault);
         });
 
         it('creates a new law when called with a string', function() {
@@ -95,7 +95,7 @@ describe('The class LawBook', function() {
 
     describe('omit', function() {
         beforeEach(function() {
-            this.lawBook = new LawBook(lawbookConfigDefault);
+            this.lawBook = new Lawbook(lawbookConfigDefault);
 
             this.lawBook.add('fizz');
             this.lawBook.add('buzz');
@@ -132,7 +132,7 @@ describe('The class LawBook', function() {
 
     describe('has', function() {
         beforeEach(function() {
-            this.lawBook = new LawBook(lawbookConfigDefault);
+            this.lawBook = new Lawbook(lawbookConfigDefault);
 
             this.lawBook.add('fizz');
             this.lawBook.add('buzz');
@@ -158,7 +158,7 @@ describe('The class LawBook', function() {
 
     describe('filter', function() {
         beforeEach(function() {
-            this.lawBook = new LawBook(lawbookConfigDefault);
+            this.lawBook = new Lawbook(lawbookConfigDefault);
 
             this.lawBook.add('fizz');
             this.lawBook.add('buzz');
@@ -195,7 +195,7 @@ describe('The class LawBook', function() {
 
     describe('enforce', function() {
         beforeEach(function() {
-            this.lawBook = new LawBook(lawbookConfigDefault);
+            this.lawBook = new Lawbook(lawbookConfigDefault);
         });
 
         it('logs a warning when there are no laws in the set', async function() {
