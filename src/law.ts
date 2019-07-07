@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import { logger, Logger } from './log';
 import { LawError, ConfigError } from './errors/index';
 import { LawConfig } from './config/types';
-import Lawbook from './lawbook';
+import { Lawbook } from './lawbook';
 import { specificity } from './utils';
 
 
@@ -26,11 +26,12 @@ import { specificity } from './utils';
  *     })
  *     .enforce(1);
  */
-export default class Law {
+export class Law {
     public name: string;
-    public description: string|undefined;
+    public description?: string;
     public specificity: number;
     public lawbook: Lawbook;
+    private _alias: string | null;
     private _config: LawConfig;
     private log: Logger;
     private on: {
@@ -41,6 +42,7 @@ export default class Law {
 
     constructor(name: string, lawbook: Lawbook) {
         this.name = name;
+        this._alias = null;
         this.lawbook = lawbook;
         this.specificity = specificity(name);
 
@@ -60,12 +62,7 @@ export default class Law {
             pass: function undefined(input) { return; },
 
             fail: function undefined(input, err) {
-                if (err) {
-                    throw err;
-                }
-                else {
-                    this.throw();
-                }
+                this.throw(err);
             },
         };
     }
@@ -85,15 +82,12 @@ export default class Law {
     set config(config: LawConfig) {
         this._config = _.defaultsDeep(config, this._config);
 
-        if (this._config.severity === undefined) {
-            this._config.severity = 'must';
-        }
         if (this._config.severity === null) {
             this._config._throw = null;
             return;
         }
 
-        this._config.severity = this._config.severity.toLowerCase() as LawConfig['severity'];
+        this._config.severity = this._config.severity!.toLowerCase() as LawConfig['severity'];
 
         if (this.lawbook.config) {
             const lawbookConfig = this.lawbook.config.generic;
@@ -183,9 +177,30 @@ export default class Law {
     public describe(description: string) {
         this.description = description
             .trim()
-            // Get rid of whitespace at the start of all lines
+            // Get rid of whitespace at the start of each line
             .replace(/^[^\S\n]+/gm, '');
 
+        return this;
+    }
+
+
+    /**
+     * When enforcing use another law(s) under the namespace of the current law.
+     * Any errors will be thrown under the currents laws name with the currents
+     * law severity level.
+     *
+     * @example
+     * Law.alias('another/law')
+     *
+     * @example
+     * Law.alias('another/*')
+     */
+    public alias(globPattern: string) {
+        // Ideally we would check for the existence of the aliased law
+        // here, but at this point not all laws have been defined yet.
+        // Instead we'll check as a part of `.enforce()`
+        this.log.debug(`Set alias ${globPattern}`);
+        this._alias = globPattern;
         return this;
     }
 
@@ -200,24 +215,115 @@ export default class Law {
      * Law.enforce('foo', 'bar', 1, 86, 9302);
      */
     public async enforce(...input: any) {
-        if (this._config._throw === null) {
+        if (this._config._throw === null && !this._config._asAlias) {
+            // Skip law
             return this;
         }
 
         this.log.debug(`Enforcing`);
 
         let result = null;
-        try {
-            result = this.on.enforce.call(this, ...input);
+        if (this._alias !== null) {
+            try {
+                await this.enforceAlias(this._alias, input);
 
-            if (result instanceof Promise) {
-                result = await result;
+                // The aliased law did not throw. Stop enforcing now to prevent
+                // doing things twice. This also means that the current law will
+                // not reward.
+                return this;
+            }
+            catch (err) {
+                result = err;
             }
         }
-        catch (err) {
-            result = err;
+        else {
+            try {
+                result = await this.on.enforce.call(this, ...input);
+            }
+            catch (err) {
+                result = err;
+            }
         }
 
+        this.handleEnforceResult(input, result);
+        return this;
+    }
+
+    /**
+     * Throw an error or log a warning for this law.
+     * Severity decides if it'll throw or log at witch level.
+     *
+     * @example
+     * Law.throw('An error has occured');
+     */
+    public throw(...message: string[]) {
+        this.log.debug(`Throwing error`);
+
+        message = message.map((msg: any) => {
+            if (msg instanceof Error) {
+                return msg.message;
+            }
+            return msg;
+        });
+
+        const lawError = new LawError(this, ...message);
+
+        // Always throw when called as an aliased law so we can handle the
+        // error in the alias.
+        if (this._config._throw === 'error' || this._config._asAlias) {
+            throw lawError;
+        }
+        if (this._config._throw === 'warn') {
+            this.log.warn(lawError.toString());
+            return;
+        }
+        if (this._config._throw === 'info') {
+            this.log.info(lawError.toString());
+            return;
+        }
+    }
+
+
+    /**
+     * Enforce by the definition of another law
+     */
+    private async enforceAlias(aliasName: string, input: any[]) {
+        this.log.debug(`Enforcing via alias ${this._alias}`);
+
+        if (!this.lawbook.has(aliasName)) {
+            throw new Error(`Could not find alias named '${aliasName}'`);
+        }
+
+        const aliased = this.lawbook.filter(aliasName);
+        aliased.forEach((law) => {
+            // Tell the law it's being enforced as an alias
+            law.config = { _asAlias: true };
+
+            // We are not copying the config of the current law to the alias.
+            // We may want to add that at some point, but I quite frankly don't
+            // see why it's worth the effort.
+        });
+
+        try {
+            await aliased.enforce(aliasName, ...input);
+            this.log.debug('Alias passed');
+        }
+        catch (err) {
+            this.log.debug(`Alias threw error. Punishing in own name`);
+            this.description = err.law.description;
+            throw new Error(err._message);
+        }
+        finally {
+            aliased.forEach((law) => {
+                law.config = { _asAlias: false };
+            });
+        }
+    }
+
+    /**
+     * Determine what to do with the enforce results
+     */
+    private handleEnforceResult(input: any[], result: any) {
         if (result === true) {
             this.log.debug(`Law passed. Rewarding`);
 
@@ -243,40 +349,6 @@ export default class Law {
                 }
                 this.throw(err.message);
             }
-        }
-
-        return this;
-    }
-
-    /**
-     * Throw an error or log a warning for this law.
-     * Severity decides if it'll throw or log at witch level.
-     *
-     * @example
-     * Law.throw('An error has occured');
-     */
-    public throw(...message: string[]) {
-        this.log.debug(`Throwing error`);
-
-        message = message.map((msg: any) => {
-            if (msg instanceof Error) {
-                return msg.message;
-            }
-            return msg;
-        });
-
-        const lawError = new LawError(this, ...message);
-
-        if (this._config._throw === 'error') {
-            throw lawError;
-        }
-        if (this._config._throw === 'warn') {
-            this.log.warn(lawError.toString());
-            return;
-        }
-        if (this._config._throw === 'info') {
-            this.log.info(lawError.toString());
-            return;
         }
     }
 }

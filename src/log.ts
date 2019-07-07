@@ -27,9 +27,11 @@ function fullWidthLine(left: string, right: string) {
 }
 
 function logFormat(info: any) {
-    return fullWidthLine(
-        `${levelMarkers[info.level]()} ${info.message}`,
-        c.grey(`${info.law}`));
+    const logLine = `${levelMarkers[info.level]()} ${info.message}`;
+    if (info.law) {
+        return fullWidthLine(logLine, c.grey(`${info.law}`));
+    }
+    return logLine;
 }
 
 const logger = createLogger({

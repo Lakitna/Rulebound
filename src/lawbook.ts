@@ -2,7 +2,7 @@ import * as micromatch from 'micromatch';
 import isGlob from 'is-glob';
 
 import { ConfigManager } from './config/manager';
-import Law from './law';
+import { Law } from './law';
 import { logger, Logger } from './log';
 import { LawbookConfig, LawConfig } from './config/types';
 import { LawbookError } from './errors/index';
@@ -11,7 +11,7 @@ import { LawbookError } from './errors/index';
 /**
  * Collection to manage laws
  */
-export default class Lawbook {
+export class Lawbook {
     public config: ConfigManager;
     public laws: Law[];
     private log: Logger;

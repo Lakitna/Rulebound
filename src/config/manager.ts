@@ -67,11 +67,10 @@ export class ConfigManager {
     public parse(config: LawbookConfig) {
         if (Object.keys(config.laws).length === 0) {
             // There is nothing to parse
-            this.log.debug('No unparsed configuration found. Will not parse.');
             return config;
         }
 
-        this.log.debug('Unparsed configuration found. Parsing now...');
+        this.log.debug('Unparsed configuration found. Parsing...');
 
         // Map from `laws` to `_laws`
         Object.entries(config.laws)

@@ -1,8 +1,8 @@
 import * as sinon from 'sinon';
 
-import Law from '../src/law';
+import { Law } from '../src/law';
 import { expect } from 'chai';
-import Lawbook from '../src/lawbook';
+import { Lawbook } from '../src/lawbook';
 import c from 'ansi-colors';
 
 
@@ -53,6 +53,21 @@ describe('The class Law', function() {
                 fizz: 'buzz',
             });
         });
+
+        it('throws when specifying an unkown severity level', function() {
+            this.law.lawbook.config = {
+                generic: {
+                    severity: {
+                        'known level': 'error',
+                        'another known level': 'warn',
+                    },
+                },
+            };
+
+            expect(() => {
+                this.law.config = { severity: 'unkown level' };
+            }).to.throw(`Found unkown severity 'unkown level' in the configuration for law 'foo'`);
+        });
     });
 
     describe('Definition', function() {
@@ -78,6 +93,44 @@ describe('The class Law', function() {
         it('returns the law object instance', function() {
             const ret = this.law.define(() => {});
             expect(ret).to.equal(this.law);
+        });
+    });
+
+    describe('Description', function() {
+        beforeEach(function() {
+            this.law = new Law('foo', {} as Lawbook);
+        });
+
+        it('is chainable', function() {
+            expect(this.law.describe('foo')).to.be.instanceOf(Law);
+        });
+
+        it('removes indentation from each line of a regular string', function() {
+            this.law.describe('  FirstLine\n\tSecondLine');
+
+            expect(this.law.description).to.equal('FirstLine\nSecondLine')
+        });
+
+        it('removes indentation from each line of a template literal', function() {
+            this.law.describe(`
+                FirstLine
+                SecondLine
+            `);
+
+            expect(this.law.description).to.equal('FirstLine\nSecondLine')
+        });
+
+        it('includes the description when an error is thrown', async function() {
+            this.law
+                .define(() => false)
+                .describe('awesome description');
+
+            try {
+                await this.law.enforce();
+            }
+            catch (err) {
+                expect(err.message).to.include('awesome description');
+            }
         });
     });
 
@@ -137,6 +190,16 @@ describe('The class Law', function() {
         it('returns the law object instance', function() {
             const ret = this.law.reward(() => {});
             expect(ret).to.equal(this.law);
+        });
+    });
+
+    describe('Alias', function() {
+        beforeEach(function() {
+            this.law = new Law('foo', {} as Lawbook);
+        });
+
+        it('is chainable', function() {
+            expect(this.law.alias('foo')).to.be.instanceOf(Law);
         });
     });
 
@@ -294,6 +357,38 @@ describe('The class Law', function() {
                 });
         });
 
+        it('handles an error thrown by reward', async function() {
+            this.law
+                .define(() => true)
+                .reward(() => {
+                    throw new Error('Reward error');
+                });
+
+            try {
+                await this.law.enforce();
+                throw new Error('Expected error to be thrown')
+            }
+            catch (err) {
+                expect(err.message).to.equal('Reward error');
+            }
+        });
+
+        it('handles an error thrown by punishment', async function() {
+            this.law
+                .define(() => false)
+                .punishment(() => {
+                    throw new Error('Punishment error');
+                });
+
+            try {
+                await this.law.enforce();
+                throw new Error('Expected error to be thrown')
+            }
+            catch (err) {
+                expect(err.message).to.equal('Punishment error');
+            }
+        });
+
         it('rethrows errors thrown by nested laws via the punishment of the parent law', function(done) {
             this.law
                 .define(async () => {
@@ -316,6 +411,111 @@ describe('The class Law', function() {
                     expect(err.law.name).to.equal('bar');
                     done();
                 });
+        });
+
+        describe('Using an alias', function() {
+            beforeEach(function() {
+                this.lawbook = new Lawbook();
+            });
+
+            it('throws an error thrown by the aliased law in name of the alias', async function() {
+                this.lawbook.add('bar').define(() => 'alias failed');
+                this.lawbook.add('foo').alias('bar');
+
+                try {
+                    await this.lawbook.enforce('foo');
+                    throw new Error('Expected error to be thrown')
+                }
+                catch (err) {
+                    expect(err.law.name).to.equal('foo');
+                    expect(err.message).to.equal('alias failed');
+                }
+            });
+
+            it('throws when the alias does not exist', async function() {
+                this.lawbook.add('foo').alias('bar');
+
+                try {
+                    await this.lawbook.enforce('foo');
+                    throw new Error('Expected error to be thrown')
+                }
+                catch (err) {
+                    expect(err.message).to.equal(`Could not find alias named 'bar'`);
+                }
+            });
+
+            it('passes the alias when the aliassed law passes', async function() {
+                this.lawbook.add('bar').define(() => true);
+                this.lawbook.add('foo').alias('bar');
+
+                await this.lawbook.enforce('foo');
+            });
+
+            context('Aliased laws will throw with the severity of the alias', function() {
+                it('throws with the aliased law having the severity null', async function() {
+                    this.lawbook.add('bar', {severity: null}).define(() => 'alias failed');
+                    this.lawbook.add('foo').alias('bar');
+
+                    try {
+                        await this.lawbook.enforce('foo');
+                        throw new Error('Expected error to be thrown')
+                    }
+                    catch (err) {
+                        expect(err.law.name).to.equal('foo');
+                        expect(err.message).to.equal('alias failed');
+                    }
+                });
+
+                it('throws with the aliased law having the severity should', async function() {
+                    this.lawbook.add('bar', {severity: 'should'}).define(() => 'alias failed');
+                    this.lawbook.add('foo').alias('bar');
+
+                    try {
+                        await this.lawbook.enforce('foo');
+                        throw new Error('Expected error to be thrown')
+                    }
+                    catch (err) {
+                        expect(err.law.name).to.equal('foo');
+                        expect(err.message).to.equal('alias failed');
+                    }
+                });
+            });
+
+            context('Punish & reward', function() {
+                it('will not call the punishment of the alias, only that of the aliassed', async function() {
+                    let aliassed = false;
+                    let alias = false;
+
+                    this.lawbook.add('bar')
+                        .define(() => false)
+                        .punishment(() => { aliassed = true; });
+
+                    this.lawbook.add('foo')
+                        .alias('bar')
+                        .punishment(() => { alias = true; });
+
+                    await this.lawbook.enforce('foo');
+                    expect(aliassed).to.be.true;
+                    expect(alias).to.be.false;
+                });
+
+                it('will not call the reward of the alias, only that of the aliassed', async function() {
+                    let aliassed = false;
+                    let alias = false;
+
+                    this.lawbook.add('bar')
+                        .define(() => true)
+                        .reward(() => { aliassed = true; });
+
+                    this.lawbook.add('foo')
+                        .alias('bar')
+                        .reward(() => { alias = true; });
+
+                    await this.lawbook.enforce('foo');
+                    expect(aliassed).to.be.true;
+                    expect(alias).to.be.false;
+                });
+            });
         });
     });
 

@@ -1,5 +1,5 @@
 import * as c from 'ansi-colors';
-import Law from '../law';
+import { Law } from '../law';
 import { severityLevel } from '../config/types';
 
 export class LawError extends Error {
@@ -9,9 +9,9 @@ export class LawError extends Error {
     public law: Law;
 
     /**
-     * String used when logging the error without throwing
+     * Original message. Used when logging error without throwing
      */
-    public warnMessage: string;
+    public _message: string;
 
     /**
      * The severity with which the error was thrown
@@ -19,7 +19,7 @@ export class LawError extends Error {
     public severity: severityLevel;
 
     constructor(law: Law, ...message: string[]) {
-        const warnMessage = message.join(' ');
+        const _message = message.join(' ');
 
         if (law.description) {
             message.push('\n' + c.yellow(law.description));
@@ -30,10 +30,10 @@ export class LawError extends Error {
         this.law = law;
         this.severity = (this.law.config.severity || '').toUpperCase() as severityLevel;
         this.name = `LawError | ${this.severity} ${this.law.name}`;
-        this.warnMessage = warnMessage;
+        this._message = _message;
     }
 
     public toString() {
-        return `${c.grey(this.severity!)} ${this.warnMessage}`;
+        return `${c.grey(this.severity!)} ${this._message}`;
     }
 }
