@@ -1,6 +1,7 @@
 /* istanbul ignore file */
 import { createLogger, format, transports, Logger } from 'winston';
 import c from 'ansi-colors';
+import { TransformableInfo } from 'logform';
 
 const levelMarkers = {
     debug: () => c.grey('»'),
@@ -26,7 +27,7 @@ function fullWidthLine(left: string, right: string) {
     return left + ' '.repeat(spaceCount) + right;
 }
 
-function logFormat(info: any) {
+function logFormat(info: TransformableInfo) {
     const logLine = `${levelMarkers[info.level]()} ${info.message}`;
     if (info.law) {
         return fullWidthLine(logLine, c.grey(`${info.law}`));

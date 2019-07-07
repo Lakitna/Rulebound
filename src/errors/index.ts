@@ -1,8 +1,8 @@
 /* istanbul ignore file */
 
-export { LawbookError } from './LawbookError';
-export { LawError } from './LawError';
-export { ConfigError } from './ConfigError';
+export { LawbookError } from './lawbook-error';
+export { LawError } from './law-error';
+export { ConfigError } from './config-error';
 
 /**
  * Limit unwieldly stack traces, but only do so if it's not limited

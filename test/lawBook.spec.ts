@@ -1,5 +1,4 @@
 import * as sinon from 'sinon';
-import * as _ from 'lodash';
 
 import { Lawbook } from '../src/lawbook';
 import { expect } from 'chai';
