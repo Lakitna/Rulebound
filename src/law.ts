@@ -97,7 +97,6 @@ export class Law {
             const lawbookConfig = this.lawbook.config.generic;
 
             if (!has(lawbookConfig.severity, this._config.severity)) {
-                // TODO if (!lawbookConfig.severity.hasOwnProperty(this._config.severity!)) {
                 throw new ConfigError(
                     `Found unkown severity '${this._config.severity}' in the`,
                     `configuration for law '${this.name}'. Expected one of`,

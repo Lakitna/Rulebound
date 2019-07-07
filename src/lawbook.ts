@@ -131,3 +131,4 @@ export class Lawbook {
         return this;
     }
 }
+module.exports = Lawbook;
