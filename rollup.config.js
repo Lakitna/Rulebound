@@ -1,5 +1,4 @@
 import pkg from './package.json';
-import tslint from "rollup-plugin-tslint";
 import typescript from 'rollup-plugin-typescript2';
 import dts from 'rollup-plugin-dts';
 import cleanup from 'rollup-plugin-cleanup';
@@ -17,11 +16,6 @@ const config = [
             // Delete contents of target folder
             del({
                 targets: pkg.files,
-            }),
-
-            // Lint source files
-            tslint({
-                throwOnError: true,
             }),
 
             // Compile source (typescript) to javascript
