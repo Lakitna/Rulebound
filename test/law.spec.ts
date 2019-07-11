@@ -1,7 +1,9 @@
 import * as sinon from 'sinon';
+import { use, expect } from 'chai';
+import asPromised from 'chai-as-promised';
+use(asPromised);
 
 import { Law } from '../src/law';
-import { expect } from 'chai';
 import { Lawbook } from '../src/lawbook';
 import c from 'ansi-colors';
 
@@ -76,22 +78,41 @@ describe('The class Law', function() {
             this.law = new Law('foo', {} as Lawbook);
         });
 
-        it('throws an error when called before its set', function() {
-            expect(this.law.on.enforce.name).to.equal('undefined');
+        it('throws an error when called before its set', async function() {
+            expect(this.law.handler.enforce).to.be.lengthOf(1);
+            expect(this.law.handler.enforce[0].name).to.equal('undefined');
 
-            expect(this.law.on.enforce.bind(this.law))
-                .to.throw('Law is undefined');
+            await expect(this.law.enforce())
+                .to.be.rejectedWith('Law is undefined');
         });
 
-        it('sets the defintion', function() {
-            function noop() { return; }
+        it('sets the defintion', async function() {
+            function noop() { return true; }
 
             this.law.define(noop);
 
-            expect(this.law.on.enforce.name).to.equal('definition');
+            expect(this.law.handler.enforce).to.be.lengthOf(1);
+            expect(this.law.handler.enforce[0].name).to.equal('enforce');
+
+            await expect(this.law.enforce())
+                .to.be.fulfilled;
         });
 
-        it('returns the law object instance', function() {
+        it('takes multiple definitions', async function() {
+            this.law.define(() => true);
+            this.law.define(() => true);
+            this.law.define(() => true);
+
+            expect(this.law.handler.enforce).to.be.lengthOf(3);
+            for (const fn of this.law.handler.enforce) {
+                expect(fn.name).to.equal('enforce');
+            }
+            expect(this.law.handler.enforce[0])
+                .to.not.equal(this.law.handler.enforce[1])
+                .to.not.equal(this.law.handler.enforce[2]);
+        });
+
+        it('is chainable', function() {
             const returnValue = this.law.define(() => {});
             expect(returnValue).to.equal(this.law);
         });
@@ -103,7 +124,7 @@ describe('The class Law', function() {
         });
 
         it('is chainable', function() {
-            expect(this.law.describe('foo')).to.be.instanceOf(Law);
+            expect(this.law.describe('foo')).to.equal(this.law);
         });
 
         it('removes indentation from each line of a regular string', function() {
@@ -135,22 +156,24 @@ describe('The class Law', function() {
         });
     });
 
-    describe('Punishment', function() {
+    describe('fail', function() {
         beforeEach(function() {
             this.law = new Law('foo', {} as Lawbook);
         });
 
-        it('throws when called before its set with input', function() {
-            expect(this.law.on.fail.name).to.equal('undefined');
+        it('throws when called before its set with input', async function() {
+            expect(this.law.handler.fail).to.be.lengthOf(1);
+            expect(this.law.handler.fail[0].name).to.equal('undefined');
 
-            expect(this.law.on.fail.bind(this.law, 'bar'))
+            expect(this.law.handler.fail[0].bind(this.law, 'bar'))
                 .to.throw('');
         });
 
         it('throws when called with error before its set', function() {
-            expect(this.law.on.fail.name).to.equal('undefined');
+            expect(this.law.handler.fail).to.be.lengthOf(1);
+            expect(this.law.handler.fail[0].name).to.equal('undefined');
 
-            expect(this.law.on.fail.bind(this.law, 'foo', new Error('foo')))
+            expect(this.law.handler.fail[0].bind(this.law, 'bar', new Error('foo')))
                 .to.throw('foo');
         });
 
@@ -159,12 +182,26 @@ describe('The class Law', function() {
 
             this.law.punishment(noop);
 
-            expect(this.law.on.fail.name).to.equal('punishment');
+            expect(this.law.handler.fail).to.be.lengthOf(1);
+            expect(this.law.handler.fail[0].name).to.equal('fail');
         });
 
-        it('returns the law object instance', function() {
-            const returnValue = this.law.punishment(() => {});
-            expect(returnValue).to.equal(this.law);
+        it('takes multiple punishments', async function() {
+            this.law.punishment(() => true);
+            this.law.punishment(() => true);
+            this.law.punishment(() => true);
+
+            expect(this.law.handler.fail).to.be.lengthOf(3);
+            for (const fn of this.law.handler.fail) {
+                expect(fn.name).to.equal('fail');
+            }
+            expect(this.law.handler.fail[0])
+                .to.not.equal(this.law.handler.fail[1])
+                .to.not.equal(this.law.handler.fail[2]);
+        });
+
+        it('is chainable', function() {
+            expect(this.law.punishment(() => {})).to.equal(this.law);
         });
     });
 
@@ -174,9 +211,10 @@ describe('The class Law', function() {
         });
 
         it('is a noop when called before its set', function() {
-            expect(this.law.on.pass.name).to.equal('undefined');
+            expect(this.law.handler.pass).to.be.lengthOf(1);
+            expect(this.law.handler.pass[0].name).to.equal('undefined');
 
-            expect(this.law.on.pass)
+            expect(this.law.handler.pass[0])
                 .to.not.throw();
         });
 
@@ -185,12 +223,26 @@ describe('The class Law', function() {
 
             this.law.reward(noop);
 
-            expect(this.law.on.pass.name).to.equal('reward');
+            expect(this.law.handler.pass).to.be.lengthOf(1);
+            expect(this.law.handler.pass[0].name).to.equal('pass');
         });
 
-        it('returns the law object instance', function() {
-            const returnValue = this.law.reward(() => {});
-            expect(returnValue).to.equal(this.law);
+        it('takes multiple rewards', async function() {
+            this.law.reward(() => true);
+            this.law.reward(() => true);
+            this.law.reward(() => true);
+
+            expect(this.law.handler.pass).to.be.lengthOf(3);
+            for (const fn of this.law.handler.pass) {
+                expect(fn.name).to.equal('pass');
+            }
+            expect(this.law.handler.pass[0])
+                .to.not.equal(this.law.handler.pass[1])
+                .to.not.equal(this.law.handler.pass[2]);
+        });
+
+        it('is chainable', function() {
+            expect(this.law.reward(() => {})).to.equal(this.law);
         });
     });
 
@@ -228,7 +280,7 @@ describe('The class Law', function() {
                 .define(() => false)
                 .punishment((input: any[], result: boolean) => {
                     expect(input).to.be.lengthOf(0);
-                    expect(result).to.be.false;
+                    expect(result).to.deep.equal([ false ]);
                     done();
                 })
                 .reward(() => {
@@ -258,7 +310,7 @@ describe('The class Law', function() {
                 .define(() => 'foo')
                 .punishment((input: any[], result: string) => {
                     expect(input).to.be.lengthOf(0);
-                    expect(result).to.equal('foo');
+                    expect(result).to.deep.equal([ 'foo' ]);
                     done();
                 })
                 .reward(() => {
@@ -276,7 +328,7 @@ describe('The class Law', function() {
                 })
                 .punishment((input: any[], result: boolean) => {
                     expect(input).to.be.lengthOf(0);
-                    expect(result).to.be.false;
+                    expect(result).to.deep.equal([ false ]);
                     done();
                 })
                 .reward(() => {
@@ -312,7 +364,7 @@ describe('The class Law', function() {
                 })
                 .punishment((input: any[], result: string) => {
                     expect(input).to.be.lengthOf(0);
-                    expect(result).to.equal('foo');
+                    expect(result).to.deep.equal([ 'foo' ]);
                     done();
                 })
                 .reward(() => {
@@ -515,6 +567,69 @@ describe('The class Law', function() {
                     await this.lawbook.enforce('foo');
                     expect(aliassed).to.be.true;
                     expect(alias).to.be.false;
+                });
+            });
+        });
+
+        describe('Multiple handlers per event', function() {
+            it('calls all enforce events in order', async function() {
+                const called: number[][] = [];
+
+                for (let i = 0; i < 100; i++) {
+                    called.push([i, 0]);
+
+                    this.law.on('enforce', () => {
+                        called[i][1]++;
+                        return true;
+                    });
+                }
+
+                await this.law.enforce();
+
+                called.forEach((call: number[]) => {
+                    expect(call[1]).to.equal(1);
+                });
+            });
+
+            it('calls all fail events in order', async function() {
+                const called: number[][] = [];
+
+                this.law.on('enforce', () => false);
+
+                for (let i = 0; i < 100; i++) {
+                    called.push([i, 0]);
+
+                    this.law.on('fail', () => {
+                        called[i][1]++;
+                        return true;
+                    });
+                }
+
+                await this.law.enforce();
+
+                called.forEach((call: number[]) => {
+                    expect(call[1]).to.equal(1);
+                });
+            });
+
+            it('calls all pass events in order', async function() {
+                const called: number[][] = [];
+
+                this.law.on('enforce', () => true);
+
+                for (let i = 0; i < 100; i++) {
+                    called.push([i, 0]);
+
+                    this.law.on('pass', () => {
+                        called[i][1]++;
+                        return true;
+                    });
+                }
+
+                await this.law.enforce();
+
+                called.forEach((call: number[]) => {
+                    expect(call[1]).to.equal(1);
                 });
             });
         });
