@@ -1,4 +1,4 @@
-import { omitBy, defaultsDeep, keys, isError, has } from 'lodash';
+import { omitBy, defaultsDeep, keys, isError, has, isString } from 'lodash';
 
 import { logger, Logger } from './log';
 import { LawError, ConfigError } from './errors';
@@ -34,10 +34,10 @@ export class Law {
     private _alias: string | null;
     private _config: LawConfig;
     private log: Logger;
-    private on: {
-        enforce: (this: Law, ...input: any) => boolean|any;
-        pass: (this: Law, input: any[]) => void;
-        fail: (this: Law, input: any[], result: any|Error) => void;
+    private handler: {
+        enforce: { (this: Law, ...input: any): boolean|any }[];
+        pass: { (this: Law, input: any[]): void }[];
+        fail: { (this: Law, input: any[], result: any[]|Error): void }[];
     };
 
     public constructor(name: string, lawbook: Lawbook) {
@@ -55,21 +55,26 @@ export class Law {
             _specificity: 0,
         };
 
-        this.on = {
-            // eslint-disable-next-line no-shadow-restricted-names
-            enforce: function undefined() {
-                throw new LawError(this, 'Law is undefined');
-            },
-
-            // eslint-disable-next-line no-shadow-restricted-names
-            pass: function undefined() { return; },
-
-            // eslint-disable-next-line no-shadow-restricted-names
-            fail: function undefined(_, result) {
-                this.throw(result);
-            },
-        };
+        this.handler = {
+            enforce: [
+                // eslint-disable-next-line no-shadow-restricted-names
+                function undefined() {
+                    throw new LawError(this, 'Law is undefined');
+                },
+            ],
+            pass: [
+                // eslint-disable-next-line no-shadow-restricted-names
+                function undefined() { return; },
+            ],
+            fail: [
+                // eslint-disable-next-line no-shadow-restricted-names
+                function undefined(_, result) {
+                    this.throw(result);
+                },
+            ],
+        }
     }
+
 
     /**
      * Get config, omitting keys that start with `_`
@@ -107,11 +112,52 @@ export class Law {
         }
     }
 
+
+    /**
+     * Subscribe to an event
+     *
+     * @example
+     * Law.on('enforce', (val) => {
+     *      return val > 5;
+     * });
+     *
+     * @example
+     * Law.on('fail', (val) => {
+     *     throw new Error(`Law failed. Input: ${input}`)
+     * });
+     *
+     * @example
+     * Law.on('pass', (val) => {
+     *     console.log('Yay! The law is uphold. Let\'s party!');
+     * });
+     */
+    public on(event: 'enforce'|'fail'|'pass', fn: (this: Law, ...params: any) => any) {
+        this.log.debug(`on event ${event} defined`);
+
+        Object.defineProperty(fn, 'name', { value: event });
+
+        if (event !== 'enforce' && event !== 'fail' && event !== 'pass') {
+            throw new LawError(this,
+                `You tried to subscribe to unkown event '${event}'`);
+        }
+
+        if (this.handler[event].length === 1) {
+            // Filter out default handler functions
+            // @ts-ignore
+            this.handler[event] = this.handler[event].filter((fn) => {
+                return !fn.name.startsWith('undefined');
+            });
+        }
+
+        this.handler[event].push(fn);
+        return this;
+    }
+
+
     /**
      * Define the law logic.
      * Return `true` to reward, return anything else or throw an error
-     * to punish. The returned value is passed to the punishment as the
-     * final argument.
+     * to punish.
      *
      * @example
      * Law.define(function(val) {
@@ -119,17 +165,13 @@ export class Law {
      * });
      */
     public define(fn: (...input: any) => boolean|any) {
-        this.log.debug(`Law defined`);
-
-        Object.defineProperty(fn, 'name', { value: 'definition' });
-
-        this.on.enforce = fn;
-
-        return this;
+        return this.on('enforce', fn);
     }
 
+
     /**
-     * Define what will happen if the law fails
+     * Define what will happen if the law fails.  The returned/thrown value is
+     * passed as the final argument.
      *
      * @example
      * Law.punishment(function(input) {
@@ -142,14 +184,9 @@ export class Law {
      * });
      */
     public punishment(fn: (input: any, err: any) => void) {
-        this.log.debug(`Punishment defined`);
-
-        Object.defineProperty(fn, 'name', { value: 'punishment' });
-
-        this.on.fail = fn;
-
-        return this;
+        return this.on('fail', fn);
     }
+
 
     /**
      * Define what will happen if the law passes.
@@ -160,13 +197,7 @@ export class Law {
      * });
      */
     public reward(fn: (input: any[]) => void) {
-        this.log.debug(`Reward defined`);
-
-        Object.defineProperty(fn, 'name', { value: 'reward' });
-
-        this.on.pass = fn;
-
-        return this;
+        return this.on('pass', fn);
     }
 
 
@@ -242,14 +273,17 @@ export class Law {
         }
         else {
             try {
-                result = await this.on.enforce.call(this, ...input);
+                result = [];
+                for (const fn of this.handler.enforce) {
+                    result.push(await fn.call(this, ...input));
+                }
             }
             catch (error) {
                 result = error;
             }
         }
 
-        this.handleEnforceResult(input, result);
+        await this.handleEnforceResult(input, result);
         return this;
     }
 
@@ -260,17 +294,20 @@ export class Law {
      * @example
      * Law.throw('An error has occured');
      */
-    public throw(...message: string[]) {
+    public throw(...message: (any|Error)[]) {
         this.log.debug(`Throwing error`);
 
         message = message.map((partialMessage: any) => {
             if (isError(partialMessage)) {
                 return partialMessage.message;
             }
+            else if (!isString(partialMessage)) {
+                return partialMessage.toString();
+            }
             return partialMessage;
         });
 
-        const lawError = new LawError(this, ...message);
+        const lawError = new LawError(this, ...message as string[]);
 
         // Always throw when called as an aliased law so we can handle the
         // error in the alias.
@@ -327,32 +364,39 @@ export class Law {
     /**
      * Determine what to do with the enforce results
      */
-    private handleEnforceResult(input: any[], result: any) {
-        if (result === true) {
-            this.log.debug(`Law passed. Rewarding`);
+    private async handleEnforceResult(input: any[], results: any[]|Error) {
+        let failResults = [];
+        if (isError(results)) {
+            failResults.push(results);
+        }
+        else {
+            failResults = results.filter((r: any) => r !== true);
+        }
 
-            try {
-                this.on.pass.call(this, input);
-            }
-            catch (error) {
-                if (error instanceof LawError) {
-                    throw error;
-                }
-                this.throw(error.message);
-            }
+        if (failResults.length === 0) {
+            this.log.debug(`Law passed. Rewarding`);
+            await this.raiseVoidEvent('pass', input);
         }
         else {
             this.log.debug(`Law failed. Punishing`);
+            await this.raiseVoidEvent('fail', input, results);
+        }
+    }
 
-            try {
-                this.on.fail.call(this, input, result);
+    /**
+     * Raise void event and handle any errors
+     */
+    private async raiseVoidEvent(event: string, ...params: any) {
+        try {
+            for (const fn of this.handler[event]) {
+                await fn.call(this, ...params);
             }
-            catch (error) {
-                if (error instanceof LawError) {
-                    throw error;
-                }
-                this.throw(error.message);
+        }
+        catch (error) {
+            if (error instanceof LawError) {
+                throw error;
             }
+            this.throw(error.message);
         }
     }
 }
