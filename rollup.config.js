@@ -9,11 +9,7 @@ const config = [
     {
         input: './src/lawbook.ts',
         output: [
-            {
-                file: pkg.main, format: 'cjs',
-                exports: 'named',
-                outro: 'module.exports = Lawbook;',
-            },
+            { file: pkg.main, format: 'cjs' },
             { file: pkg.module, format: 'es' },
         ],
         plugins: [
