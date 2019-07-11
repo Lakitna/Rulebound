@@ -57,14 +57,17 @@ export class Law {
 
         this.handler = {
             enforce: [
+                // eslint-disable-next-line no-shadow-restricted-names
                 function undefined() {
                     throw new LawError(this, 'Law is undefined');
                 },
             ],
             pass: [
+                // eslint-disable-next-line no-shadow-restricted-names
                 function undefined() { return; },
             ],
             fail: [
+                // eslint-disable-next-line no-shadow-restricted-names
                 function undefined(_, result) {
                     this.throw(result);
                 },
@@ -273,7 +276,7 @@ export class Law {
                 result = [];
                 for (const fn of this.handler.enforce) {
                     result.push(await fn.call(this, ...input));
-                };
+                }
             }
             catch (error) {
                 result = error;
@@ -367,38 +370,33 @@ export class Law {
             failResults.push(results);
         }
         else {
-            failResults = results.filter((r:any) => r !== true);
+            failResults = results.filter((r: any) => r !== true);
         }
 
         if (failResults.length === 0) {
             this.log.debug(`Law passed. Rewarding`);
-
-            try {
-                for (const fn of this.handler.pass) {
-                    await fn.call(this, input);
-                }
-            }
-            catch (error) {
-                if (error instanceof LawError) {
-                    throw error;
-                }
-                this.throw(error.message);
-            }
+            await this.raiseVoidEvent('pass', input);
         }
         else {
             this.log.debug(`Law failed. Punishing`);
+            await this.raiseVoidEvent('fail', input, results);
+        }
+    }
 
-            try {
-                for (const fn of this.handler.fail) {
-                    await fn.call(this, input, results);
-                }
+    /**
+     * Raise void event and handle any errors
+     */
+    private async raiseVoidEvent(event: string, ...params: any) {
+        try {
+            for (const fn of this.handler[event]) {
+                await fn.call(this, ...params);
             }
-            catch (error) {
-                if (error instanceof LawError) {
-                    throw error;
-                }
-                this.throw(error.message);
+        }
+        catch (error) {
+            if (error instanceof LawError) {
+                throw error;
             }
+            this.throw(error.message);
         }
     }
 }
