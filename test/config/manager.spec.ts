@@ -59,51 +59,51 @@ describe('The class ConfigManager', function() {
         it('re-parses the law configs', function() {
             this.manager.set({
                 laws: {
-                    'foo-bar': { a: 'b' },
-                    'foo-*': { b: 'c' },
+                    'foo/bar': { a: 'b' },
+                    'foo/*': { b: 'c' },
                 },
             });
 
             expect(this.manager.laws[0].b).to.equal('c');
-            expect(this.manager.laws[0]._name).to.equal('foo-*');
+            expect(this.manager.laws[0]._name).to.equal('foo/*');
 
             expect(this.manager.laws[1].a).to.equal('b');
             expect(this.manager.laws[1].b).to.equal('c');
-            expect(this.manager.laws[1]._name).to.equal('foo-bar');
+            expect(this.manager.laws[1]._name).to.equal('foo/bar');
         });
     });
 
     describe('get', function() {
         beforeEach(function() {
             const config = lawbookConfigDefault;
-            config.laws['bar-*'] = { bar: 2 } as any;
-            config.laws['foo-bar'] = { bar: 4 } as any;
-            config.laws['foo-bar-*'] = { bar: 8 } as any;
-            config.laws['foo-bar-fizz-buzz'] = { bar: 16 } as any;
+            config.laws['bar/**'] = { bar: 2 } as any;
+            config.laws['foo/bar'] = { bar: 4 } as any;
+            config.laws['foo/bar/**'] = { bar: 8 } as any;
+            config.laws['foo/bar/fizz/buzz'] = { bar: 16 } as any;
 
             this.manager = new ConfigManager(config);
         });
 
         it('gets the config of a specific law with its own config', function() {
-            const config = this.manager.get('foo-bar');
+            const config = this.manager.get('foo/bar');
             expect(config.bar).to.equal(4);
-            expect(config._name).to.equal('foo-bar');
+            expect(config._name).to.equal('foo/bar');
         });
 
         it('gets the config of a specific law with a shared config', function() {
-            const config = this.manager.get('bar-fizz-buzz');
+            const config = this.manager.get('bar/fizz/buzz');
             expect(config.bar).to.equal(2);
-            expect(config._name).to.equal('bar-*');
+            expect(config._name).to.equal('bar/**');
         });
 
         it('gets the most specific config available', function() {
-            const config = this.manager.get('foo-bar-fizz-buzz');
+            const config = this.manager.get('foo/bar/fizz/buzz');
             expect(config.bar).to.equal(16);
-            expect(config._name).to.equal('foo-bar-fizz-buzz');
+            expect(config._name).to.equal('foo/bar/fizz/buzz');
         });
 
         it('gets an empty config where there is none available', function() {
-            const config = this.manager.get('lorum-ipsum');
+            const config = this.manager.get('lorum/ipsum');
             expect(config).to.deep.equal({
                 _name: '*',
                 _specificity: 0,
@@ -118,17 +118,17 @@ describe('The class ConfigManager', function() {
 
         it('sorts an array of objects by a delimited key string', function() {
             const unordered = [
-                { key: 'somewhat-specific' },
+                { key: 'somewhat/specific' },
                 { key: 'unspecific' },
-                { key: 'actually-quite-specific' },
-                { key: 'somewhat-specific' },
+                { key: 'actually/quite/specific' },
+                { key: 'somewhat/specific' },
             ];
 
             const expectedOrder = [
                 'unspecific',
-                'somewhat-specific',
-                'somewhat-specific',
-                'actually-quite-specific',
+                'somewhat/specific',
+                'somewhat/specific',
+                'actually/quite/specific',
             ];
 
             const sorted = this.manager._sortBySpecificity(unordered, 'key');
@@ -165,9 +165,9 @@ describe('The class ConfigManager', function() {
             const config = this.manager.parse({
                 _laws: [],
                 laws: {
-                    'foo-*': { bar: true },
-                    'foo-bar': { fizz: 12 },
-                    'foo-buzz': { buzz: 'lorum' },
+                    'foo/*': { bar: true },
+                    'foo/bar': { fizz: 12 },
+                    'foo/buzz': { buzz: 'lorum' },
                 },
             });
 
@@ -175,19 +175,19 @@ describe('The class ConfigManager', function() {
             expect(config._laws).to.be.lengthOf(3);
             expect(config._laws[0]).to.deep.equal({
                 bar: true,
-                _name: 'foo-*',
+                _name: 'foo/*',
                 _specificity: 1,
             });
             expect(config._laws[1]).to.deep.equal({
                 bar: true,
                 fizz: 12,
-                _name: 'foo-bar',
+                _name: 'foo/bar',
                 _specificity: 2,
             });
             expect(config._laws[2]).to.deep.equal({
                 bar: true,
                 buzz: 'lorum',
-                _name: 'foo-buzz',
+                _name: 'foo/buzz',
                 _specificity: 2,
             });
         });
@@ -200,7 +200,7 @@ describe('The class ConfigManager', function() {
                     existing: 'val',
                     overwritten: false,
                 }, {
-                    _name: 'foo-bar',
+                    _name: 'foo/bar',
                     _specificity: 2,
                 }],
                 laws: {
@@ -218,7 +218,7 @@ describe('The class ConfigManager', function() {
                 bar: true,
             });
             expect(config._laws[1]).to.deep.equal({
-                _name: 'foo-bar',
+                _name: 'foo/bar',
                 _specificity: 2,
             });
         });
@@ -226,17 +226,17 @@ describe('The class ConfigManager', function() {
         it('updates the config of a multiple existing laws', function() {
             const config = this.manager.parse({
                 _laws: [{
-                    _name: 'foo-buzz',
+                    _name: 'foo/buzz',
                     _specificity: 2,
                 }, {
-                    _name: 'foo-bar',
+                    _name: 'foo/bar',
                     _specificity: 2,
                 }, {
                     _name: 'fizz',
                     _specificity: 1,
                 }],
                 laws: {
-                    'foo-*': { overwritten: true },
+                    'foo/*': { overwritten: true },
                 },
             });
 
@@ -247,17 +247,17 @@ describe('The class ConfigManager', function() {
                 _specificity: 1,
             });
             expect(config._laws[1]).to.deep.equal({
-                _name: 'foo-*',
+                _name: 'foo/*',
                 _specificity: 1,
                 overwritten: true,
             });
             expect(config._laws[2]).to.deep.equal({
-                _name: 'foo-buzz',
+                _name: 'foo/buzz',
                 _specificity: 2,
                 overwritten: true,
             });
             expect(config._laws[3]).to.deep.equal({
-                _name: 'foo-bar',
+                _name: 'foo/bar',
                 _specificity: 2,
                 overwritten: true,
             });

@@ -8,7 +8,6 @@ describe('Util functions', function() {
             expect(specificity('HelloWorld'), 'HelloWorld').to.equal(1);
             expect(specificity('Hello World'), 'Hello World').to.equal(2);
             expect(specificity(' '), ' ').to.equal(2);
-            expect(specificity('--'), '--').to.equal(3);
             expect(specificity('@'), '@').to.equal(2);
             expect(specificity('#'), '#').to.equal(2);
             expect(specificity('$'), '$').to.equal(2);
@@ -32,13 +31,13 @@ describe('Util functions', function() {
         });
 
         it('does not count a delimiter directly followed by a `*` wildcard', function() {
-            expect(specificity('foo-*')).to.equal(1);
-            expect(specificity('foo-*-bar')).to.equal(2);
+            expect(specificity('foo/*')).to.equal(1);
+            expect(specificity('foo/*/bar')).to.equal(2);
         });
 
         it('counts a delimiter directly followed by a `?` wildcard', function() {
-            expect(specificity('foo-?')).to.equal(2);
-            expect(specificity('foo-?-bar')).to.equal(3);
+            expect(specificity('foo/?')).to.equal(2);
+            expect(specificity('foo/?/bar')).to.equal(3);
         });
     });
 });

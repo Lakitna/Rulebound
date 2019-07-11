@@ -68,7 +68,7 @@ describe('The class Lawbook', function() {
         });
 
         it('throws an error when the law name is a Glob pattern', function() {
-            expect(this.lawBook.add.bind(this.lawBook, 'foo-*'))
+            expect(this.lawBook.add.bind(this.lawBook, 'foo/*'))
                 .to.throw('Can\'t add a law with a Glob pattern for its name');
         });
 
@@ -225,7 +225,7 @@ describe('The class Lawbook', function() {
         it('enforces all laws in ascending order of specificity', async function() {
             let order = 0;
 
-            this.lawBook.add('fizz-bar-buzz')
+            this.lawBook.add('fizz/bar/buzz')
                 .define(() => {
                     order++;
                     expect(order).to.equal(3);
@@ -239,7 +239,7 @@ describe('The class Lawbook', function() {
                     return true;
                 });
 
-            this.lawBook.add('fizz-buzz')
+            this.lawBook.add('fizz/buzz')
                 .define(() => {
                     order++;
                     expect(order).to.equal(2);
@@ -247,7 +247,7 @@ describe('The class Lawbook', function() {
                 });
 
 
-            await this.lawBook.enforce('fizz*');
+            await this.lawBook.enforce('fizz/**');
             expect(order).to.equal(3);
         });
     });
