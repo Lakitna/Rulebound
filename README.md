@@ -2,11 +2,32 @@
 
 A lightweight & flexible framework for rule based testing.
 
+- [Lawful](#lawful)
+  - [Why](#why)
+  - [Getting started](#getting-started)
+  - [Writing laws](#writing-laws)
+    - [Name _{string}_](#name-string)
+    - [Configuration _{object}_](#configuration-object)
+    - [Description _{string}_](#description-string)
+    - [Alias _{string}_](#alias-string)
+    - [Definition _{function}_](#definition-function)
+      - [Function arguments](#function-arguments)
+      - [Breaking a law](#breaking-a-law)
+      - [Upholding the law](#upholding-the-law)
+    - [Punishment _{function}_](#punishment-function)
+      - [Function arguments](#function-arguments-1)
+    - [Reward _{function}_](#reward-function)
+      - [Function arguments](#function-arguments-2)
+
 ## Why
+
+Because rule-based testing is awesome!
+
+// TODO: Details
 
 ## Getting started
 
-First install Lawful
+First add Lawful to your project
 
 ```shell
 npm install lawful --save-dev
@@ -28,7 +49,7 @@ import { Lawbook } from 'lawful';
 const lawbook = new Lawbook();
 ```
 
-Now add your first law
+Now add and execute your first law.
 
 ```javascript
 import { Lawbook } from 'lawful';
@@ -40,5 +61,133 @@ lawbook.add('is-divisible')
         return (number % factor) === 0;
     });
 
-await lawbook.enforce('is-devisible', 21, 7);
+await lawbook.enforce('is-divisible', 21, 7);
 ```
+
+## Writing laws
+
+A law consists of the following
+
+### Name _{string}_
+
+```typescript
+new Law('string/max-length');
+```
+
+The name of the law MUST be a unique identifier without any whitespace.
+
+It SHOULD be a human readable string. Law names SHOULD use `/` and `-` as separators but MAY also use `_`, `@` and `|`.
+
+### Configuration _{object}_
+
+```typescript
+new Law('string/max-length', {
+    maximum: 12,
+});
+```
+
+A law MAY have law-specific configuration. The default configuration can be defined like above. The user can overwrite this configuration via the Lawful configuration file.
+
+The parsed configuration can be accessed with `this.config` in the definition, punishment, and reward callback functions.
+
+### Description _{string}_
+
+```typescript
+law.describe(`
+    This is a description. Any IDE formatting whitespace is stripped.
+`);
+```
+
+A description SHOULD be added to the law so humans know what the purpose of that law is. Putting some effort in this will make things a lot simpler for someone who has not written the law.
+
+### Alias _{string}_
+
+```typescript
+law.alias('some-law-name');
+```
+
+A law MAY have an alias. The provided string MUST be the name of another law. When a law has an alias set it SHOULD NOT have a definition, punishment, or reward. When enforcing the law with alias set the definitions, punishments, and rewards of the aliased law will be used.
+
+This allows you to use the same law in different name spaces.
+
+### Definition _{function}_
+
+```typescript
+// Semantic syntax
+law.define(function(inputValue) {
+    return true;
+});
+```
+
+```typescript
+// Event based syntax
+law.on('enforce', function(inputValue) {
+    return true;
+});
+```
+
+A law MUST have a definition. It's the part that is used to enforce it. A law MAY have multiple definitions. A law can be defined with two distinct syntaxes (as above). There is no technical difference between these syntaxes.
+
+#### Function arguments
+
+The arguments passed to the callback function are the same as passed to the `enforce` function.
+
+#### Breaking a law
+
+A law is considered broken when the definition:
+
+- Throws an error
+- Does NOT return the boolean value `true`
+
+#### Upholding the law
+
+A law is considered uphold when the definition returns the boolean value `true`.
+
+### Punishment _{function}_
+
+```typescript
+law.punishment(function(input, result) {
+    throw new Error('Something bad happened');
+});
+```
+
+```typescript
+law.on('fail', function(input, result) {
+    throw new Error('Something bad happened');
+});
+```
+
+A law MAY have a punishment. When a law is broken the defined punishments are automatically executed. When no punishment is provided the default punishment will be used. A punishment MAY have multiple definitions. A punishment can be defined with two distinct syntaxes (as above). There is no technical difference between these syntaxes.
+
+#### Function arguments
+
+The following arguments are passed to the callback function:
+
+| name | type | description|
+|---------|---------|----------------|
+| `input` | `any[]` | An array of the arguments passed to the `enforce` function |
+| `result` | `any[] | Error` | An array containing the results of all `define` functions **or** a thrown error |
+
+### Reward _{function}_
+
+```typescript
+law.reward(function(input, result) {
+    console.log('Yay, the law is uphold!');
+});
+```
+
+```typescript
+law.on('pass', function(input, result) {
+    console.log('Yay, the law is uphold!');
+});
+```
+
+A law MAY have a reward. When a law is uphold the defined rewards are automatically executed. When no reward is provided nothing will happen. A reward MAY have multiple definitions. A reward can be defined with two distinct syntaxes (as above). There is no technical difference between these syntaxes.
+
+#### Function arguments
+
+The following arguments are passed to the callback function:
+
+| name | type | description|
+|---------|---------|----------------|
+| `input` | `any[]` | An array of the arguments passed to the `enforce` function |

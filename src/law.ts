@@ -42,6 +42,9 @@ export class Law {
     };
 
     public constructor(name: string, lawbook: Lawbook) {
+        if (name.match(/\s/) !== null) {
+            throw new Error('Law name must not include any whitespace');
+        }
         this.name = name;
         this._alias = null;
         this.lawbook = lawbook;
