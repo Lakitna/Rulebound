@@ -70,3 +70,32 @@ lawbook
 
 lawbook.enforce(namePattern: globString, ...input: any[]);
 ```
+
+### Embedded tests
+
+Do we maybe want to embed tests?
+
+```javascript
+lawbook
+    .define((...input: any) => {
+    })
+    .test(function(law) {
+        it('should work as intended', function() {
+            law.enforce('foo');
+        })
+    })
+
+    .test('should pass a valid string', [ 'foo' ])
+
+    .test('should pass a valid string', [ 'foo' ],
+        function(result) {
+            expect(result).to.be.true;
+        })
+
+    .test('should throw on a number', [ 123 ],
+        function(result) {
+            expect(result).to.be.instanceOf(Error);
+            expect(result.msg).to.equal(`That's not a string!`);
+        })
+    ;
+```
