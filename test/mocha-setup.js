@@ -1,3 +1,8 @@
+const chai = require('chai');
+chai.use(require('chai-as-promised'));
+chai.use(require('chai-sinon'));
+chai.use(require('chai-string'));
+
 require('ts-node')
     .register({
         'include': [

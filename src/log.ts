@@ -5,9 +5,15 @@ import { TransformableInfo } from 'logform';
 
 const levelMarkers = {
     debug: () => c.grey('»'),
-    info: () => c.blueBright('i'),
-    warn: () => '\n' + c.bgYellow.black(` WARN `),
-    error: () => '\n' + c.bgRed.black(` ERROR `),
+    info: () => {
+        return { color: c.bgBlue.white, text: ' i '};
+    },
+    warn: () => {
+        return { color: c.bgYellow.black, text: ' WARN '};
+    },
+    error: () => {
+        return { color: c.bgRed.white.bold, text: ' ERROR '};
+    },
 };
 
 
@@ -28,11 +34,18 @@ function fullWidthLine(left: string, right: string) {
 }
 
 function logFormat(info: TransformableInfo) {
-    const logLine = `${levelMarkers[info.level]()} ${info.message}`;
-    if (info.law) {
-        return fullWidthLine(logLine, c.grey(`${info.law}`));
+    const levelMarker = levelMarkers[info.level]();
+    if (info.level === 'debug') {
+        if (info.law) {
+            return fullWidthLine(`${levelMarker} ${info.message}`, c.grey(`${info.law}`));
+        }
+        return `${levelMarker} ${info.message}`;
     }
-    return logLine;
+
+    const indent = ' '.repeat(levelMarker.text.length - 1) + levelMarker.color(' ');
+    const indentedMessage = info.message.replace(/\n/g, `\n${indent} `);
+
+    return `\n${levelMarker.color(levelMarker.text)} ${indentedMessage}`;
 }
 
 const logger = createLogger({

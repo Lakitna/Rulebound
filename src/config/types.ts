@@ -26,7 +26,11 @@ export interface LawConfig {
     _specificity: number;
 }
 
-export type severityLevel = 'error'|'warn'|'info'|null;
+export type severityLevel = string | {
+    level: 'error'|'warn'|'info'|null;
+    description: boolean;
+    input: boolean;
+};
 
 export interface LawbookConfig {
     /**
@@ -39,24 +43,9 @@ export interface LawbookConfig {
      * Describe the effect a failure has in a given severity category
      */
     severity: {
-        /**
-         * @default error
-         */
         must: severityLevel;
-
-        /**
-         * @default warn
-         */
         should: severityLevel;
-
-        /**
-         * @default info
-         */
         may: severityLevel;
-
-        /**
-         * @default info
-         */
         optional: severityLevel;
     };
 

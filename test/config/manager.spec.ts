@@ -1,3 +1,4 @@
+import { cloneDeep } from 'lodash';
 import { expect } from 'chai';
 import { lawbookConfigDefault } from '../../src/config/defaults';
 import { ConfigManager } from '../../src/config/manager';
@@ -33,10 +34,26 @@ describe('The class ConfigManager', function() {
                 expect(this.manager.generic).to.deep.equal({
                     verboseness: 'info',
                     severity: {
-                        must: 'error',
-                        should: 'warn',
-                        may: 'info',
-                        optional: 'info',
+                        must: {
+                            level: 'error',
+                            input: true,
+                            description: true,
+                        },
+                        should: {
+                            level: 'warn',
+                            input: false,
+                            description: true,
+                        },
+                        may: {
+                            level: 'info',
+                            input: false,
+                            description: false,
+                        },
+                        optional: {
+                            level: 'info',
+                            input: false,
+                            description: false,
+                        },
                     },
                 });
             });
@@ -75,7 +92,7 @@ describe('The class ConfigManager', function() {
 
     describe('get', function() {
         beforeEach(function() {
-            const config = lawbookConfigDefault;
+            const config = cloneDeep(lawbookConfigDefault);
             config.laws['bar/**'] = { bar: 2 } as any;
             config.laws['foo/bar'] = { bar: 4 } as any;
             config.laws['foo/bar/**'] = { bar: 8 } as any;
