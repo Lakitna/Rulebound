@@ -1,10 +1,11 @@
-import { omitBy, defaultsDeep, keys, isError, has, isString } from 'lodash';
+import { omitBy, defaultsDeep, keys, isError, has, isString, isUndefined } from 'lodash';
 
 import { logger, Logger } from './log';
 import { LawError, ConfigError } from './errors';
 import { LawConfig } from './config/types';
 import { Lawbook } from './lawbook';
 import { specificity } from './utils';
+import { isFunction } from 'util';
 
 
 /**
@@ -37,7 +38,7 @@ export class Law {
     private handler: {
         enforce: { (this: Law, ...input: any): boolean|any }[];
         pass: { (this: Law, input: any[]): void }[];
-        fail: { (this: Law, input: any[], result: any[]|Error): void }[];
+        fail: { (this: Law, input: any[], result: any|Error): void }[];
     };
 
     public constructor(name: string, lawbook: Lawbook) {
@@ -59,7 +60,7 @@ export class Law {
             enforce: [
                 // eslint-disable-next-line no-shadow-restricted-names
                 function undefined() {
-                    throw new LawError(this, 'Law is undefined');
+                    throw new LawError(this, [], 'Law is undefined');
                 },
             ],
             pass: [
@@ -69,7 +70,10 @@ export class Law {
             fail: [
                 // eslint-disable-next-line no-shadow-restricted-names
                 function undefined(_, result) {
-                    this.throw(result);
+                    if (isError(result)) {
+                        throw result;
+                    }
+                    throw new Error(result);
                 },
             ],
         }
@@ -108,7 +112,7 @@ export class Law {
                     `['${keys(lawbookConfig.severity).join(`', '`)}', null]`);
             }
 
-            this._config._throw = lawbookConfig.severity[this._config.severity];
+            this._config._throw = lawbookConfig.severity[this._config.severity].level;
         }
     }
 
@@ -137,7 +141,7 @@ export class Law {
         Object.defineProperty(fn, 'name', { value: event });
 
         if (event !== 'enforce' && event !== 'fail' && event !== 'pass') {
-            throw new LawError(this,
+            throw new LawError(this, [],
                 `You tried to subscribe to unkown event '${event}'`);
         }
 
@@ -210,6 +214,11 @@ export class Law {
      * `);
      */
     public describe(description: string) {
+        if (isFunction(description)) {
+            throw new LawError(this, [], `Description must be a string. `
+                + `Did you mean to call '.define(fn)' instead?`);
+        }
+
         this.description = description
             .trim()
             // Get rid of whitespace at the start of each line
@@ -294,12 +303,15 @@ export class Law {
      * @example
      * Law.throw('An error has occured');
      */
-    public throw(...message: (any|Error)[]) {
+    public throw(input: any, ...message: (any|Error)[]) {
         this.log.debug(`Throwing error`);
 
         message = message.map((partialMessage: any) => {
             if (isError(partialMessage)) {
                 return partialMessage.message;
+            }
+            else if (isUndefined(partialMessage)) {
+                return '';
             }
             else if (!isString(partialMessage)) {
                 return partialMessage.toString();
@@ -307,11 +319,13 @@ export class Law {
             return partialMessage;
         });
 
-        const lawError = new LawError(this, ...message as string[]);
+        const lawError = new LawError(this, input, ...message as string[]);
 
         // Always throw when called as an aliased law so we can handle the
         // error in the alias.
         if (this._config._throw === 'error' || this._config._asAlias) {
+            // TODO: Find a way to log this in it's pretty form
+            // this.log.error(lawError.toString());
             throw lawError;
         }
         if (this._config._throw === 'warn') {
@@ -332,7 +346,7 @@ export class Law {
         this.log.debug(`Enforcing via alias ${this._alias}`);
 
         if (!this.lawbook.has(aliasName)) {
-            throw new Error(`Could not find alias named '${aliasName}'`);
+            throw new LawError(this, input, `Could not find alias named '${aliasName}'`);
         }
 
         const aliased = this.lawbook.filter(aliasName);
@@ -351,8 +365,8 @@ export class Law {
         }
         catch (error) {
             this.log.debug(`Alias threw error. Punishing in own name`);
-            this.description = error.law.description;
-            throw new Error(error._message);
+            this.description = error.description;
+            throw new Error(error.message);
         }
         finally {
             aliased.forEach((law) => {
@@ -386,17 +400,17 @@ export class Law {
     /**
      * Raise void event and handle any errors
      */
-    private async raiseVoidEvent(event: string, ...params: any) {
+    private async raiseVoidEvent(event: string, ...parameters: any) {
         try {
             for (const fn of this.handler[event]) {
-                await fn.call(this, ...params);
+                await fn.call(this, ...parameters);
             }
         }
         catch (error) {
             if (error instanceof LawError) {
                 throw error;
             }
-            this.throw(error.message);
+            this.throw(parameters[0], error.message);
         }
     }
 }

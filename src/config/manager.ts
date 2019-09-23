@@ -1,4 +1,4 @@
-import { defaultsDeep, omit, isUndefined } from 'lodash';
+import { defaultsDeep, omit, isUndefined, isObject } from 'lodash';
 import * as micromatch from 'micromatch';
 import isGlob from 'is-glob';
 
@@ -72,6 +72,8 @@ export class ConfigManager {
 
         this.log.debug('Unparsed configuration found. Parsing...');
 
+        this._parseSeverity(config);
+
         // Map from `laws` to `_laws`
         Object.entries(config.laws)
             .map((law) => {
@@ -128,5 +130,22 @@ export class ConfigManager {
 
         return sorted
             .sort((a, b) => a._specificity! - b._specificity!);
+    }
+
+
+    /**
+     * Allow severity levels to be specified as both strings and objects
+     */
+    private _parseSeverity(config: LawbookConfig) {
+        for (const level in config.severity) {
+            if (isObject(config.severity[level])) {
+                continue;
+            }
+
+            const object = {
+                level: config.severity[level],
+            };
+            config.severity[level] = defaultsDeep(object, lawbookConfigDefault.severity[level]);
+        }
     }
 }

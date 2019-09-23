@@ -1,7 +1,5 @@
 import * as sinon from 'sinon';
-import { use, expect } from 'chai';
-import asPromised from 'chai-as-promised';
-use(asPromised);
+import { expect } from 'chai';
 
 import { Law } from '../src/law';
 import { Lawbook } from '../src/lawbook';
@@ -142,7 +140,7 @@ describe('The class Law', function() {
             expect(this.law.description).to.equal('FirstLine\nSecondLine')
         });
 
-        it('includes the description when an error is thrown', async function() {
+        it('includes the description in the error', async function() {
             this.law
                 .define(() => false)
                 .describe('awesome description');
@@ -151,7 +149,7 @@ describe('The class Law', function() {
                 await this.law.enforce();
             }
             catch (error) {
-                expect(error.message).to.include('awesome description');
+                expect(error.description).to.equal('awesome description');
             }
         });
     });
@@ -165,15 +163,15 @@ describe('The class Law', function() {
             expect(this.law.handler.fail).to.be.lengthOf(1);
             expect(this.law.handler.fail[0].name).to.equal('undefined');
 
-            expect(this.law.handler.fail[0].bind(this.law, 'bar'))
-                .to.throw('');
+            expect(this.law.handler.fail[0].bind(this.law, ['input'], 'foo'))
+                .to.throw('foo');
         });
 
-        it('throws when called with error before its set', function() {
+        it('throws when called before its set with error', async function() {
             expect(this.law.handler.fail).to.be.lengthOf(1);
             expect(this.law.handler.fail[0].name).to.equal('undefined');
 
-            expect(this.law.handler.fail[0].bind(this.law, 'bar', new Error('foo')))
+            expect(this.law.handler.fail[0].bind(this.law, ['input'], new Error('foo')))
                 .to.throw('foo');
         });
 
@@ -477,7 +475,7 @@ describe('The class Law', function() {
 
                 try {
                     await this.lawbook.enforce('foo');
-                    throw new Error('Expected error to be thrown')
+                    throw new Error('Expected error to be thrown');
                 }
                 catch (error) {
                     expect(error.law.name).to.equal('foo');
@@ -490,7 +488,7 @@ describe('The class Law', function() {
 
                 try {
                     await this.lawbook.enforce('foo');
-                    throw new Error('Expected error to be thrown')
+                    throw new Error('Expected error to be thrown');
                 }
                 catch (error) {
                     expect(error.message).to.equal(`Could not find alias named 'bar'`);
@@ -511,7 +509,7 @@ describe('The class Law', function() {
 
                     try {
                         await this.lawbook.enforce('foo');
-                        throw new Error('Expected error to be thrown')
+                        throw new Error('Expected error to be thrown');
                     }
                     catch (error) {
                         expect(error.law.name).to.equal('foo');
@@ -525,7 +523,7 @@ describe('The class Law', function() {
 
                     try {
                         await this.lawbook.enforce('foo');
-                        throw new Error('Expected error to be thrown')
+                        throw new Error('Expected error to be thrown');
                     }
                     catch (error) {
                         expect(error.law.name).to.equal('foo');
@@ -644,7 +642,7 @@ describe('The class Law', function() {
         it('throws an error when the option throw=error', function() {
             this.law.config = { _throw: 'error' };
 
-            expect(this.law.throw.bind(this.law, 'bar'))
+            expect(this.law.throw.bind(this.law, undefined, 'bar'))
                 .to.throw('bar');
         });
 
@@ -652,12 +650,12 @@ describe('The class Law', function() {
             const logStub = sinon.stub(this.law.log, 'warn');
 
             this.law.config = { _throw: 'warn' };
-            this.law.throw('bar');
+            this.law.throw(undefined, 'bar');
 
             expect(logStub.callCount).to.equal(1);
-            expect(c.stripColor(logStub.getCall(0).lastArg)).to.equal('MUST bar');
+            expect(c.stripColor(logStub.getCall(0).lastArg))
+                .to.endWith('bar');
 
-            logStub.restore();
             done();
         });
 
@@ -665,10 +663,11 @@ describe('The class Law', function() {
             const logStub = sinon.stub(this.law.log, 'info');
 
             this.law.config = { _throw: 'info' };
-            this.law.throw('bar');
+            this.law.throw(undefined, 'bar');
 
             expect(logStub.callCount).to.equal(1);
-            expect(c.stripColor(logStub.getCall(0).lastArg)).to.equal('MUST bar');
+            expect(c.stripColor(logStub.getCall(0).lastArg))
+                .to.endWith('bar');
 
             done();
         });

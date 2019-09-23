@@ -54,6 +54,8 @@ module.exports = {
                 'lodash/prefer-noop': 'off',
                 'lodash/prefer-constant': 'off',
 
+                'unicorn/consistent-function-scoping': 'off',
+
                 'chai-expect/missing-assertion': 'error',
                 'chai-expect/no-inner-compare': 'error',
                 'chai-expect/terminating-properties': 'error',
