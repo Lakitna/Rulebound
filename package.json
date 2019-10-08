@@ -1,6 +1,6 @@
 {
   "name": "lawful",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "A simple rule based testing framework",
   "license": "MIT",
   "main": "dist/lawful.js",
