@@ -7,7 +7,9 @@ export interface LawConfig {
      * @default must
      */
     severity: 'must'|'should'|'may'|'optional'|'omit';
+}
 
+export interface ParsedLawConfig extends LawConfig {
     /**
      * Define the behaviour of a failure.
      * @private
@@ -66,10 +68,12 @@ export interface LawbookConfig {
     laws: {
         [lawName: string]: LawConfig;
     };
+}
 
+export interface ParsedLawbookConfig extends LawbookConfig {
     /**
      * @private
      * List of laws and their parsed configurations.
      */
-    _laws: LawConfig[];
+    _laws: ParsedLawConfig[];
 }

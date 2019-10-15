@@ -9,5 +9,4 @@ export const lawbookConfigDefault: LawbookConfig = {
         optional: 'info',
     },
     laws: {},
-    _laws: [],
 };

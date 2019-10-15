@@ -7,7 +7,13 @@ describe('The class ConfigManager', function() {
     it('initializes', function() {
         const manager = new ConfigManager();
 
-        expect(manager.config).to.deep.equal(lawbookConfigDefault);
+        expect(manager.config).to.deep.equal(Object.assign(
+            lawbookConfigDefault,
+            {
+                // Fields added by parsing
+                _laws: [],
+            }
+        ));
         expect(manager.full).to.deep.equal(manager.config);
     });
 

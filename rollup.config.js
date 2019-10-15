@@ -12,7 +12,6 @@ const config = [
             {
                 file: pkg.main, format: 'cjs',
                 exports: 'named',
-                outro: 'module.exports = Lawbook;',
             },
             { file: pkg.module, format: 'es' },
         ],
