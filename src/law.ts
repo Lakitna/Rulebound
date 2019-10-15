@@ -108,7 +108,7 @@ export class Law {
                     `['${keys(lawbookConfig.severity).join(`', '`)}', null]`);
             }
 
-            this._config._throw = lawbookConfig.severity[this._config.severity].level;
+            this._config._throw = lawbookConfig.severity[this._config.severity];
         }
     }
 
