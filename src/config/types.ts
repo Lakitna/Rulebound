@@ -2,11 +2,11 @@ export interface LawConfig {
     [config: string]: any;
 
     /**
-     * Define the severity of the law.
+     * Define the required of the law.
      * note: `omit` will always result in the law not being enforced
      * @default must
      */
-    severity: 'must'|'should'|'may'|'optional'|'omit';
+    required: 'must'|'should'|'may'|'optional'|'omit';
 }
 
 export interface ParsedLawConfig extends LawConfig {

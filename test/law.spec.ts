@@ -23,7 +23,7 @@ describe('The class Law', function() {
 
         it('initializes with defaults', function() {
             expect(this.law._config).to.deep.equal({
-                severity: 'must',
+                required: 'must',
                 _name: '*',
                 _throw: 'error',
                 _specificity: 0,
@@ -32,7 +32,7 @@ describe('The class Law', function() {
 
         it('sets the config', function() {
             const config = {
-                severity: null,
+                required: null,
                 foo: 'bar',
             };
 
@@ -51,7 +51,7 @@ describe('The class Law', function() {
             };
 
             expect(this.law.config).to.deep.equal({
-                severity: 'must',
+                required: 'must',
                 foo: 'bar',
                 fizz: 'buzz',
             });
@@ -68,8 +68,8 @@ describe('The class Law', function() {
             };
 
             expect(() => {
-                this.law.config = { severity: 'unkown level' };
-            }).to.throw(`Found unkown severity 'unkown level' in the configuration for law 'foo'`);
+                this.law.config = { required: 'unkown level' };
+            }).to.throw(`Found unkown required level 'unkown level' in the configuration for law 'foo'`);
         });
     });
 
@@ -79,8 +79,8 @@ describe('The class Law', function() {
         });
 
         it('throws an error when called before its set', async function() {
-            expect(this.law.handler.enforce).to.be.lengthOf(1);
-            expect(this.law.handler.enforce[0].name).to.equal('undefined');
+            expect(this.law._handler.enforce).to.be.lengthOf(1);
+            expect(this.law._handler.enforce[0].name).to.equal('undefined');
 
             await expect(this.law.enforce())
                 .to.be.rejectedWith('Law is undefined');
@@ -91,8 +91,8 @@ describe('The class Law', function() {
 
             this.law.define(noop);
 
-            expect(this.law.handler.enforce).to.be.lengthOf(1);
-            expect(this.law.handler.enforce[0].name).to.equal('enforce');
+            expect(this.law._handler.enforce).to.be.lengthOf(1);
+            expect(this.law._handler.enforce[0].name).to.equal('enforce');
 
             await expect(this.law.enforce())
                 .to.be.fulfilled;
@@ -103,13 +103,13 @@ describe('The class Law', function() {
             this.law.define(() => true);
             this.law.define(() => true);
 
-            expect(this.law.handler.enforce).to.be.lengthOf(3);
-            for (const fn of this.law.handler.enforce) {
+            expect(this.law._handler.enforce).to.be.lengthOf(3);
+            for (const fn of this.law._handler.enforce) {
                 expect(fn.name).to.equal('enforce');
             }
-            expect(this.law.handler.enforce[0])
-                .to.not.equal(this.law.handler.enforce[1])
-                .to.not.equal(this.law.handler.enforce[2]);
+            expect(this.law._handler.enforce[0])
+                .to.not.equal(this.law._handler.enforce[1])
+                .to.not.equal(this.law._handler.enforce[2]);
         });
 
         it('is chainable', function() {
@@ -162,18 +162,18 @@ describe('The class Law', function() {
         });
 
         it('throws when called before its set with input', async function() {
-            expect(this.law.handler.fail).to.be.lengthOf(1);
-            expect(this.law.handler.fail[0].name).to.equal('undefined');
+            expect(this.law._handler.fail).to.be.lengthOf(1);
+            expect(this.law._handler.fail[0].name).to.equal('undefined');
 
-            expect(this.law.handler.fail[0].bind(this.law, 'bar'))
+            expect(this.law._handler.fail[0].bind(this.law, 'bar'))
                 .to.throw('');
         });
 
         it('throws when called with error before its set', function() {
-            expect(this.law.handler.fail).to.be.lengthOf(1);
-            expect(this.law.handler.fail[0].name).to.equal('undefined');
+            expect(this.law._handler.fail).to.be.lengthOf(1);
+            expect(this.law._handler.fail[0].name).to.equal('undefined');
 
-            expect(this.law.handler.fail[0].bind(this.law, 'bar', new Error('foo')))
+            expect(this.law._handler.fail[0].bind(this.law, 'bar', new Error('foo')))
                 .to.throw('foo');
         });
 
@@ -182,8 +182,8 @@ describe('The class Law', function() {
 
             this.law.punishment(noop);
 
-            expect(this.law.handler.fail).to.be.lengthOf(1);
-            expect(this.law.handler.fail[0].name).to.equal('fail');
+            expect(this.law._handler.fail).to.be.lengthOf(1);
+            expect(this.law._handler.fail[0].name).to.equal('fail');
         });
 
         it('takes multiple punishments', async function() {
@@ -191,13 +191,13 @@ describe('The class Law', function() {
             this.law.punishment(() => true);
             this.law.punishment(() => true);
 
-            expect(this.law.handler.fail).to.be.lengthOf(3);
-            for (const fn of this.law.handler.fail) {
+            expect(this.law._handler.fail).to.be.lengthOf(3);
+            for (const fn of this.law._handler.fail) {
                 expect(fn.name).to.equal('fail');
             }
-            expect(this.law.handler.fail[0])
-                .to.not.equal(this.law.handler.fail[1])
-                .to.not.equal(this.law.handler.fail[2]);
+            expect(this.law._handler.fail[0])
+                .to.not.equal(this.law._handler.fail[1])
+                .to.not.equal(this.law._handler.fail[2]);
         });
 
         it('is chainable', function() {
@@ -211,10 +211,10 @@ describe('The class Law', function() {
         });
 
         it('is a noop when called before its set', function() {
-            expect(this.law.handler.pass).to.be.lengthOf(1);
-            expect(this.law.handler.pass[0].name).to.equal('undefined');
+            expect(this.law._handler.pass).to.be.lengthOf(1);
+            expect(this.law._handler.pass[0].name).to.equal('undefined');
 
-            expect(this.law.handler.pass[0])
+            expect(this.law._handler.pass[0])
                 .to.not.throw();
         });
 
@@ -223,8 +223,8 @@ describe('The class Law', function() {
 
             this.law.reward(noop);
 
-            expect(this.law.handler.pass).to.be.lengthOf(1);
-            expect(this.law.handler.pass[0].name).to.equal('pass');
+            expect(this.law._handler.pass).to.be.lengthOf(1);
+            expect(this.law._handler.pass[0].name).to.equal('pass');
         });
 
         it('takes multiple rewards', async function() {
@@ -232,13 +232,13 @@ describe('The class Law', function() {
             this.law.reward(() => true);
             this.law.reward(() => true);
 
-            expect(this.law.handler.pass).to.be.lengthOf(3);
-            for (const fn of this.law.handler.pass) {
+            expect(this.law._handler.pass).to.be.lengthOf(3);
+            for (const fn of this.law._handler.pass) {
                 expect(fn.name).to.equal('pass');
             }
-            expect(this.law.handler.pass[0])
-                .to.not.equal(this.law.handler.pass[1])
-                .to.not.equal(this.law.handler.pass[2]);
+            expect(this.law._handler.pass[0])
+                .to.not.equal(this.law._handler.pass[1])
+                .to.not.equal(this.law._handler.pass[2]);
         });
 
         it('is chainable', function() {
@@ -649,7 +649,7 @@ describe('The class Law', function() {
         });
 
         it('logs an error when the options throw=warn', function(done) {
-            const logStub = sinon.stub(this.law.log, 'warn');
+            const logStub = sinon.stub(this.law._log, 'warn');
 
             this.law.config = { _throw: 'warn' };
             this.law.throw('bar');
@@ -662,7 +662,7 @@ describe('The class Law', function() {
         });
 
         it('logs when the options throw=log', function(done) {
-            const logStub = sinon.stub(this.law.log, 'info');
+            const logStub = sinon.stub(this.law._log, 'info');
 
             this.law.config = { _throw: 'info' };
             this.law.throw('bar');

@@ -4,7 +4,7 @@ import isGlob from 'is-glob';
 import cosmiconfig from 'cosmiconfig';
 
 import { logger, Logger } from '../log';
-import { lawbookConfigDefault } from './defaults';
+import { lawbookConfigDefault, lawConfigDefault } from './defaults';
 import { LawbookConfig, LawConfig, ParsedLawbookConfig, ParsedLawConfig } from './types';
 import { specificity } from '../utils';
 
@@ -50,10 +50,7 @@ export class ConfigManager {
      * Find the most specific config for a law
      */
     public get(lawName: string) {
-        let config: Partial<LawConfig> = {
-            _name: '*',
-            _specificity: 0,
-        };
+        let config = lawConfigDefault;
 
         this.config._laws.forEach((lawConfig) => {
             if (micromatch.isMatch(lawName, lawConfig._name)
@@ -124,7 +121,6 @@ export class ConfigManager {
 
     /**
      * Sort a list of objects by the specificity of the provided key
-     * @private
      */
     private _sortBySpecificity(targets: LawConfig[], patternKey: string) {
         const parsedTargets = targets as ParsedLawConfig[];

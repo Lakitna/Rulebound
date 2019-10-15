@@ -1,6 +1,6 @@
 import * as c from 'ansi-colors';
 import { Law } from '../law';
-import { severityLevel } from '../config/types';
+import { ParsedLawConfig } from '../config/types';
 
 export class LawError extends Error {
     /**
@@ -14,9 +14,9 @@ export class LawError extends Error {
     public _message: string;
 
     /**
-     * The severity with which the error was thrown
+     * The required level with which the error was thrown
      */
-    public severity: severityLevel;
+    public required: ParsedLawConfig['required'] | '';
 
     public constructor(law: Law, ...message: string[]) {
         const _message = message.join(' ');
@@ -28,12 +28,12 @@ export class LawError extends Error {
         super(message.join(' '));
 
         this.law = law;
-        this.severity = (this.law.config.severity || '').toUpperCase() as severityLevel;
-        this.name = `LawError | ${this.severity} ${this.law.name}`;
+        this.required = (this.law.config.required || '');
+        this.name = `LawError | ${this.required.toUpperCase()} ${this.law.name}`;
         this._message = _message;
     }
 
     public toString() {
-        return `${c.grey(this.severity!)} ${this._message}`;
+        return `${c.grey(this.required.toUpperCase())} ${this._message}`;
     }
 }
