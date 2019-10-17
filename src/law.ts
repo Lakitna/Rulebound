@@ -381,10 +381,10 @@ export class Law {
     /**
      * Raise void event and handle any errors
      */
-    private async raiseVoidEvent(event: string, ...params: any) {
+    private async raiseVoidEvent(event: string, ...parameters: any) {
         try {
             for (const fn of this._handler[event]) {
-                await fn.call(this, ...params);
+                await fn.call(this, ...parameters);
             }
         }
         catch (error) {
