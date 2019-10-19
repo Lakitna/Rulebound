@@ -136,12 +136,10 @@ export class Law {
                 `You tried to subscribe to unkown event '${event}'`);
         }
 
-        if (this._handler[event].length === 1) {
-            // Filter out default handler functions
-            // @ts-ignore
-            this._handler[event] = this._handler[event].filter((fn) => {
-                return !fn.name.startsWith('undefined');
-            });
+        // Delete default `undefined` handler function
+        const handlers = this._handler[event];
+        if (handlers.length === 1 && handlers[0].name.startsWith('undefined')) {
+            handlers.shift();
         }
 
         this._handler[event].push(fn);
