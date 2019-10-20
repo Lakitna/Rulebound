@@ -493,7 +493,7 @@ describe('The class Law', function() {
                     throw new Error('Expected error to be thrown')
                 }
                 catch (error) {
-                    expect(error.message).to.equal(`Could not find alias named 'bar'`);
+                    expect(error.message).to.equal(`Could not find alias law named 'bar'`);
                 }
             });
 

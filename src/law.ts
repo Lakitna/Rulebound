@@ -127,7 +127,7 @@ export class Law {
      * });
      */
     public on(event: 'enforce'|'fail'|'pass', fn: (this: Law, ...params: any) => any) {
-        this._log.debug(`on event ${event} defined`);
+        this._log.debug(`Handler for event '${event}' added`);
 
         Object.defineProperty(fn, 'name', { value: event });
 
@@ -214,8 +214,8 @@ export class Law {
 
     /**
      * When enforcing use another law(s) under the namespace of the current law.
-     * Any errors will be thrown under the currents laws name with the currents
-     * law required level.
+     * Any errors will be thrown under the currents laws name with required
+     * level of the current law.
      *
      * @example
      * Law.alias('another/law')
@@ -226,8 +226,10 @@ export class Law {
     public alias(globPattern: string) {
         // Ideally we would check for the existence of the aliased law
         // here, but at this point not all laws have been defined yet.
-        // Instead we'll check as a part of `.enforce()`
-        this._log.debug(`Set alias ${globPattern}`);
+        // Instead we'll check as a part of `.enforce()`.
+
+        // TODO: Find out if aliasses can be daisy chained
+        this._log.debug(`Alias set to ${globPattern}`);
         this._alias = globPattern;
         return this;
     }
@@ -248,7 +250,7 @@ export class Law {
             return this;
         }
 
-        this._log.debug(`Enforcing`);
+        this._log.debug(`Event triggered: 'enforce'`);
 
         let result = null;
         if (this._alias !== null) {
@@ -325,7 +327,7 @@ export class Law {
         this._log.debug(`Enforcing via alias ${this._alias}`);
 
         if (!this.lawbook.has(aliasName)) {
-            throw new Error(`Could not find alias named '${aliasName}'`);
+            throw new Error(`Could not find alias law named '${aliasName}'`);
         }
 
         const aliased = this.lawbook.filter(aliasName);
@@ -340,10 +342,10 @@ export class Law {
 
         try {
             await aliased.enforce(aliasName, ...input);
-            this._log.debug('Alias passed');
+            this._log.debug('Alias law uphold');
         }
         catch (error) {
-            this._log.debug(`Alias threw error. Punishing in own name`);
+            this._log.debug(`Alias law broken`);
             this.description = error.law.description;
             throw new Error(error._message);
         }
@@ -367,11 +369,11 @@ export class Law {
         }
 
         if (failResults.length === 0) {
-            this._log.debug(`Law passed. Rewarding`);
+            this._log.debug(`Law uphold`);
             await this.raiseVoidEvent('pass', input);
         }
         else {
-            this._log.debug(`Law failed. Punishing`);
+            this._log.debug(`Law broken`);
             await this.raiseVoidEvent('fail', input, results);
         }
     }
@@ -380,6 +382,8 @@ export class Law {
      * Raise void event and handle any errors
      */
     private async raiseVoidEvent(event: string, ...parameters: any) {
+        this._log.debug(`Event triggered: '${event}'`);
+
         try {
             for (const fn of this._handler[event]) {
                 await fn.call(this, ...parameters);
