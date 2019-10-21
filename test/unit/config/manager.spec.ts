@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import { lawbookConfigDefault, lawConfigDefault } from '../../src/config/defaults';
-import { ConfigManager } from '../../src/config/manager';
+import { lawbookConfigDefault, lawConfigDefault } from '../../../src/config/defaults';
+import { ConfigManager } from '../../../src/config/manager';
 
 
 describe('The class ConfigManager', function() {

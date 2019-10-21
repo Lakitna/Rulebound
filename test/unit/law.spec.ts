@@ -3,8 +3,8 @@ import { use, expect } from 'chai';
 import asPromised from 'chai-as-promised';
 use(asPromised);
 
-import { Law } from '../src/law';
-import { Lawbook } from '../src/lawbook';
+import { Law } from '../../src/law';
+import { Lawbook } from '../../src/lawbook';
 import c from 'ansi-colors';
 
 
