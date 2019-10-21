@@ -2,9 +2,10 @@ import { omitBy, defaultsDeep, keys, isError, has, isString } from 'lodash';
 
 import { logger, Logger } from './log';
 import { LawError, ConfigError } from './errors';
-import { LawConfig } from './config/types';
 import { Lawbook } from './lawbook';
 import { specificity } from './utils';
+import { LawConfig, ParsedLawConfig } from './config/types';
+import { lawConfigDefault } from './config/defaults';
 
 
 /**
@@ -32,9 +33,9 @@ export class Law {
     public specificity: number;
     public lawbook: Lawbook;
     private _alias: string | null;
-    private _config: LawConfig;
-    private log: Logger;
-    private handler: {
+    private _config: ParsedLawConfig;
+    private _log: Logger;
+    private _handler: {
         enforce: { (this: Law, ...input: any): boolean|any }[];
         pass: { (this: Law, input: any[]): void }[];
         fail: { (this: Law, input: any[], result: any[]|Error): void }[];
@@ -46,16 +47,10 @@ export class Law {
         this.lawbook = lawbook;
         this.specificity = specificity(name);
 
-        this.log = logger.child({ law: name });
+        this._log = logger.child({ law: name });
+        this._config = lawConfigDefault;
 
-        this._config = {
-            severity: 'must',
-            _name: '*',
-            _throw: 'error',
-            _specificity: 0,
-        };
-
-        this.handler = {
+        this._handler = {
             enforce: [
                 // eslint-disable-next-line no-shadow-restricted-names
                 function undefined() {
@@ -77,38 +72,38 @@ export class Law {
 
 
     /**
-     * Get config, omitting keys that start with `_`
+     * Get config, omitting keys that start with `_`.
      */
     public get config() {
         return omitBy(this._config, (_, key) => {
             return key.startsWith('_');
-        }) as Partial<LawConfig>;
+        }) as Partial<ParsedLawConfig>;
     }
 
     /**
-     * Set config while treating existing config as defaults
+     * Set config while treating existing config as defaults.
      */
     public set config(config: Partial<LawConfig>) {
         this._config = defaultsDeep(config, this._config);
 
-        if (this._config.severity === null) {
+        if (this._config.required === null) {
             this._config._throw = null;
             return;
         }
 
-        this._config.severity = this._config.severity!.toLowerCase() as LawConfig['severity'];
+        this._config.required = this._config.required!.toLowerCase() as LawConfig['required'];
 
         if (this.lawbook.config) {
             const lawbookConfig = this.lawbook.config.generic;
 
-            if (!has(lawbookConfig.severity, this._config.severity)) {
+            if (!has(lawbookConfig.severity, this._config.required)) {
                 throw new ConfigError(
-                    `Found unkown severity '${this._config.severity}' in the`,
+                    `Found unkown required level '${this._config.required}' in the`,
                     `configuration for law '${this.name}'. Expected one of`,
                     `['${keys(lawbookConfig.severity).join(`', '`)}', null]`);
             }
 
-            this._config._throw = lawbookConfig.severity[this._config.severity];
+            this._config._throw = lawbookConfig.severity[this._config.required];
         }
     }
 
@@ -132,7 +127,7 @@ export class Law {
      * });
      */
     public on(event: 'enforce'|'fail'|'pass', fn: (this: Law, ...params: any) => any) {
-        this.log.debug(`on event ${event} defined`);
+        this._log.debug(`Handler for event '${event}' added`);
 
         Object.defineProperty(fn, 'name', { value: event });
 
@@ -141,15 +136,13 @@ export class Law {
                 `You tried to subscribe to unkown event '${event}'`);
         }
 
-        if (this.handler[event].length === 1) {
-            // Filter out default handler functions
-            // @ts-ignore
-            this.handler[event] = this.handler[event].filter((fn) => {
-                return !fn.name.startsWith('undefined');
-            });
+        // Delete default `undefined` handler function
+        const handlers = this._handler[event];
+        if (handlers.length === 1 && handlers[0].name.startsWith('undefined')) {
+            handlers.shift();
         }
 
-        this.handler[event].push(fn);
+        this._handler[event].push(fn);
         return this;
     }
 
@@ -221,8 +214,8 @@ export class Law {
 
     /**
      * When enforcing use another law(s) under the namespace of the current law.
-     * Any errors will be thrown under the currents laws name with the currents
-     * law severity level.
+     * Any errors will be thrown under the currents laws name with required
+     * level of the current law.
      *
      * @example
      * Law.alias('another/law')
@@ -233,8 +226,10 @@ export class Law {
     public alias(globPattern: string) {
         // Ideally we would check for the existence of the aliased law
         // here, but at this point not all laws have been defined yet.
-        // Instead we'll check as a part of `.enforce()`
-        this.log.debug(`Set alias ${globPattern}`);
+        // Instead we'll check as a part of `.enforce()`.
+
+        // TODO: Find out if aliasses can be daisy chained
+        this._log.debug(`Alias set to ${globPattern}`);
         this._alias = globPattern;
         return this;
     }
@@ -255,7 +250,7 @@ export class Law {
             return this;
         }
 
-        this.log.debug(`Enforcing`);
+        this._log.debug(`Event triggered: 'enforce'`);
 
         let result = null;
         if (this._alias !== null) {
@@ -274,7 +269,7 @@ export class Law {
         else {
             try {
                 result = [];
-                for (const fn of this.handler.enforce) {
+                for (const fn of this._handler.enforce) {
                     result.push(await fn.call(this, ...input));
                 }
             }
@@ -289,13 +284,13 @@ export class Law {
 
     /**
      * Throw an error or log a warning for this law.
-     * Severity decides if it'll throw or log at witch level.
+     * Required decides if it'll throw or log at which level.
      *
      * @example
      * Law.throw('An error has occured');
      */
     public throw(...message: (any|Error)[]) {
-        this.log.debug(`Throwing error`);
+        this._log.debug(`Throwing error`);
 
         message = message.map((partialMessage: any) => {
             if (isError(partialMessage)) {
@@ -315,11 +310,11 @@ export class Law {
             throw lawError;
         }
         if (this._config._throw === 'warn') {
-            this.log.warn(lawError.toString());
+            this._log.warn(lawError.toString());
             return;
         }
         if (this._config._throw === 'info') {
-            this.log.info(lawError.toString());
+            this._log.info(lawError.toString());
             return;
         }
     }
@@ -329,10 +324,10 @@ export class Law {
      * Enforce by the definition of another law
      */
     private async enforceAlias(aliasName: string, input: any[]) {
-        this.log.debug(`Enforcing via alias ${this._alias}`);
+        this._log.debug(`Enforcing via alias ${this._alias}`);
 
         if (!this.lawbook.has(aliasName)) {
-            throw new Error(`Could not find alias named '${aliasName}'`);
+            throw new Error(`Could not find alias law named '${aliasName}'`);
         }
 
         const aliased = this.lawbook.filter(aliasName);
@@ -347,10 +342,10 @@ export class Law {
 
         try {
             await aliased.enforce(aliasName, ...input);
-            this.log.debug('Alias passed');
+            this._log.debug('Alias law uphold');
         }
         catch (error) {
-            this.log.debug(`Alias threw error. Punishing in own name`);
+            this._log.debug(`Alias law broken`);
             this.description = error.law.description;
             throw new Error(error._message);
         }
@@ -374,11 +369,11 @@ export class Law {
         }
 
         if (failResults.length === 0) {
-            this.log.debug(`Law passed. Rewarding`);
+            this._log.debug(`Law uphold`);
             await this.raiseVoidEvent('pass', input);
         }
         else {
-            this.log.debug(`Law failed. Punishing`);
+            this._log.debug(`Law broken`);
             await this.raiseVoidEvent('fail', input, results);
         }
     }
@@ -386,10 +381,12 @@ export class Law {
     /**
      * Raise void event and handle any errors
      */
-    private async raiseVoidEvent(event: string, ...params: any) {
+    private async raiseVoidEvent(event: string, ...parameters: any) {
+        this._log.debug(`Event triggered: '${event}'`);
+
         try {
-            for (const fn of this.handler[event]) {
-                await fn.call(this, ...params);
+            for (const fn of this._handler[event]) {
+                await fn.call(this, ...parameters);
             }
         }
         catch (error) {

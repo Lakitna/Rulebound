@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { lawbookConfigDefault } from '../../src/config/defaults';
+import { lawbookConfigDefault, lawConfigDefault } from '../../src/config/defaults';
 import { ConfigManager } from '../../src/config/manager';
 
 
@@ -7,7 +7,13 @@ describe('The class ConfigManager', function() {
     it('initializes', function() {
         const manager = new ConfigManager();
 
-        expect(manager.config).to.deep.equal(lawbookConfigDefault);
+        expect(manager.config).to.deep.equal(Object.assign(
+            lawbookConfigDefault,
+            {
+                // Fields added by parsing
+                _laws: [],
+            }
+        ));
         expect(manager.full).to.deep.equal(manager.config);
     });
 
@@ -102,12 +108,9 @@ describe('The class ConfigManager', function() {
             expect(config._name).to.equal('foo-bar-fizz-buzz');
         });
 
-        it('gets an empty config where there is none available', function() {
+        it('gets the default config where there is none available', function() {
             const config = this.manager.get('lorum-ipsum');
-            expect(config).to.deep.equal({
-                _name: '*',
-                _specificity: 0,
-            });
+            expect(config).to.deep.equal(lawConfigDefault);
         });
     });
 
