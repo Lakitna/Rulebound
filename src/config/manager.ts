@@ -127,7 +127,6 @@ export class ConfigManager {
 
         parsedTargets.map((target) => {
             target._specificity = specificity(target[patternKey]);
-            // sorted.push(target);
             return target;
         });
 
