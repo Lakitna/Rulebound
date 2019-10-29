@@ -91,7 +91,7 @@ export class Law {
             return;
         }
 
-        this._config.required = this._config.required!.toLowerCase() as LawConfig['required'];
+        this._config.required = this._config.required.toLowerCase() as LawConfig['required'];
 
         if (this.lawbook.config) {
             const lawbookConfig = this.lawbook.config.generic;

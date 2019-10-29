@@ -1,4 +1,4 @@
-import { defaultsDeep, omit, isUndefined } from 'lodash';
+import { cloneDeep, defaultsDeep, omit, omitBy, isUndefined } from 'lodash';
 import * as micromatch from 'micromatch';
 import isGlob from 'is-glob';
 import cosmiconfig from 'cosmiconfig';
@@ -16,12 +16,12 @@ export class ConfigManager {
     public config: ParsedLawbookConfig;
     private log: Logger;
 
-    public constructor(config?: LawbookConfig) {
+    public constructor(partialConfig?: Partial<LawbookConfig>) {
         const configFile = cosmiconfig('lawful').searchSync();
 
-        config = defaultsDeep(config,
-            (configFile === null) ? {} : configFile.config,
-            lawbookConfigDefault) as LawbookConfig;
+        const config = defaultsDeep(cloneDeep(partialConfig),
+            (configFile === null) ? {} : cloneDeep(configFile.config),
+            cloneDeep(lawbookConfigDefault)) as LawbookConfig;
 
         logger.level = config.verboseness;
         this.log = logger.child({});
@@ -30,7 +30,9 @@ export class ConfigManager {
     }
 
     public get full() {
-        return this.config;
+        return omitBy(this.config, (value, key) => {
+            return key.startsWith('_');
+        });
     }
 
     public get laws() {
@@ -60,7 +62,7 @@ export class ConfigManager {
             }
         });
 
-        return config;
+        return cloneDeep(config);
     }
 
     /**

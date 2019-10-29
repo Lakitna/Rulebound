@@ -1,7 +1,5 @@
-import * as sinon from 'sinon';
-import { use, expect } from 'chai';
-import asPromised from 'chai-as-promised';
-use(asPromised);
+import sinon from 'sinon';
+import { expect } from 'chai';
 
 import { Law } from '../../src/law';
 import { Lawbook } from '../../src/lawbook';
