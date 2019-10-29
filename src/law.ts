@@ -157,7 +157,7 @@ export class Law {
      *     return val > 5;
      * });
      */
-    public define(fn: (...input: any) => boolean|any) {
+    public define(fn: (this: Law, ...input: any) => boolean|any) {
         return this.on('enforce', fn);
     }
 
@@ -176,7 +176,7 @@ export class Law {
      *     this.throw(`Enforcing resulted in ${result}`);
      * });
      */
-    public punishment(fn: (input: any, err: any) => void) {
+    public punishment(fn: (this: Law, input: any, err: any) => void) {
         return this.on('fail', fn);
     }
 
@@ -189,7 +189,7 @@ export class Law {
      *     console.log('Yay! The law is uphold. Let\'s party!');
      * });
      */
-    public reward(fn: (input: any[]) => void) {
+    public reward(fn: (this: Law, input: any[]) => void) {
         return this.on('pass', fn);
     }
 

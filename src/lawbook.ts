@@ -39,7 +39,7 @@ export class Lawbook {
      * Add a law or create a new empty one
      * Sets configuration
      */
-    public add(law: string | Law, defaultConfig?: LawConfig) {
+    public add(law: string | Law, defaultConfig?: Partial<LawConfig>) {
         if (!(law instanceof Law)) {
             law = new Law(law, this);
         }
