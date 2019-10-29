@@ -71,6 +71,40 @@ describe('The class Law', function() {
         });
     });
 
+    describe('on', function() {
+        beforeEach(function() {
+            this.law = new Law('foo', {} as Lawbook);
+        });
+
+        it('throws when trying to add an unkown event', async function() {
+            expect(() => {
+                this.law.on('unkown', () => {});
+            }).to.throw(`You tried to subscribe to unkown event 'unkown'`);
+        });
+
+        it('deletes the default handler when adding the first', async function() {
+            expect(this.law._handler['enforce'].length).to.equal(1);
+            expect(this.law._handler['enforce'][0].name).to.equal('undefined');
+
+            this.law.on('enforce', () => {});
+
+            expect(this.law._handler['enforce'].length).to.equal(1);
+            expect(this.law._handler['enforce'][0].name).to.equal('enforce');
+        });
+
+        it('does not delete a handler when adding the second first', async function() {
+            expect(this.law._handler['enforce'].length).to.equal(1);
+            expect(this.law._handler['enforce'][0].name).to.equal('undefined');
+
+            this.law.on('enforce', () => {});
+            this.law.on('enforce', () => {});
+
+            expect(this.law._handler['enforce'].length).to.equal(2);
+            expect(this.law._handler['enforce'][0].name).to.equal('enforce');
+            expect(this.law._handler['enforce'][1].name).to.equal('enforce');
+        });
+    });
+
     describe('Definition', function() {
         beforeEach(function() {
             this.law = new Law('foo', {} as Lawbook);
@@ -646,7 +680,7 @@ describe('The class Law', function() {
                 .to.throw('bar');
         });
 
-        it('logs an error when the options throw=warn', function(done) {
+        it('logs an error when the options throw=warn', async function() {
             const logStub = sinon.stub(this.law._log, 'warn');
 
             this.law.config = { _throw: 'warn' };
@@ -656,10 +690,9 @@ describe('The class Law', function() {
             expect(c.stripColor(logStub.getCall(0).lastArg)).to.equal('MUST bar');
 
             logStub.restore();
-            done();
         });
 
-        it('logs when the options throw=log', function(done) {
+        it('logs when the options throw=log', async function() {
             const logStub = sinon.stub(this.law._log, 'info');
 
             this.law.config = { _throw: 'info' };
@@ -667,8 +700,15 @@ describe('The class Law', function() {
 
             expect(logStub.callCount).to.equal(1);
             expect(c.stripColor(logStub.getCall(0).lastArg)).to.equal('MUST bar');
+        });
 
-            done();
+        it('does nothing when the options throw=null', async function() {
+            const logStub = sinon.stub(this.law._log, 'info');
+
+            this.law.config = { _throw: null };
+            this.law.throw('bar');
+
+            expect(logStub.callCount).to.equal(0);
         });
     });
 });

@@ -58,10 +58,10 @@ export class Lawbook {
         let config = this.config.get(law.name);
         if (defaultConfig) {
             if (config._specificity === 0) {
-                config = defaultsDeep(config, defaultConfig);
+                config = defaultsDeep(defaultConfig, config);
             }
             else {
-                config = defaultsDeep(defaultConfig, config);
+                config = defaultsDeep(config, defaultConfig);
             }
         }
         law.config = config;

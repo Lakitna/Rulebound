@@ -59,7 +59,7 @@ describe('The class Lawbook', function() {
             expect(this.lawBook.laws[0].config.configSet).to.equal(true);
         });
 
-        it('creates adds the law when called with a Law', function() {
+        it('adds the law when called with a Law', function() {
             this.lawBook.add(new Law('foo', this.lawBook));
 
             expect(this.lawBook.laws).to.be.lengthOf(1);
@@ -89,6 +89,26 @@ describe('The class Lawbook', function() {
             this.lawBook.add('foo');
 
             expect(this.lawBook.laws[0].config.bar).to.equal('fizz');
+        });
+
+        it('overwrites the law default config with the specific config '
+                + 'from the lawBook config', function() {
+            const config = {
+                laws: {
+                    foo: { sizzle: false },
+                },
+            };
+            this.lawBook.config.set(config);
+            this.lawBook.add('foo', {
+                sizzle: true,
+                fizzle: true,
+            });
+
+            expect(this.lawBook.laws[0].config).to.deep.equal({
+                required: 'must',
+                sizzle: false,
+                fizzle: true,
+            });
         });
     });
 
