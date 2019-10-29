@@ -1,6 +1,7 @@
+import { isUndefined } from 'lodash';
 import { Lawbook } from '../../../../../src/lawbook';
 
-export default (lawbook: Lawbook) => {
+export default async (lawbook: Lawbook) => {
     const formats = [
         'binary',
         'date',
@@ -9,9 +10,9 @@ export default (lawbook: Lawbook) => {
     ];
 
     const lawbookChapter = new Lawbook(lawbook.config.full);
-    formats.forEach((format) => {
-        require(`./${format}`)(lawbookChapter);
-    });
+    for (const format of formats) {
+        (await import(`./${format}`)).default(lawbookChapter);
+    }
 
     return lawbook
         .add('openApiSchema/string/format', {
@@ -25,13 +26,13 @@ export default (lawbook: Lawbook) => {
 
             https://swagger.io/docs/specification/data-models/data-types/#format
         `)
-        .define(async function(num, schema) {
-            if (typeof schema.format === 'undefined') {
+        .define(async function(string, schema) {
+            if (isUndefined(schema.format)) {
                 // No format, nothing to test
                 return true;
             }
             else if (formats.includes(schema.format)) {
-                await lawbookChapter.enforce(`${this.name}/${schema.format}`, num, schema);
+                await lawbookChapter.enforce(`${this.name}/${schema.format}`, string, schema);
             }
             else if (!this.config.allowUnkown) {
                 throw new Error(`Unkown format '${schema.format}'. `

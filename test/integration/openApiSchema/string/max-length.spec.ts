@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 import { Lawbook } from '../../../../src/lawbook';
-import law from './maxLength';
+import law from './max-length';
 
-const lawName = 'openApiSchema/string/maxLength';
+const lawName = 'openApiSchema/string/max-length';
 
 describe(`Law: ${lawName}`, function() {
     beforeEach(async function(this: any) {

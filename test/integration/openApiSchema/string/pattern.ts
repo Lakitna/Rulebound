@@ -1,3 +1,4 @@
+import { isUndefined } from 'lodash';
 import { Lawbook } from '../../../../src/lawbook';
 
 export default (lawbook: Lawbook) => {
@@ -10,13 +11,13 @@ export default (lawbook: Lawbook) => {
 
             https://swagger.io/docs/specification/data-models/data-types/#pattern
         `)
-        .define(async function(str, schema) {
-            if (typeof schema.pattern === 'undefined') {
+        .define(async function(string, schema) {
+            if (isUndefined(schema.pattern)) {
                 return true;
             }
 
-            if (!new RegExp(schema.pattern, this.config.flags).test(str)) {
-                throw new Error(`'${str}' does not match pattern `
+            if (!new RegExp(schema.pattern, this.config.flags).test(string)) {
+                throw new Error(`'${string}' does not match pattern `
                     + `/${schema.pattern}/${this.config.flags}`);
             }
 

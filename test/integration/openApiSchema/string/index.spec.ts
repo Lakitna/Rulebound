@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { Lawbook } from '../../../../src/lawbook';
-import law from './index';
+import law from '.';
 
 const lawName = 'openApiSchema/string';
 

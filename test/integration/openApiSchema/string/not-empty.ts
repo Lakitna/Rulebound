@@ -8,8 +8,8 @@ export default (lawbook: Lawbook) => {
         .describe(`
             Since empty strings do not contain any data, it is good practice to omit them.
         `)
-        .define(async function(str, schema) {
-            if (str.replace(/\s+/g, '') === '') {
+        .define(async function(string) {
+            if (string.replace(/\s+/g, '') === '') {
                 throw new Error(`String is empty. Empty strings should be omitted.`);
             }
 

@@ -9,8 +9,8 @@ export default (lawbook: Lawbook) => {
 
             https://swagger.io/docs/specification/data-models/data-types/#format
         `)
-        .define(function(str, schema) {
-            const split = str.split('-');
+        .define(function(string) {
+            const split = string.split('-');
             assert(split.length == 3);
 
             let y = split[0],
@@ -40,7 +40,7 @@ export default (lawbook: Lawbook) => {
 
             return true;
         })
-        .punishment(function(inputs, err) {
+        .punishment(function(inputs) {
             this.throw(`'${inputs[0]}' is not a valid date`);
         });
 };

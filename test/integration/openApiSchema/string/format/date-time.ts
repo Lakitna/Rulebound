@@ -9,17 +9,17 @@ export default (lawbook: Lawbook) => {
 
             https://swagger.io/docs/specification/data-models/data-types/#format
         `)
-        .define(async function(str, schema) {
-            const split = str.split('T');
+        .define(async function(string) {
+            const split = string.split('T');
             assert(split.length == 2);
 
-            let date = split[0],
-                time = split[1];
+            const date = split[0];
+            let time = split[1];
 
             try {
-                await this.lawbook.enforce('openApiSchema/string/format/date', date, schema);
+                await this.lawbook.enforce('openApiSchema/string/format/date', date);
             }
-            catch (err) {
+            catch (error) {
                 return false;
             }
 
@@ -54,7 +54,7 @@ export default (lawbook: Lawbook) => {
 
             return true;
         })
-        .punishment(function(inputs, err) {
+        .punishment(function(inputs) {
             this.throw(`'${inputs[0]}' is not valid date-time`);
         });
 };

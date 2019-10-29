@@ -1,21 +1,22 @@
+import { isUndefined } from 'lodash';
 import { Lawbook } from '../../../../src/lawbook';
 
 export default (lawbook: Lawbook) => {
     return lawbook
-        .add('openApiSchema/string/minLength')
+        .add('openApiSchema/string/min-length')
         .describe(`
             "String length can be restricted using \`minLength\` and \`maxLength\`"
 
             https://swagger.io/docs/specification/data-models/data-types/#string
         `)
-        .define(async function(str, schema) {
-            if (typeof schema.minLength === 'undefined') {
+        .define(async function(string, schema) {
+            if (isUndefined(schema.minLength)) {
                 return true;
             }
 
-            if (str.length < schema.minLength) {
-                throw new Error(`'${str}' is too short. `
-                    + `Expected at least ${schema.minLength} characters but got ${str.length}`);
+            if (string.length < schema.minLength) {
+                throw new Error(`'${string}' is too short. `
+                    + `Expected at least ${schema.minLength} characters but got ${string.length}`);
             }
 
             return true;

@@ -1,3 +1,4 @@
+import { isUndefined } from 'lodash';
 import { Lawbook } from '../../../../src/lawbook';
 
 export default (lawbook: Lawbook) => {
@@ -10,23 +11,23 @@ export default (lawbook: Lawbook) => {
 
             https://swagger.io/docs/specification/data-models/enums/
         `)
-        .define(async function(str, schema) {
-            if (typeof schema.enum === 'undefined') {
+        .define(async function(string, schema) {
+            if (isUndefined(schema.enum)) {
                 return true;
             }
 
             if (!Array.isArray(schema.enum)) {
-                throw new Error(`Enum must be an array`);
+                throw new TypeError(`Enum must be an array`);
             }
 
-            const types = [...new Set(schema.enum.map((value:string|any) => typeof value))];
+            const types = [...new Set(schema.enum.map((value: string|any) => typeof value))];
             if (types.length > 1) {
                 throw new Error(`All values in an enum must be of the same `
                     + `type. Found the distinct types [${types.join(', ')}]`);
             }
 
-            if (!schema.enum.includes(str)) {
-                throw new Error(`Unexpected value '${str}'. `
+            if (!schema.enum.includes(string)) {
+                throw new Error(`Unexpected value '${string}'. `
                     + `Expected one of ['${schema.enum.join(`', '`)}']`);
             }
 
