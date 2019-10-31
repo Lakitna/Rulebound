@@ -1,8 +1,10 @@
-import { expect } from 'chai';
+// import { expect } from 'chai';
 import { Lawbook } from '../../../src/lawbook';
-import law from './openApiSchema';
+import law from './openapi-schema';
 
-const lawName = 'openApiSchema';
+const lawName = 'openapi-schema';
+
+// TODO: Tests
 
 describe(`Law: ${lawName}`, function() {
     beforeEach(async function(this: any) {

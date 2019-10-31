@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { Lawbook } from '../../../../src/lawbook';
 import law from './min-length';
 
-const lawName = 'openApiSchema/string/min-length';
+const lawName = 'openapi-schema/string/min-length';
 
 describe(`Law: ${lawName}`, function() {
     beforeEach(async function(this: any) {

@@ -3,7 +3,7 @@ import { Lawbook } from '../../../../../src/lawbook';
 
 export default (lawbook: Lawbook) => {
     return lawbook
-        .add('openApiSchema/string/format/date')
+        .add('openapi-schema/string/format/date')
         .describe(`
             "full-date notation as defined by RFC 3339, section 5.6, for example, 2017-07-21"
 

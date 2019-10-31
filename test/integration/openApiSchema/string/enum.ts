@@ -3,7 +3,7 @@ import { Lawbook } from '../../../../src/lawbook';
 
 export default (lawbook: Lawbook) => {
     return lawbook
-        .add('openApiSchema/string/enum')
+        .add('openapi-schema/string/enum')
         .describe(`
             "You can use the enum keyword to specify possible values of a request parameter or a model property."
 

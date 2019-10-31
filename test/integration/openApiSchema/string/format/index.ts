@@ -15,7 +15,7 @@ export default async (lawbook: Lawbook) => {
     }
 
     return lawbook
-        .add('openApiSchema/string/format', {
+        .add('openapi-schema/string/format', {
             allowUnkown: false,
             severity: 'should',
         })

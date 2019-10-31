@@ -3,7 +3,7 @@ import { Lawbook } from '../../../../src/lawbook';
 
 export default (lawbook: Lawbook) => {
     return lawbook
-        .add('openApiSchema/string/pattern', {
+        .add('openapi-schema/string/pattern', {
             flags: 'g',
         })
         .describe(`

@@ -3,7 +3,7 @@ import { Lawbook } from '../../../../../src/lawbook';
 
 export default (lawbook: Lawbook) => {
     return lawbook
-        .add('openApiSchema/string/format/date-time')
+        .add('openapi-schema/string/format/date-time')
         .describe(`
             "the date-time notation as defined by RFC 3339, section 5.6, for example, 2017-07-21T17:32:28Z"
 
@@ -17,7 +17,7 @@ export default (lawbook: Lawbook) => {
             let time = split[1];
 
             try {
-                await this.lawbook.enforce('openApiSchema/string/format/date', date);
+                await this.lawbook.enforce('openapi-schema/string/format/date', date);
             }
             catch (error) {
                 return false;

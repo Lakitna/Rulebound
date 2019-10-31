@@ -1,3 +1,4 @@
+import { isObject } from 'lodash';
 import { Lawbook } from '../../../src/lawbook';
 
 export default async (lawbook: Lawbook) => {
@@ -14,27 +15,27 @@ export default async (lawbook: Lawbook) => {
     }
 
     return lawbook
-        .add('openApiSchema')
+        .add('openapi-schema')
         .describe(`
             JSON schema is at the heart of OpenAPI.
         `)
         .define(async function(json, schema) {
-            if (typeof schema !== 'object') {
-                throw new Error(`Expected schema to be an object`);
+            if (!isObject(schema)) {
+                throw new TypeError(`Expected schema to be an object`);
             }
-            if (typeof json !== 'object') {
-                throw new Error(`Expected json to be an object`);
+            if (!isObject(json)) {
+                throw new TypeError(`Expected json to be an object`);
             }
 
             // Enforce object rules on root
             // await lawbook.enforce(
-            //     `openApiSchema/object`,
+            //     `openapi-schema/object`,
             //     json,
             //     {properties: schema},
             //     []);
 
             const recurse = async (json: object, schema: object, trail: string[]) => {
-                for (let key in schema) {
+                for (const key in schema) {
                     const subSchema = schema[key];
                     const subJson = json[key];
 
@@ -48,11 +49,11 @@ export default async (lawbook: Lawbook) => {
                     trail.push(key);
 
                     // Some basic checks on the schema
-                    await lawbook.enforce('openApiSchema/schema/**', subSchema);
+                    await lawbook.enforce('openapi-schema/schema/**', subSchema);
 
                     // Enforce more specific rules
                     // await lawbook.enforce(
-                    //     `openApiSchema/${subSchema.type}`,
+                    //     `openapi-schema/${subSchema.type}`,
                     //     subJson,
                     //     subSchema,
                     //     trail);
@@ -62,8 +63,11 @@ export default async (lawbook: Lawbook) => {
                         await recurse(subJson, subSchema.properties, trail);
                     }
                     else if (subSchema.type === 'array') {
-                        for (let i=0; i<subJson.length; i++) {
-                            await recurse({[i]: subJson[i]}, {[i]: subSchema.items}, trail);
+                        for (const [index, jsonItem] of subJson.entries()) {
+                            await recurse(
+                                {[index]: jsonItem},
+                                {[index]: subSchema.items},
+                                trail);
                         }
                     }
 
@@ -74,14 +78,14 @@ export default async (lawbook: Lawbook) => {
 
             return true;
         })
-        .punishment(function (input, err) {
+        .punishment(function (input, error) {
             // if (this.trail.length) {
-            //     err.message += `\n@ ${this.trail.join(' > ')}`;
+            //     error.message += `\n@ ${this.trail.join(' > ')}`;
             // }
             // else {
-            //     err.message += `\n@ object root`
+            //     error.message += `\n@ object root`
             // }
 
-            throw err;
+            throw error;
         });
 };

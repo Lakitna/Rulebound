@@ -63,7 +63,7 @@ module.exports = {
                 'mocha/no-exclusive-tests': 'warn',
                 'mocha/no-global-tests': 'error',
                 'mocha/no-hooks': 'off',
-                'mocha/no-hooks-for-single-case': 'warn',
+                'mocha/no-hooks-for-single-case': 'off',
                 'mocha/no-identical-title': 'error',
                 'mocha/no-mocha-arrows': 'error',
                 'mocha/no-nested-tests': 'error',

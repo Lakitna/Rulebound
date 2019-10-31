@@ -2,7 +2,7 @@ import { Lawbook } from '../../../../src/lawbook';
 
 export default (lawbook: Lawbook) => {
     return lawbook
-        .add('openApiSchema/string/not-empty', {
+        .add('openapi-schema/string/not-empty', {
             required: 'should',
         })
         .describe(`

@@ -16,8 +16,8 @@ export default async (lawbook: Lawbook) => {
     }
 
     return lawbook
-        .add('openApiSchema/string')
-        .define(async function(string, schema) {
+        .add('openapi-schema/string')
+        .define(async function(string) {
             if (!isString(string)) {
                 if (Array.isArray(string)) string = `[${string}]`;
 

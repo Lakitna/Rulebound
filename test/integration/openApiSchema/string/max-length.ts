@@ -3,7 +3,7 @@ import { Lawbook } from '../../../../src/lawbook';
 
 export default (lawbook: Lawbook) => {
     return lawbook
-        .add('openApiSchema/string/max-length')
+        .add('openapi-schema/string/max-length')
         .describe(`
             "String length can be restricted using \`minLength\` and \`maxLength\`"
 
