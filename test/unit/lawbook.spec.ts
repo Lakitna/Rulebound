@@ -1,9 +1,9 @@
 import * as sinon from 'sinon';
 
-import { Lawbook } from '../src/lawbook';
+import { Lawbook } from '../../src/lawbook';
 import { expect } from 'chai';
-import { Law } from '../src/law';
-import { lawbookConfigDefault } from '../src/config/defaults';
+import { Law } from '../../src/law';
+import { lawbookConfigDefault } from '../../src/config/defaults';
 
 
 describe('The class Lawbook', function() {

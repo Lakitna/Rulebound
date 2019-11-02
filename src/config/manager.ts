@@ -1,5 +1,4 @@
-import { cloneDeep, defaultsDeep, omit, omitBy, isUndefined } from 'lodash';
-import { defaultsDeep, omit, isUndefined, isObject } from 'lodash';
+import { cloneDeep, defaultsDeep, omit, omitBy, isUndefined, isObject } from 'lodash';
 import * as micromatch from 'micromatch';
 import isGlob from 'is-glob';
 import cosmiconfig from 'cosmiconfig';

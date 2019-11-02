@@ -1,7 +1,7 @@
 import { cloneDeep } from 'lodash';
 import { expect } from 'chai';
-import { lawbookConfigDefault } from '../../src/config/defaults';
-import { ConfigManager } from '../../src/config/manager';
+import { lawbookConfigDefault } from '../../../src/config/defaults';
+import { ConfigManager } from '../../../src/config/manager';
 
 
 describe('The class ConfigManager', function() {

@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
+
 const chai = require('chai');
 chai.use(require('chai-as-promised'));
-chai.use(require('chai-sinon'));
+// chai.use(require('sinon-chai'));
 chai.use(require('chai-string'));
 
 require('ts-node')

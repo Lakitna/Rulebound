@@ -1,4 +1,4 @@
-import { omitBy, defaultsDeep, keys, isError, has, isString, isUndefined } from 'lodash';
+import { omitBy, defaultsDeep, keys, isError, has, isString, isUndefined, isFunction } from 'lodash';
 
 import { logger, Logger } from './log';
 import { LawError, ConfigError } from './errors';
@@ -330,7 +330,8 @@ export class Law {
                 return value;
             }) as string[];
 
-            lawError = new LawError(this, ...errorMessages);
+            // TODO: input?
+            lawError = new LawError(this, [], ...errorMessages);
         }
 
         const throwingLawConfig = lawError.law._config;

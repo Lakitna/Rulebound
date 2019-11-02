@@ -1,8 +1,8 @@
 import * as sinon from 'sinon';
 import { expect } from 'chai';
 
-import { Law } from '../src/law';
-import { Lawbook } from '../src/lawbook';
+import { Law } from '../../src/law';
+import { Lawbook } from '../../src/lawbook';
 import c from 'ansi-colors';
 
 

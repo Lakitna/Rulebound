@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { specificity } from '../src/utils';
+import { specificity } from '../../src/utils';
 
 describe('Util functions', function() {
     describe('specificity', function() {

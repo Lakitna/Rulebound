@@ -11,13 +11,13 @@ A lightweight & flexible framework for rule based testing.
     - [Description _{string}_](#description-string)
     - [Alias _{string}_](#alias-string)
     - [Definition _{function}_](#definition-function)
-      - [Function arguments](#function-arguments)
+      - [Definition function arguments](#definition-function-arguments)
       - [Breaking a law](#breaking-a-law)
       - [Upholding the law](#upholding-the-law)
     - [Punishment _{function}_](#punishment-function)
-      - [Function arguments](#function-arguments-1)
+      - [Punishment function arguments](#punishment-function-arguments)
     - [Reward _{function}_](#reward-function)
-      - [Function arguments](#function-arguments-2)
+      - [Reward function arguments](#reward-function-arguments)
 
 ## Why
 
@@ -128,16 +128,16 @@ law.on('enforce', function(inputValue) {
 
 A law MUST have a definition. It's the part that is used to enforce it. A law MAY have multiple definitions. A law can be defined with two distinct syntaxes (as above). There is no technical difference between these syntaxes.
 
-#### Function arguments
+#### Definition function arguments
 
 The arguments passed to the callback function are the same as passed to the `enforce` function.
 
 #### Breaking a law
 
-A law is considered broken when the definition:
+A law is considered broken when the definition does one of the following:
 
 - Throws an error
-- Does NOT return the boolean value `true`
+- NOT return the boolean value `true`
 
 #### Upholding the law
 
@@ -159,7 +159,7 @@ law.on('fail', function(input, result) {
 
 A law MAY have a punishment. When a law is broken the defined punishments are automatically executed. When no punishment is provided the default punishment will be used. A punishment MAY have multiple definitions. A punishment can be defined with two distinct syntaxes (as above). There is no technical difference between these syntaxes.
 
-#### Function arguments
+#### Punishment function arguments
 
 The following arguments are passed to the callback function:
 
@@ -184,7 +184,7 @@ law.on('pass', function(input, result) {
 
 A law MAY have a reward. When a law is uphold the defined rewards are automatically executed. When no reward is provided nothing will happen. A reward MAY have multiple definitions. A reward can be defined with two distinct syntaxes (as above). There is no technical difference between these syntaxes.
 
-#### Function arguments
+#### Reward function arguments
 
 The following arguments are passed to the callback function:
 
