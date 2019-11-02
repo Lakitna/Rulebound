@@ -1,4 +1,5 @@
 import assert from 'assert';
+import { isUndefined } from 'lodash';
 import { Lawbook } from '../../../../../src/lawbook';
 
 export default (lawbook: Lawbook) => {
@@ -23,34 +24,34 @@ export default (lawbook: Lawbook) => {
                 return false;
             }
 
-            assert(time.endsWith('Z'));
-            time = time.replace(/Z$/, '');
+            const timeZone = time.split('+')[1];
+            if (isUndefined(timeZone)) {
+                assert(time.endsWith('Z'));
+                time = time.replace(/Z$/, '');
+            }
+            else {
+                const timeZoneSplit = timeZone.split(':');
+                assert(timeZoneSplit.length === 2);
+
+                const h = timeZoneSplit[0],
+                    m = timeZoneSplit[1];
+
+                assertZeroPaddedTimePartial(h, 24);
+                assertZeroPaddedTimePartial(m, 60);
+
+                time = time.split('+')[0];
+            }
 
             const timeSplit = time.split(':');
             assert(timeSplit.length == 3);
 
-            let h = timeSplit[0],
+            const h = timeSplit[0],
                 m = timeSplit[1],
                 s = timeSplit[2];
 
-            // Always 2 characters
-            assert(h.length == 2);
-            assert(m.length == 2);
-            assert(s.length == 2);
-
-            h = Number(h);
-            m = Number(m);
-            s = Number(s);
-
-            // Always numbers
-            assert(!isNaN(h));
-            assert(!isNaN(m));
-            assert(!isNaN(s));
-
-            // Always in range
-            assert(0 <= h && h < 24);
-            assert(0 <= m && m < 60);
-            assert(0 <= s && s < 60);
+            assertZeroPaddedTimePartial(h, 24);
+            assertZeroPaddedTimePartial(m, 60);
+            assertZeroPaddedTimePartial(s, 60);
 
             return true;
         })
@@ -58,3 +59,12 @@ export default (lawbook: Lawbook) => {
             this.throw(`'${inputs[0]}' is not valid date-time`);
         });
 };
+
+
+function assertZeroPaddedTimePartial(value: string, maximum: number) {
+    assert(value.length == 2);
+
+    const numeric = Number(value);
+    assert(!isNaN(numeric));
+    assert(0 <= numeric && numeric < maximum);
+}

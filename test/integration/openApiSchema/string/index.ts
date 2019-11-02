@@ -3,7 +3,7 @@ import { Lawbook } from '../../../../src/lawbook';
 
 export default async (lawbook: Lawbook) => {
     const subLaws = [
-        // 'format',
+        'format',
         'not-empty',
         'max-length',
         'min-length',

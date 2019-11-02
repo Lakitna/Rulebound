@@ -3,10 +3,8 @@ import { Lawbook } from '../../../../../src/lawbook';
 
 export default async (lawbook: Lawbook) => {
     const formats = [
-        'binary',
         'date',
         'date-time',
-        'password',
     ];
 
     const lawbookChapter = new Lawbook(lawbook.config.full);
@@ -17,7 +15,7 @@ export default async (lawbook: Lawbook) => {
     return lawbook
         .add('openapi-schema/string/format', {
             allowUnkown: false,
-            severity: 'should',
+            required: 'should',
         })
         .describe(`
             "An optional \`format\` modifier serves as a hint at the contents and format of the string."
