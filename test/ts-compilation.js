@@ -1,3 +1,8 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
+
+const chai = require('chai');
+chai.use(require('chai-as-promised'));
+
 require('ts-node')
     .register({
         'include': [

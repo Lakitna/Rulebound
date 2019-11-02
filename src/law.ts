@@ -1,4 +1,4 @@
-import { omitBy, defaultsDeep, keys, isError, has, isString } from 'lodash';
+import { omitBy, defaultsDeep, keys, isError, has, isString, isUndefined } from 'lodash';
 
 import { logger, Logger } from './log';
 import { LawError, ConfigError } from './errors';
@@ -41,6 +41,16 @@ export class Law {
         fail: { (this: Law, input: any[], result: any[]|Error): void }[];
     };
 
+    /**
+     * Use context to share state between events
+     */
+    public context: {
+        [key: string]: any;
+    }
+    public ctx: {
+        [key: string]: any;
+    }
+
     public constructor(name: string, lawbook: Lawbook) {
         this.name = name;
         this._alias = null;
@@ -68,6 +78,9 @@ export class Law {
                 },
             ],
         }
+
+        this.context = {};
+        this.ctx = this.context;
     }
 
 
@@ -91,7 +104,7 @@ export class Law {
             return;
         }
 
-        this._config.required = this._config.required!.toLowerCase() as LawConfig['required'];
+        this._config.required = this._config.required.toLowerCase() as LawConfig['required'];
 
         if (this.lawbook.config) {
             const lawbookConfig = this.lawbook.config.generic;
@@ -157,7 +170,7 @@ export class Law {
      *     return val > 5;
      * });
      */
-    public define(fn: (...input: any) => boolean|any) {
+    public define(fn: (this: Law, ...input: any) => boolean|any) {
         return this.on('enforce', fn);
     }
 
@@ -176,7 +189,7 @@ export class Law {
      *     this.throw(`Enforcing resulted in ${result}`);
      * });
      */
-    public punishment(fn: (input: any, err: any) => void) {
+    public punishment(fn: (this: Law, input: any, err: any) => void) {
         return this.on('fail', fn);
     }
 
@@ -189,7 +202,7 @@ export class Law {
      *     console.log('Yay! The law is uphold. Let\'s party!');
      * });
      */
-    public reward(fn: (input: any[]) => void) {
+    public reward(fn: (this: Law, input: any[]) => void) {
         return this.on('pass', fn);
     }
 
@@ -292,28 +305,35 @@ export class Law {
     public throw(...message: (any|Error)[]) {
         this._log.debug(`Throwing error`);
 
-        message = message.map((partialMessage: any) => {
-            if (isError(partialMessage)) {
-                return partialMessage.message;
-            }
-            else if (!isString(partialMessage)) {
-                return partialMessage.toString();
-            }
-            return partialMessage;
+        let lawError = message.find((partialMessage) => {
+            return partialMessage instanceof LawError;
         });
+        if (isUndefined(lawError)) {
+            const errorMessages = message.map((value: any) => {
+                if (isError(value)) {
+                    return value.message;
+                }
+                else if (!isString(value)) {
+                    return value.toString();
+                }
+                return value;
+            }) as string[];
 
-        const lawError = new LawError(this, ...message as string[]);
+            lawError = new LawError(this, ...errorMessages);
+        }
+
+        const throwingLawConfig = lawError.law._config;
 
         // Always throw when called as an aliased law so we can handle the
         // error in the alias.
-        if (this._config._throw === 'error' || this._config._asAlias) {
+        if (throwingLawConfig._throw === 'error' || this._config._asAlias) {
             throw lawError;
         }
-        if (this._config._throw === 'warn') {
+        if (throwingLawConfig._throw === 'warn') {
             this._log.warn(lawError.toString());
             return;
         }
-        if (this._config._throw === 'info') {
+        if (throwingLawConfig._throw === 'info') {
             this._log.info(lawError.toString());
             return;
         }

@@ -1,6 +1,7 @@
 import { expect } from 'chai';
-import { lawbookConfigDefault, lawConfigDefault } from '../../src/config/defaults';
-import { ConfigManager } from '../../src/config/manager';
+import { cloneDeep } from 'lodash';
+import { lawbookConfigDefault, lawConfigDefault } from '../../../src/config/defaults';
+import { ConfigManager } from '../../../src/config/manager';
 
 
 describe('The class ConfigManager', function() {
@@ -8,13 +9,14 @@ describe('The class ConfigManager', function() {
         const manager = new ConfigManager();
 
         expect(manager.config).to.deep.equal(Object.assign(
+            {},
             lawbookConfigDefault,
             {
                 // Fields added by parsing
                 _laws: [],
             }
         ));
-        expect(manager.full).to.deep.equal(manager.config);
+        expect(manager.full).to.deep.equal(lawbookConfigDefault);
     });
 
     describe('getters', function() {
@@ -81,7 +83,7 @@ describe('The class ConfigManager', function() {
 
     describe('get', function() {
         beforeEach(function() {
-            const config = lawbookConfigDefault;
+            const config = cloneDeep(lawbookConfigDefault);
             config.laws['bar-*'] = { bar: 2 } as any;
             config.laws['foo-bar'] = { bar: 4 } as any;
             config.laws['foo-bar-*'] = { bar: 8 } as any;

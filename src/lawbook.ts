@@ -1,5 +1,6 @@
-import * as micromatch from 'micromatch';
+import micromatch from 'micromatch';
 import isGlob from 'is-glob';
+import { defaultsDeep } from 'lodash';
 
 import { ConfigManager } from './config/manager';
 import { Law } from './law';
@@ -16,7 +17,7 @@ export class Lawbook {
     public laws: Law[];
     private log: Logger;
 
-    public constructor(config?: LawbookConfig) {
+    public constructor(config?: Partial<LawbookConfig>) {
         this.config = new ConfigManager(config);
         this.laws = [];
 
@@ -38,7 +39,7 @@ export class Lawbook {
      * Add a law or create a new empty one
      * Sets configuration
      */
-    public add(law: string | Law, defaultConfig?: LawConfig) {
+    public add(law: string | Law, defaultConfig?: Partial<LawConfig>) {
         if (!(law instanceof Law)) {
             law = new Law(law, this);
         }
@@ -54,10 +55,15 @@ export class Lawbook {
                 `Law names must be unique.`);
         }
 
+        let config = this.config.get(law.name);
         if (defaultConfig) {
-            law.config = defaultConfig;
+            if (config._specificity === 0) {
+                config = defaultsDeep(defaultConfig, config);
+            }
+            else {
+                config = defaultsDeep(config, defaultConfig);
+            }
         }
-        const config = this.config.get(law.name);
         law.config = config;
 
         this.laws.push(law);

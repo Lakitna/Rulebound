@@ -1,4 +1,4 @@
-import * as c from 'ansi-colors';
+import c from 'ansi-colors';
 import { Law } from '../law';
 import { ParsedLawConfig } from '../config/types';
 
