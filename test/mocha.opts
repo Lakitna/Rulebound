@@ -1,3 +1,3 @@
---require test/ts-compilation.js
+--require test/mocha-setup.js
 --require choma
 --recursive

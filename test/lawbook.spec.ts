@@ -1,9 +1,9 @@
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 
-import { Lawbook } from '../../src/lawbook';
+import { Lawbook } from '../src/lawbook';
 import { expect } from 'chai';
-import { Law } from '../../src/law';
-import { lawbookConfigDefault } from '../../src/config/defaults';
+import { Law } from '../src/law';
+import { lawbookConfigDefault } from '../src/config/defaults';
 
 
 describe('The class Lawbook', function() {
@@ -59,7 +59,7 @@ describe('The class Lawbook', function() {
             expect(this.lawBook.laws[0].config.configSet).to.equal(true);
         });
 
-        it('adds the law when called with a Law', function() {
+        it('creates adds the law when called with a Law', function() {
             this.lawBook.add(new Law('foo', this.lawBook));
 
             expect(this.lawBook.laws).to.be.lengthOf(1);
@@ -90,26 +90,6 @@ describe('The class Lawbook', function() {
 
             expect(this.lawBook.laws[0].config.bar).to.equal('fizz');
         });
-
-        it('overwrites the law default config with the specific config '
-                + 'from the lawBook config', function() {
-            const config = {
-                laws: {
-                    foo: { sizzle: false },
-                },
-            };
-            this.lawBook.config.set(config);
-            this.lawBook.add('foo', {
-                sizzle: true,
-                fizzle: true,
-            });
-
-            expect(this.lawBook.laws[0].config).to.deep.equal({
-                required: 'must',
-                sizzle: false,
-                fizzle: true,
-            });
-        });
     });
 
     describe('omit', function() {
@@ -125,7 +105,7 @@ describe('The class Lawbook', function() {
             const newSet = this.lawBook.omit('fizz');
 
             expect(this.lawBook).to.not.equal(newSet);
-            expect(this.lawBook.config.full).to.deep.equal(newSet.config.full);
+            expect(this.lawBook.config.full).to.equal(newSet.config.full);
             expect(newSet).to.be.lengthOf(2);
             expect(newSet.laws[0].name).to.equal('buzz');
             expect(newSet.laws[1].name).to.equal('fizzbuzz');
@@ -135,7 +115,7 @@ describe('The class Lawbook', function() {
             const newSet = this.lawBook.omit('fizz*');
 
             expect(this.lawBook).to.not.equal(newSet);
-            expect(this.lawBook.config.full).to.deep.equal(newSet.config.full);
+            expect(this.lawBook.config.full).to.equal(newSet.config.full);
             expect(newSet).to.be.lengthOf(1);
             expect(newSet.laws[0].name).to.equal('buzz');
         });
@@ -144,7 +124,7 @@ describe('The class Lawbook', function() {
             const newSet = this.lawBook.omit('foo');
 
             expect(this.lawBook).to.not.equal(newSet);
-            expect(this.lawBook.config.full).to.deep.equal(newSet.config.full);
+            expect(this.lawBook.config.full).to.equal(newSet.config.full);
             expect(newSet).to.be.lengthOf(3);
         });
     });
@@ -188,7 +168,7 @@ describe('The class Lawbook', function() {
             const newSet = this.lawBook.filter('fizz');
 
             expect(this.lawBook).to.not.equal(newSet);
-            expect(this.lawBook.config.full).to.deep.equal(newSet.config.full);
+            expect(this.lawBook.config.full).to.equal(newSet.config.full);
             expect(newSet).to.be.lengthOf(1);
             expect(newSet.laws[0].name).to.equal('fizz');
         });
@@ -197,7 +177,7 @@ describe('The class Lawbook', function() {
             const newSet = this.lawBook.filter('fizz*');
 
             expect(this.lawBook).to.not.equal(newSet);
-            expect(this.lawBook.config.full).to.deep.equal(newSet.config.full);
+            expect(this.lawBook.config.full).to.equal(newSet.config.full);
             expect(newSet).to.be.lengthOf(2);
             expect(newSet.laws[0].name).to.equal('fizz');
             expect(newSet.laws[1].name).to.equal('fizzbuzz');
@@ -207,7 +187,7 @@ describe('The class Lawbook', function() {
             const newSet = this.lawBook.filter('foo');
 
             expect(this.lawBook).to.not.equal(newSet);
-            expect(this.lawBook.config.full).to.deep.equal(newSet.config.full);
+            expect(this.lawBook.config.full).to.equal(newSet.config.full);
             expect(newSet).to.be.lengthOf(0);
         });
     });
