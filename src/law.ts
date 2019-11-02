@@ -1,4 +1,4 @@
-import { omitBy, defaultsDeep, keys, isError, has, isString } from 'lodash';
+import { omitBy, defaultsDeep, keys, isError, has, isString, isUndefined } from 'lodash';
 
 import { logger, Logger } from './log';
 import { LawError, ConfigError } from './errors';
@@ -41,6 +41,16 @@ export class Law {
         fail: { (this: Law, input: any[], result: any[]|Error): void }[];
     };
 
+    /**
+     * Use context to share state between events
+     */
+    public context: {
+        [key: string]: any;
+    }
+    public ctx: {
+        [key: string]: any;
+    }
+
     public constructor(name: string, lawbook: Lawbook) {
         this.name = name;
         this._alias = null;
@@ -68,6 +78,9 @@ export class Law {
                 },
             ],
         }
+
+        this.context = {};
+        this.ctx = this.context;
     }
 
 
@@ -292,28 +305,35 @@ export class Law {
     public throw(...message: (any|Error)[]) {
         this._log.debug(`Throwing error`);
 
-        message = message.map((partialMessage: any) => {
-            if (isError(partialMessage)) {
-                return partialMessage.message;
-            }
-            else if (!isString(partialMessage)) {
-                return partialMessage.toString();
-            }
-            return partialMessage;
+        let lawError = message.find((partialMessage) => {
+            return partialMessage instanceof LawError;
         });
+        if (isUndefined(lawError)) {
+            const errorMessages = message.map((value: any) => {
+                if (isError(value)) {
+                    return value.message;
+                }
+                else if (!isString(value)) {
+                    return value.toString();
+                }
+                return value;
+            }) as string[];
 
-        const lawError = new LawError(this, ...message as string[]);
+            lawError = new LawError(this, ...errorMessages);
+        }
+
+        const throwingLawConfig = lawError.law._config;
 
         // Always throw when called as an aliased law so we can handle the
         // error in the alias.
-        if (this._config._throw === 'error' || this._config._asAlias) {
+        if (throwingLawConfig._throw === 'error' || this._config._asAlias) {
             throw lawError;
         }
-        if (this._config._throw === 'warn') {
+        if (throwingLawConfig._throw === 'warn') {
             this._log.warn(lawError.toString());
             return;
         }
-        if (this._config._throw === 'info') {
+        if (throwingLawConfig._throw === 'info') {
             this._log.info(lawError.toString());
             return;
         }

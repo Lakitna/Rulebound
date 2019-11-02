@@ -12,11 +12,11 @@ export default async (lawbook: Lawbook) => {
     ];
 
     for (const law of subLaws) {
-        (await import(`./${law}`)).default(lawbook);
+        await (await import(`./${law}`)).default(lawbook);
     }
 
     return lawbook
-        .add('openapi-schema/string')
+        .add('openapi-schema/string/type')
         .define(async function(string) {
             if (!isString(string)) {
                 if (Array.isArray(string)) string = `[${string}]`;
