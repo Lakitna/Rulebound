@@ -30,8 +30,9 @@ import { lawConfigDefault } from './config/defaults';
 export class Law {
     public name: string;
     public description?: string;
-    public specificity: number;
     public lawbook: Lawbook;
+    public specificity: number;
+
     private _alias: string | null;
     private _config: ParsedLawConfig;
     private _log: Logger;
@@ -52,7 +53,7 @@ export class Law {
     }
 
     public constructor(name: string, lawbook: Lawbook) {
-        this.name = name;
+        this.name = this._validateName(name);
         this._alias = null;
         this.lawbook = lawbook;
         this.specificity = specificity(name);
@@ -415,5 +416,24 @@ export class Law {
             }
             this.throw(error.message);
         }
+    }
+
+    private _validateName(name: string) {
+        const re = new RegExp(/^[A-Za-z0-9/\-_@|]+$/, 'g');
+
+        if (re.exec(name) === null) {
+            const demands = [
+                '',
+                'Lowercase letters',
+                'Uppercase letters',
+                'Numbers',
+                'These symbols: /-_|@',
+            ]
+
+            throw new Error(`'${name}' is not a valid law name. `
+                + `\nLaw names are restricted to:${demands.join('\n- ')}`);
+        }
+
+        return name;
     }
 }

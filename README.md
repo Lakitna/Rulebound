@@ -76,7 +76,7 @@ new Law('string/max-length');
 
 The name of the law MUST be a unique identifier without any whitespace.
 
-It SHOULD be a human readable string. Law names SHOULD use `/` and `-` as separators but MAY also use `_`, `@` and `|`.
+It SHOULD be a human readable string. Law names SHOULD use `/` and `-` as separators but MAY also use `_`, `@` and `|`. Law names SHOULD be kebab-cased.
 
 ### Configuration _{object}_
 

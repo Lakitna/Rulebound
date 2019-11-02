@@ -44,11 +44,6 @@ export class Lawbook {
             law = new Law(law, this);
         }
 
-        if (isGlob(law.name)) {
-            throw new LawbookError(
-                `Can't add a law with a Glob pattern for its name.`,
-                `'${law.name}' includes reserved Glob pattern characters.`);
-        }
         if (this.has(law.name)) {
             throw new LawbookError(
                 `The law named '${law.name}' already exists in the set.`,
@@ -123,7 +118,15 @@ export class Lawbook {
         const matcher = micromatch.matcher(globPattern);
         const subSet = this.laws
             .filter((law) => matcher(law.name))
-            .sort((a, b) => a.specificity - b.specificity);
+            .sort((a, b) => {
+                if (a.specificity > b.specificity) {
+                    return 1;
+                }
+                if (a.specificity < b.specificity) {
+                    return -1;
+                }
+                return 0;
+            });
 
         if (subSet.length === 0) {
             this.log.warn(`No laws to enforce for name pattern '${globPattern}'`);
