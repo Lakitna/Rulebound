@@ -40,6 +40,7 @@ module.exports = {
         '@typescript-eslint/explicit-function-return-type': 'off',
         '@typescript-eslint/no-non-null-assertion': 'off',
         '@typescript-eslint/no-explicit-any': 'off',
+        '@typescript-eslint/no-use-before-define': 'off',
     },
     overrides: [
         {
@@ -65,7 +66,7 @@ module.exports = {
                 'mocha/no-exclusive-tests': 'warn',
                 'mocha/no-global-tests': 'error',
                 'mocha/no-hooks': 'off',
-                'mocha/no-hooks-for-single-case': 'warn',
+                'mocha/no-hooks-for-single-case': 'off',
                 'mocha/no-identical-title': 'error',
                 'mocha/no-mocha-arrows': 'error',
                 'mocha/no-nested-tests': 'error',
@@ -80,6 +81,8 @@ module.exports = {
                 'mocha/valid-suite-description': 'off',
                 'mocha/valid-test-description': 'off',
                 'mocha/no-async-describe': 'error',
+
+                'unicorn/consistent-function-scoping': 'off',
             },
         },
     ],

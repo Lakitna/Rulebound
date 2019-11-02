@@ -1,8 +1,6 @@
-import * as c from 'ansi-colors';
+import c from 'ansi-colors';
 import { Law } from '../law';
-import { LawConfig } from '../config/types';
-import { ConfigManager } from '../config/manager';
-import { isObject } from 'lodash';
+import { ParsedLawConfig } from '../config/types';
 
 export class LawError extends Error {
     /**
@@ -16,14 +14,9 @@ export class LawError extends Error {
     public description: string;
 
     /**
-     * The input that resulted in the law failure
+     * The required level with which the error was thrown
      */
-    public input: any;
-
-    /**
-     * The severity with which the error was thrown
-     */
-    public severity: LawConfig['severity'];
+    public required: ParsedLawConfig['required'] | '';
 
     public config: ConfigManager
 
@@ -31,26 +24,13 @@ export class LawError extends Error {
         super(message.join(' '));
 
         this.law = law;
-        this.description = this.law.description || '';
-        this.input = input;
-        this.severity = (this.law.config.severity || '') as LawConfig['severity'];
-        this.name = `${this.severity.toUpperCase()} law ${this.law.name} was broken`;
-
-        this.config = this.law.lawbook.config;
-
-        if (this.config) {
-            const severityConfig = this.config.generic.severity[this.severity];
-            this._addDescriptionToMessage(severityConfig);
-            this._addInputToMessage(severityConfig);
-        }
+        this.required = (this.law.config.required || '');
+        this.name = `LawError | ${this.required.toUpperCase()} ${this.law.name}`;
+        this._message = _message;
     }
 
     public toString() {
-        let returnString = `${c.grey(this.name + ':')}`;
-
-        returnString += `\n${this.message.trim()}`;
-
-        return returnString;
+        return `${c.grey(this.required.toUpperCase())} ${this._message}`;
     }
 
     private _addDescriptionToMessage(severityConfig: any) {
