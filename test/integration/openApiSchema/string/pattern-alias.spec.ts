@@ -47,7 +47,7 @@ describe(`Law: ${lawName}`, function() {
         })).to.be.rejectedWith(`'abc' does not match pattern /[A-Z]{3}/g`);
     });
 
-    // TODO: Pass config of alias to target law
+    // TODO: #19 Pass config of alias to target law
     // eslint-disable-next-line mocha/no-setup-in-describe
     describe.skip('Option: flags = i', function() {
         beforeEach(async function(this: any) {
