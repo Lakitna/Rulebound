@@ -53,7 +53,7 @@ export class Law {
     }
 
     public constructor(name: string, lawbook: Lawbook) {
-        this.name = this._validateName(name);
+        this.name = this.validateName(name);
         this._alias = null;
         this.lawbook = lawbook;
         this.specificity = specificity(name);
@@ -418,7 +418,7 @@ export class Law {
         }
     }
 
-    private _validateName(name: string) {
+    private validateName(name: string) {
         const re = new RegExp(/^[A-Za-z0-9/\-_@|]+$/, 'g');
 
         if (re.exec(name) === null) {

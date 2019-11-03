@@ -1,6 +1,6 @@
 # Lawful
 
-A lightweight & flexible framework for rule based testing.
+A flexible framework for rule-based testing.
 
 - [Lawful](#lawful)
   - [Why](#why)
@@ -18,6 +18,8 @@ A lightweight & flexible framework for rule based testing.
       - [Punishment function arguments](#punishment-function-arguments)
     - [Reward _{function}_](#reward-function)
       - [Reward function arguments](#reward-function-arguments)
+  - [Contributing](#contributing)
+  - [Testing Lawful](#testing-lawful)
 
 ## Why
 
@@ -66,29 +68,35 @@ await lawbook.enforce('is-divisible', 21, 7);
 
 ## Writing laws
 
-A law consists of the following
+A law will typically be made through a lawbook. It consists of the following
 
 ### Name _{string}_
 
 ```typescript
-new Law('string/max-length');
+lawbook.add('string/max-length');
 ```
 
 The name of the law MUST be a unique identifier without any whitespace.
 
-It SHOULD be a human readable string. Law names SHOULD use `/` and `-` as separators but MAY also use `_`, `@` and `|`. Law names SHOULD be kebab-cased.
+It SHOULD be a human-readable string. Law names SHOULD use `/` and `-` as separators but MAY also use `_`, `@` and `|`. Law names SHOULD be kebab-cased.
 
 ### Configuration _{object}_
 
 ```typescript
-new Law('string/max-length', {
+lawbook.add('string/max-length', {
     maximum: 12,
 });
 ```
 
-A law MAY have law-specific configuration. The default configuration can be defined like above. The user can overwrite this configuration via the Lawful configuration file.
+A law MAY have a law-specific configuration. The default configuration can be defined as above. The user can overwrite this configuration via the Lawful configuration file.
 
 The parsed configuration can be accessed with `this.config` in the definition, punishment, and reward callback functions.
+
+The precedence of configuration is as follows:
+
+- Default configuration as specified when defining the law
+- User configuration for one or more laws (using glob pattern) // TODO: add test for this
+- User configuration for the specific law
 
 ### Description _{string}_
 
@@ -108,7 +116,7 @@ law.alias('some-law-name');
 
 A law MAY have an alias. The provided string MUST be the name of another law. When a law has an alias set it SHOULD NOT have a definition, punishment, or reward. When enforcing the law with alias set the definitions, punishments, and rewards of the aliased law will be used.
 
-This allows you to use the same law in different name spaces.
+This allows you to use the same law in different namespaces.
 
 ### Definition _{function}_
 
@@ -130,7 +138,16 @@ A law MUST have a definition. It's the part that is used to enforce it. A law MA
 
 #### Definition function arguments
 
-The arguments passed to the callback function are the same as passed to the `enforce` function.
+When `enforce` is called the values will be passed to the definition.
+
+```typescript
+lawbook.add('some-law')
+    .define(function(a, b) {
+        console.log(a); // => 'someValue'
+        console.log(b); // => 123
+    })
+    .enforce('some-law', 'someValue', 123);
+```
 
 #### Breaking a law
 
@@ -163,7 +180,7 @@ A law MAY have a punishment. When a law is broken the defined punishments are au
 
 The following arguments are passed to the callback function:
 
-| name | type | description|
+| name    | type    | description    |
 |---------|---------|----------------|
 | `input` | `any[]` | An array of the arguments passed to the `enforce` function |
 | `result` | `any[] | Error` | An array containing the results of all `define` functions **or** a thrown error |
@@ -172,22 +189,36 @@ The following arguments are passed to the callback function:
 
 ```typescript
 law.reward(function(input, result) {
-    console.log('Yay, the law is uphold!');
+    console.log('Yay, the law is upheld!');
 });
 ```
 
 ```typescript
 law.on('pass', function(input, result) {
-    console.log('Yay, the law is uphold!');
+    console.log('Yay, the law is upheld!');
 });
 ```
 
-A law MAY have a reward. When a law is uphold the defined rewards are automatically executed. When no reward is provided nothing will happen. A reward MAY have multiple definitions. A reward can be defined with two distinct syntaxes (as above). There is no technical difference between these syntaxes.
+A law MAY have a reward. When a law is upheld the defined rewards are automatically executed. When no reward is provided nothing will happen. A reward MAY have multiple definitions. A reward can be defined with two distinct syntaxes (as above). There is no technical difference between these syntaxes.
 
 #### Reward function arguments
 
 The following arguments are passed to the callback function:
 
-| name | type | description|
+| name    | type    | description    |
 |---------|---------|----------------|
 | `input` | `any[]` | An array of the arguments passed to the `enforce` function |
+
+## Contributing
+
+Contributors are always welcome! I don't care if you are a beginner or an expert, all help is welcome.
+
+## Testing Lawful
+
+First, clone the repository and install the dependencies.
+
+```plain
+npm test
+```
+
+Sometimes things are just that simple.
