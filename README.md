@@ -18,18 +18,19 @@ A flexible framework for rule-based testing.
       - [Punishment function arguments](#punishment-function-arguments)
     - [Reward _{function}_](#reward-function)
       - [Reward function arguments](#reward-function-arguments)
+  - [Testing laws](#testing-laws)
   - [Contributing](#contributing)
   - [Testing Lawful](#testing-lawful)
 
 ## Why
 
-Because rule-based testing is awesome!
+Rule-based testing is awesome! It forces you to look at problems from a different angle while promoting reuse and testability of your test code.
 
-// TODO: Details
+I’ve made this package because I could not find a suitable, existing framework written for rule-based testing.
 
 ## Getting started
 
-First add Lawful to your project
+First, add Lawful to your project
 
 ```shell
 npm install lawful --save-dev
@@ -68,7 +69,7 @@ await lawbook.enforce('is-divisible', 21, 7);
 
 ## Writing laws
 
-A law will typically be made through a lawbook. It consists of the following
+Laws will typically be made as part of a lawbook. A law consists of the following:
 
 ### Name _{string}_
 
@@ -76,9 +77,12 @@ A law will typically be made through a lawbook. It consists of the following
 lawbook.add('string/max-length');
 ```
 
-The name of the law MUST be a unique identifier without any whitespace.
+A law name...
 
-It SHOULD be a human-readable string. Law names SHOULD use `/` and `-` as separators but MAY also use `_`, `@` and `|`. Law names SHOULD be kebab-cased.
+- MUST be a unique identifier without any whitespace.
+- SHOULD be a human-readable string.
+- SHOULD use `/` and `-` as separators but MAY also use `_`, `@`, and `|`.
+- SHOULD be kebab-cased.
 
 ### Configuration _{object}_
 
@@ -88,14 +92,15 @@ lawbook.add('string/max-length', {
 });
 ```
 
-A law MAY have a law-specific configuration. The default configuration can be defined as above. The user can overwrite this configuration via the Lawful configuration file.
+A law MAY have a law-specific configuration. The default law-specific configuration can be defined as above. The user can overwrite this configuration via the Lawful configuration file.
 
 The parsed configuration can be accessed with `this.config` in the definition, punishment, and reward callback functions.
 
-The precedence of configuration is as follows:
+The precedence of configuration is as below where the bottom of the list overwrites the top.
 
-- Default configuration as specified when defining the law
-- User configuration for one or more laws (using glob pattern) // TODO: add test for this
+- The default configuration for every law
+- The default configuration as specified when defining the law
+- User configuration for one or more laws (using glob pattern)
 - User configuration for the specific law
 
 ### Description _{string}_
@@ -114,7 +119,9 @@ A description SHOULD be added to the law so humans know what the purpose of that
 law.alias('some-law-name');
 ```
 
-A law MAY have an alias. The provided string MUST be the name of another law. When a law has an alias set it SHOULD NOT have a definition, punishment, or reward. When enforcing the law with alias set the definitions, punishments, and rewards of the aliased law will be used.
+A law MAY have an alias. This is defined by providing the name of another law like above.
+
+A law with alias defined SHOULD NOT have any definitions as these will be ignored. When enforcing the definitions, punishments, and rewards of the target law will be used after which the punishments and rewards of the law will be executed.
 
 This allows you to use the same law in different namespaces.
 
@@ -134,11 +141,13 @@ law.on('enforce', function(inputValue) {
 });
 ```
 
-A law MUST have a definition. It's the part that is used to enforce it. A law MAY have multiple definitions. A law can be defined with two distinct syntaxes (as above). There is no technical difference between these syntaxes.
+A law MUST have a definition. It's the part that is used to enforce it. A law MAY have multiple definitions.
+
+A law can be defined with two distinct syntaxes (as above). There is no technical difference between these syntaxes.
 
 #### Definition function arguments
 
-When `enforce` is called the values will be passed to the definition.
+When `enforce` is called the given arguments will be passed to the definition.
 
 ```typescript
 lawbook.add('some-law')
@@ -153,12 +162,12 @@ lawbook.add('some-law')
 
 A law is considered broken when the definition does one of the following:
 
-- Throws an error
-- NOT return the boolean value `true`
+- Throw an error.
+- Return anything other than the boolean `true`.
 
 #### Upholding the law
 
-A law is considered uphold when the definition returns the boolean value `true`.
+A law is considered upheld when the definition returns the boolean `true`.
 
 ### Punishment _{function}_
 
@@ -174,7 +183,9 @@ law.on('fail', function(input, result) {
 });
 ```
 
-A law MAY have a punishment. When a law is broken the defined punishments are automatically executed. When no punishment is provided the default punishment will be used. A punishment MAY have multiple definitions. A punishment can be defined with two distinct syntaxes (as above). There is no technical difference between these syntaxes.
+A law MAY have one or more punishments. When a law is broken the defined punishments are automatically executed. When no punishment is provided the default punishment will be used.
+
+Punishment can be defined with two distinct syntaxes (as above). There is no technical difference between these syntaxes.
 
 #### Punishment function arguments
 
@@ -199,7 +210,9 @@ law.on('pass', function(input, result) {
 });
 ```
 
-A law MAY have a reward. When a law is upheld the defined rewards are automatically executed. When no reward is provided nothing will happen. A reward MAY have multiple definitions. A reward can be defined with two distinct syntaxes (as above). There is no technical difference between these syntaxes.
+A law MAY have one or more rewards. When a law is upheld the defined rewards are automatically executed. When no reward is provided nothing will happen.
+
+Punishment can be defined with two distinct syntaxes (as above). There is no technical difference between these syntaxes.
 
 #### Reward function arguments
 
@@ -209,13 +222,25 @@ The following arguments are passed to the callback function:
 |---------|---------|----------------|
 | `input` | `any[]` | An array of the arguments passed to the `enforce` function |
 
+## Testing laws
+
+Since laws are self-contained pieces of code you can easily test them and the logic within. Doing this will take little execution time, as they're essentially unit tests, but will increase the quality of your tests tremendously.
+
+The easiest way to show you how to test laws is with an example. The easiest way to do that is to [link to the integration tests of this package](./test/integration). All the `*.spec.ts` files in the linked folder are testing their corresponding law. In this repository, Mocha is used as the test runner and Chai as the assertion framework but the patterns transfer well to other test runners.
+
+A few things to keep in mind when testing laws:
+
+- Make sure a broken law always results in an error. It would be a shame to have a law punish but the test framework not failing the test. The easiest way to do this is to set `required: 'must'`.
+- Test custom config and things related to it.
+- Enforcing is async. Don't forget to `await`.
+
 ## Contributing
 
 Contributors are always welcome! I don't care if you are a beginner or an expert, all help is welcome.
 
 ## Testing Lawful
 
-First, clone the repository and install the dependencies.
+First, clone the repository and install the dependencies. Then run the test script:
 
 ```plain
 npm test
