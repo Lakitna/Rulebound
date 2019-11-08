@@ -52,7 +52,7 @@ import { Lawbook } from 'lawful';
 const lawbook = new Lawbook();
 ```
 
-Now add and execute your first law.
+You can now add and execute your first law.
 
 ```javascript
 import { Lawbook } from 'lawful';
@@ -65,11 +65,12 @@ lawbook.add('is-divisible')
     });
 
 await lawbook.enforce('is-divisible', 21, 7);
+await lawbook.enforce('is-divisible', 11, 2); // => throws error
 ```
 
 ## Writing laws
 
-Laws will typically be made as part of a lawbook. A law consists of the following:
+Laws are typically defined as part of a lawbook. A law consists of the following:
 
 ### Name _{string}_
 
@@ -77,9 +78,9 @@ Laws will typically be made as part of a lawbook. A law consists of the followin
 lawbook.add('string/max-length');
 ```
 
-A law name...
+A law name is a unique identifier that...
 
-- MUST be a unique identifier without any whitespace.
+- MUST NOT contain any whitespace.
 - SHOULD be a human-readable string.
 - SHOULD use `/` and `-` as separators but MAY also use `_`, `@`, and `|`.
 - SHOULD be kebab-cased.
@@ -92,7 +93,7 @@ lawbook.add('string/max-length', {
 });
 ```
 
-A law MAY have a law-specific configuration. The default law-specific configuration can be defined as above. The user can overwrite this configuration via the Lawful configuration file.
+A law MAY have a law-specific configuration. The default law-specific configuration can be defined as above. The user can overwrite this via the Lawful configuration file.
 
 The parsed configuration can be accessed with `this.config` in the definition, punishment, and reward callback functions.
 
@@ -111,7 +112,7 @@ law.describe(`
 `);
 ```
 
-A description SHOULD be added to the law so humans know what the purpose of that law is. Putting some effort in this will make things a lot simpler for someone who has not written the law.
+A description SHOULD be added to the law so humans know what the purpose of that law is and what logic it contains. Putting some effort in this will make things a lot simpler for someone who has not written the law.
 
 ### Alias _{string}_
 
@@ -121,7 +122,7 @@ law.alias('some-law-name');
 
 A law MAY have an alias. This is defined by providing the name of another law like above.
 
-A law with alias defined SHOULD NOT have any definitions as these will be ignored. When enforcing the definitions, punishments, and rewards of the target law will be used after which the punishments and rewards of the law will be executed.
+A law with alias defined SHOULD NOT have any definitions as these will be ignored. When enforcing the definitions, punishments, and rewards of the target law will be used after which the punishments and rewards of the law with alias will be executed.
 
 This allows you to use the same law in different namespaces.
 
@@ -141,7 +142,7 @@ law.on('enforce', function(inputValue) {
 });
 ```
 
-A law MUST have a definition. It's the part that is used to enforce it. A law MAY have multiple definitions.
+A law MUST have a definition. It's the part that is used to enforce it. A law MAY have multiple definitions. A definition MAY have multiple arguments.
 
 A law can be defined with two distinct syntaxes (as above). There is no technical difference between these syntaxes.
 
@@ -185,7 +186,7 @@ law.on('fail', function(input, result) {
 
 A law MAY have one or more punishments. When a law is broken the defined punishments are automatically executed. When no punishment is provided the default punishment will be used.
 
-Punishment can be defined with two distinct syntaxes (as above). There is no technical difference between these syntaxes.
+Punishments can be defined with two distinct syntaxes (as above). There is no technical difference between these syntaxes.
 
 #### Punishment function arguments
 
@@ -212,7 +213,7 @@ law.on('pass', function(input, result) {
 
 A law MAY have one or more rewards. When a law is upheld the defined rewards are automatically executed. When no reward is provided nothing will happen.
 
-Punishment can be defined with two distinct syntaxes (as above). There is no technical difference between these syntaxes.
+Rewards can be defined with two distinct syntaxes (as above). There is no technical difference between these syntaxes.
 
 #### Reward function arguments
 
@@ -230,8 +231,8 @@ The easiest way to show you how to test laws is with an example. The easiest way
 
 A few things to keep in mind when testing laws:
 
-- Make sure a broken law always results in an error. It would be a shame to have a law punish but the test framework not failing the test. The easiest way to do this is to set `required: 'must'`.
-- Test custom config and things related to it.
+- Make sure a broken law always results in an error. It would be a shame to have a law punish but the test framework not failing the test. The easiest way to do this is to set `required: 'must'` for the duration of the test.
+- Test the law specific configuration and things related to it.
 - Enforcing is async. Don't forget to `await`.
 
 ## Contributing

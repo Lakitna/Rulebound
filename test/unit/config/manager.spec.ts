@@ -85,7 +85,7 @@ describe('The class ConfigManager', function() {
         beforeEach(function() {
             const config = cloneDeep(lawbookConfigDefault);
             config.laws['bar-*'] = { bar: 2 } as any;
-            config.laws['foo-bar'] = { bar: 4, } as any;
+            config.laws['foo-bar'] = { bar: 4 } as any;
             config.laws['foo-bar-*'] = { bar: 8, foo: true } as any;
             config.laws['foo-bar-fizz-buzz'] = { bar: 16 } as any;
 
