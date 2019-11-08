@@ -1,3 +1,5 @@
+import fs from 'fs';
+
 import { expect } from 'chai';
 import { cloneDeep } from 'lodash';
 import { lawbookConfigDefault, lawConfigDefault } from '../../../src/config/defaults';
@@ -17,6 +19,38 @@ describe('The class ConfigManager', function() {
             }
         ));
         expect(manager.full).to.deep.equal(lawbookConfigDefault);
+    });
+
+    describe('User config file', function() {
+        beforeEach(function() {
+            this.filePath = '.lawfulrc';
+            fs.writeFileSync(this.filePath, JSON.stringify({
+                foo: 'bar',
+                verboseness: 'error',
+            }));
+        });
+
+        afterEach(function() {
+            fs.unlinkSync(this.filePath);
+        });
+
+        it('resolves a user config file', function() {
+            const manager = new ConfigManager();
+            // @ts-ignore ts(2339)
+            expect(manager.config.foo).to.equal('bar');
+        });
+
+        it('overwrites the default config with the user config', function() {
+            const manager = new ConfigManager();
+            expect(manager.config.verboseness).to.equal('error');
+        });
+
+        it('overwrites the user config with the constructor config', function() {
+            const manager = new ConfigManager({
+                verboseness: 'debug',
+            });
+            expect(manager.config.verboseness).to.equal('debug');
+        });
     });
 
     describe('getters', function() {

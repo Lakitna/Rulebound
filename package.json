@@ -38,7 +38,6 @@
   "devDependencies": {
     "@types/chai": "^4.2.3",
     "@types/chai-as-promised": "^7.1.2",
-    "@types/cosmiconfig": "^5.0.3",
     "@types/is-glob": "^4.0.1",
     "@types/lodash": "^4.14.144",
     "@types/micromatch": "^3.1.0",
@@ -73,7 +72,7 @@
   },
   "dependencies": {
     "ansi-colors": "^4.1.1",
-    "cosmiconfig": "^5.2.1",
+    "cosmiconfig": "^6.0.0",
     "is-glob": "^4.0.1",
     "lodash": "^4.17.15",
     "micromatch": "^4.0.2",
