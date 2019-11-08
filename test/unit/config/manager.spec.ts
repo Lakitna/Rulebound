@@ -36,6 +36,8 @@ describe('The class ConfigManager', function() {
 
         it('resolves a user config file', function() {
             const manager = new ConfigManager();
+
+            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
             // @ts-ignore ts(2339)
             expect(manager.config.foo).to.equal('bar');
         });
