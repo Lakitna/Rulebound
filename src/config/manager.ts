@@ -1,7 +1,7 @@
 import { cloneDeep, defaultsDeep, omit, omitBy, isUndefined } from 'lodash';
-import * as micromatch from 'micromatch';
+import micromatch from 'micromatch';
 import isGlob from 'is-glob';
-import cosmiconfig from 'cosmiconfig';
+import { cosmiconfigSync } from 'cosmiconfig';
 
 import { logger, Logger } from '../log';
 import { lawbookConfigDefault, lawConfigDefault } from './defaults';
@@ -17,7 +17,7 @@ export class ConfigManager {
     private log: Logger;
 
     public constructor(partialConfig?: Partial<LawbookConfig>) {
-        const configFile = cosmiconfig('lawful').searchSync();
+        const configFile = cosmiconfigSync('lawful').search();
 
         const config = defaultsDeep(cloneDeep(partialConfig),
             (configFile === null) ? {} : cloneDeep(configFile.config),
