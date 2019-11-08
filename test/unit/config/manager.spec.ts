@@ -86,7 +86,7 @@ describe('The class ConfigManager', function() {
             const config = cloneDeep(lawbookConfigDefault);
             config.laws['bar-*'] = { bar: 2 } as any;
             config.laws['foo-bar'] = { bar: 4 } as any;
-            config.laws['foo-bar-*'] = { bar: 8 } as any;
+            config.laws['foo-bar-*'] = { bar: 8, foo: true } as any;
             config.laws['foo-bar-fizz-buzz'] = { bar: 16 } as any;
 
             this.manager = new ConfigManager(config);
@@ -107,7 +107,15 @@ describe('The class ConfigManager', function() {
         it('gets the most specific config available', function() {
             const config = this.manager.get('foo-bar-fizz-buzz');
             expect(config.bar).to.equal(16);
+            expect(config.foo).to.equal(true);
             expect(config._name).to.equal('foo-bar-fizz-buzz');
+        });
+
+        it('gets the most specific config available when there\'s no exact match', function() {
+            const config = this.manager.get('foo-bar-fizz');
+            expect(config.bar).to.equal(8);
+            expect(config.foo).to.equal(true);
+            expect(config._name).to.equal('foo-bar-*');
         });
 
         it('gets the default config where there is none available', function() {

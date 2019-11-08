@@ -711,4 +711,16 @@ describe('The class Law', function() {
             expect(logStub.callCount).to.equal(0);
         });
     });
+
+    describe('_validateName', function() {
+        it('throws when an invalid name is provided', function() {
+            expect(() => {
+                new Law('foo^', {} as Lawbook);
+            }).to.throw(`'foo^' is not a valid law name.`)
+        });
+
+        it('does nothing when a valid name is provided', function() {
+            new Law('foo', {} as Lawbook);
+        });
+    })
 });

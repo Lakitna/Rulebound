@@ -67,11 +67,6 @@ describe('The class Lawbook', function() {
             expect(this.lawBook.laws[0].name).to.equal('foo');
         });
 
-        it('throws an error when the law name is a Glob pattern', function() {
-            expect(this.lawBook.add.bind(this.lawBook, 'foo-*'))
-                .to.throw('Can\'t add a law with a Glob pattern for its name');
-        });
-
         it('throws an error when the same law is added twice', function() {
             this.lawBook.add('foo');
 
