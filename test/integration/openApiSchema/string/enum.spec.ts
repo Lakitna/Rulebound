@@ -1,36 +1,36 @@
 import { expect } from 'chai';
-import { Lawbook } from '../../../../src/lawbook';
-import law from './enum';
+import { Rulebook } from '../../../../src/rulebook';
+import rule from './enum';
 
-const lawName = 'openapi-schema/string/enum';
+const ruleName = 'openapi-schema/string/enum';
 
-describe(`Law: ${lawName}`, function() {
+describe(`Rule: ${ruleName}`, function() {
     beforeEach(async function(this: any) {
-        this.book = new Lawbook({
-            laws: {
-                [lawName]: {
+        this.book = new Rulebook({
+            rules: {
+                [ruleName]: {
                     required: 'must',
                 },
             },
         });
-        await law(this.book);
-        this.law = this.book.filter(lawName).laws[0];
+        await rule(this.book);
+        this.rule = this.book.filter(ruleName).rules[0];
     });
 
     it('passes when there is no enum in the schema', async function() {
-        await this.book.enforce(this.law.name, 'value', {
+        await this.book.enforce(this.rule.name, 'value', {
             enum: undefined,
         });
     });
 
     it('throws when enum in the schema is not an array', async function() {
-        await expect(this.book.enforce(this.law.name, 'value', {
+        await expect(this.book.enforce(this.rule.name, 'value', {
             enum: 'foo',
         })).to.be.rejectedWith('Enum must be an array');
     });
 
     it('throws when values in the enum are of different types', async function() {
-        await expect(this.book.enforce(this.law.name, 'value', {
+        await expect(this.book.enforce(this.rule.name, 'value', {
             enum: [
                 'foo',
                 123,
@@ -39,7 +39,7 @@ describe(`Law: ${lawName}`, function() {
     });
 
     it('throws when the string is not included in the enum', async function() {
-        await expect(this.book.enforce(this.law.name, 'value', {
+        await expect(this.book.enforce(this.rule.name, 'value', {
             enum: [
                 'foo',
                 'bar',
@@ -48,7 +48,7 @@ describe(`Law: ${lawName}`, function() {
     });
 
     it('passes when the string is one of multiple values included in the enum', async function() {
-        this.book.enforce(this.law.name, 'value', {
+        this.book.enforce(this.rule.name, 'value', {
             enum: [
                 'foo',
                 'bar',
@@ -58,7 +58,7 @@ describe(`Law: ${lawName}`, function() {
     });
 
     it('passes when the string is the only value included in the enum', async function() {
-        this.book.enforce(this.law.name, 'value', {
+        this.book.enforce(this.rule.name, 'value', {
             enum: [
                 'value',
             ],

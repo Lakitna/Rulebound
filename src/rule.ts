@@ -1,20 +1,20 @@
 import { omitBy, defaultsDeep, keys, isError, has, isString, isUndefined } from 'lodash';
 
 import { logger, Logger } from './log';
-import { LawError, ConfigError } from './errors';
-import { Lawbook } from './lawbook';
+import { RuleError, ConfigError } from './errors';
+import { Rulebook } from './rulebook';
 import { specificity } from './utils';
-import { LawConfig, ParsedLawConfig } from './config/types';
-import { lawConfigDefault } from './config/defaults';
+import { RuleConfig, ParsedRuleConfig } from './config/types';
+import { ruleConfigDefault } from './config/defaults';
 
 
 /**
  * A testing rule
  *
  * @example
- * new Law('foo')
+ * new Rule('foo')
  *     .describe(`
- *         An example law
+ *         An example rule
  *     `)
  *     .define(function(val) {
  *         return val <= 5;
@@ -27,19 +27,19 @@ import { lawConfigDefault } from './config/defaults';
  *     })
  *     .enforce(1);
  */
-export class Law {
+export class Rule {
     public name: string;
     public description?: string;
-    public lawbook: Lawbook;
+    public rulebook: Rulebook;
     public specificity: number;
 
     private _alias: string | null;
-    private _config: ParsedLawConfig;
+    private _config: ParsedRuleConfig;
     private _log: Logger;
     private _handler: {
-        enforce: { (this: Law, ...input: any): boolean|any }[];
-        pass: { (this: Law, input: any[]): void }[];
-        fail: { (this: Law, input: any[], result: any[]|Error): void }[];
+        enforce: { (this: Rule, ...input: any): boolean|any }[];
+        pass: { (this: Rule, input: any[]): void }[];
+        fail: { (this: Rule, input: any[], result: any[]|Error): void }[];
     };
 
     /**
@@ -52,20 +52,20 @@ export class Law {
         [key: string]: any;
     }
 
-    public constructor(name: string, lawbook: Lawbook) {
+    public constructor(name: string, rulebook: Rulebook) {
         this.name = this.validateName(name);
         this._alias = null;
-        this.lawbook = lawbook;
+        this.rulebook = rulebook;
         this.specificity = specificity(name);
 
-        this._log = logger.child({ law: name });
-        this._config = lawConfigDefault;
+        this._log = logger.child({ rule: name });
+        this._config = ruleConfigDefault;
 
         this._handler = {
             enforce: [
                 // eslint-disable-next-line no-shadow-restricted-names
                 function undefined() {
-                    throw new LawError(this, 'Law is undefined');
+                    throw new RuleError(this, 'Rule is undefined');
                 },
             ],
             pass: [
@@ -91,13 +91,13 @@ export class Law {
     public get config() {
         return omitBy(this._config, (_, key) => {
             return key.startsWith('_');
-        }) as Partial<ParsedLawConfig>;
+        }) as Partial<ParsedRuleConfig>;
     }
 
     /**
      * Set config while treating existing config as defaults.
      */
-    public set config(config: Partial<LawConfig>) {
+    public set config(config: Partial<RuleConfig>) {
         this._config = defaultsDeep(config, this._config);
 
         if (this._config.required === null) {
@@ -105,19 +105,19 @@ export class Law {
             return;
         }
 
-        this._config.required = this._config.required.toLowerCase() as LawConfig['required'];
+        this._config.required = this._config.required.toLowerCase() as RuleConfig['required'];
 
-        if (this.lawbook.config) {
-            const lawbookConfig = this.lawbook.config.generic;
+        if (this.rulebook.config) {
+            const rulebookConfig = this.rulebook.config.generic;
 
-            if (!has(lawbookConfig.severity, this._config.required)) {
+            if (!has(rulebookConfig.severity, this._config.required)) {
                 throw new ConfigError(
                     `Found unkown required level '${this._config.required}' in the`,
-                    `configuration for law '${this.name}'. Expected one of`,
-                    `['${keys(lawbookConfig.severity).join(`', '`)}', null]`);
+                    `configuration for rule '${this.name}'. Expected one of`,
+                    `['${keys(rulebookConfig.severity).join(`', '`)}', null]`);
             }
 
-            this._config._throw = lawbookConfig.severity[this._config.required];
+            this._config._throw = rulebookConfig.severity[this._config.required];
         }
     }
 
@@ -126,27 +126,27 @@ export class Law {
      * Subscribe to an event
      *
      * @example
-     * Law.on('enforce', (val) => {
+     * Rule.on('enforce', (val) => {
      *      return val > 5;
      * });
      *
      * @example
-     * Law.on('fail', (val) => {
-     *     throw new Error(`Law failed. Input: ${input}`)
+     * Rule.on('fail', (val) => {
+     *     throw new Error(`Rule failed. Input: ${input}`)
      * });
      *
      * @example
-     * Law.on('pass', (val) => {
-     *     console.log('Yay! The law is uphold. Let\'s party!');
+     * Rule.on('pass', (val) => {
+     *     console.log('Yay! The rule is uphold. Let\'s party!');
      * });
      */
-    public on(event: 'enforce'|'fail'|'pass', fn: (this: Law, ...params: any) => any) {
+    public on(event: 'enforce'|'fail'|'pass', fn: (this: Rule, ...params: any) => any) {
         this._log.debug(`Handler for event '${event}' added`);
 
         Object.defineProperty(fn, 'name', { value: event });
 
         if (event !== 'enforce' && event !== 'fail' && event !== 'pass') {
-            throw new LawError(this,
+            throw new RuleError(this,
                 `You tried to subscribe to unkown event '${event}'`);
         }
 
@@ -162,57 +162,57 @@ export class Law {
 
 
     /**
-     * Define the law logic.
+     * Define the rule logic.
      * Return `true` to reward, return anything else or throw an error
      * to punish.
      *
      * @example
-     * Law.define(function(val) {
+     * Rule.define(function(val) {
      *     return val > 5;
      * });
      */
-    public define(fn: (this: Law, ...input: any) => boolean|any) {
+    public define(fn: (this: Rule, ...input: any) => boolean|any) {
         return this.on('enforce', fn);
     }
 
 
     /**
-     * Define what will happen if the law fails.  The returned/thrown value is
+     * Define what will happen if the rule fails.  The returned/thrown value is
      * passed as the final argument.
      *
      * @example
-     * Law.punishment(function(input) {
-     *     throw new Error(`Law failed. Input: ${input}`)
+     * Rule.punishment(function(input) {
+     *     throw new Error(`Rule failed. Input: ${input}`)
      * });
      *
      * @example The final argument is the result of the definition
-     * Law.punishment(function(input, result) {
+     * Rule.punishment(function(input, result) {
      *     this.throw(`Enforcing resulted in ${result}`);
      * });
      */
-    public punishment(fn: (this: Law, input: any, err: any) => void) {
+    public punishment(fn: (this: Rule, input: any, err: any) => void) {
         return this.on('fail', fn);
     }
 
 
     /**
-     * Define what will happen if the law passes.
+     * Define what will happen if the rule passes.
      *
      * @example
-     * Law.reward(function(val) {
-     *     console.log('Yay! The law is uphold. Let\'s party!');
+     * Rule.reward(function(val) {
+     *     console.log('Yay! The rule is uphold. Let\'s party!');
      * });
      */
-    public reward(fn: (this: Law, input: any[]) => void) {
+    public reward(fn: (this: Rule, input: any[]) => void) {
         return this.on('pass', fn);
     }
 
 
     /**
-     * Provide a human readable description of the law.
+     * Provide a human readable description of the rule.
      *
      * @example
-     * Law.describe(`
+     * Rule.describe(`
      *     Look at this amazing description!
      * `);
      */
@@ -227,19 +227,19 @@ export class Law {
 
 
     /**
-     * When enforcing use another law(s) under the namespace of the current law.
-     * Any errors will be thrown under the currents laws name with required
-     * level of the current law.
+     * When enforcing use another rule(s) under the namespace of the current rule.
+     * Any errors will be thrown under the currents rules name with required
+     * level of the current rule.
      *
      * @example
-     * Law.alias('another/law')
+     * Rule.alias('another/rule')
      *
      * @example
-     * Law.alias('another/*')
+     * Rule.alias('another/*')
      */
     public alias(globPattern: string) {
-        // Ideally we would check for the existence of the aliased law
-        // here, but at this point not all laws have been defined yet.
+        // Ideally we would check for the existence of the aliased rule
+        // here, but at this point not all rules have been defined yet.
         // Instead we'll check as a part of `.enforce()`.
 
         // TODO: Find out if aliasses can be daisy chained
@@ -250,17 +250,17 @@ export class Law {
 
 
     /**
-     * Enforce a law.
+     * Enforce a rule.
      *
      * @example
-     * Law.enforce('foo');
+     * Rule.enforce('foo');
      *
      * @example
-     * Law.enforce('foo', 'bar', 1, 86, 9302);
+     * Rule.enforce('foo', 'bar', 1, 86, 9302);
      */
     public async enforce(...input: any) {
         if (this._config._throw === null && !this._config._asAlias) {
-            // Skip law
+            // Skip rule
             return this;
         }
 
@@ -271,8 +271,8 @@ export class Law {
             try {
                 await this.enforceAlias(this._alias, input);
 
-                // The aliased law did not throw. Stop enforcing now to prevent
-                // doing things twice. This also means that the current law will
+                // The aliased rule did not throw. Stop enforcing now to prevent
+                // doing things twice. This also means that the current rule will
                 // not reward.
                 return this;
             }
@@ -297,19 +297,19 @@ export class Law {
     }
 
     /**
-     * Throw an error or log a warning for this law.
+     * Throw an error or log a warning for this rule.
      * Required decides if it'll throw or log at which level.
      *
      * @example
-     * Law.throw('An error has occured');
+     * Rule.throw('An error has occured');
      */
     public throw(...message: (any|Error)[]) {
         this._log.debug(`Throwing error`);
 
-        let lawError = message.find((partialMessage) => {
-            return partialMessage instanceof LawError;
+        let ruleError = message.find((partialMessage) => {
+            return partialMessage instanceof RuleError;
         });
-        if (isUndefined(lawError)) {
+        if (isUndefined(ruleError)) {
             const errorMessages = message.map((value: any) => {
                 if (isError(value)) {
                     return value.message;
@@ -320,59 +320,59 @@ export class Law {
                 return value;
             }) as string[];
 
-            lawError = new LawError(this, ...errorMessages);
+            ruleError = new RuleError(this, ...errorMessages);
         }
 
-        const throwingLawConfig = lawError.law._config;
+        const throwingRuleConfig = ruleError.rule._config;
 
-        // Always throw when called as an aliased law so we can handle the
+        // Always throw when called as an aliased rule so we can handle the
         // error in the alias.
-        if (throwingLawConfig._throw === 'error' || this._config._asAlias) {
-            throw lawError;
+        if (throwingRuleConfig._throw === 'error' || this._config._asAlias) {
+            throw ruleError;
         }
-        if (throwingLawConfig._throw === 'warn') {
-            this._log.warn(lawError.toString());
+        if (throwingRuleConfig._throw === 'warn') {
+            this._log.warn(ruleError.toString());
             return;
         }
-        if (throwingLawConfig._throw === 'info') {
-            this._log.info(lawError.toString());
+        if (throwingRuleConfig._throw === 'info') {
+            this._log.info(ruleError.toString());
             return;
         }
     }
 
 
     /**
-     * Enforce by the definition of another law
+     * Enforce by the definition of another rule
      */
     private async enforceAlias(aliasName: string, input: any[]) {
         this._log.debug(`Enforcing via alias ${this._alias}`);
 
-        if (!this.lawbook.has(aliasName)) {
-            throw new Error(`Could not find alias law named '${aliasName}'`);
+        if (!this.rulebook.has(aliasName)) {
+            throw new Error(`Could not find alias rule named '${aliasName}'`);
         }
 
-        const aliased = this.lawbook.filter(aliasName);
-        aliased.forEach((law) => {
-            // Tell the law it's being enforced as an alias
-            law.config = { _asAlias: true };
+        const aliased = this.rulebook.filter(aliasName);
+        aliased.forEach((rule) => {
+            // Tell the rule it's being enforced as an alias
+            rule.config = { _asAlias: true };
 
-            // We are not copying the config of the current law to the alias.
+            // We are not copying the config of the current rule to the alias.
             // We may want to add that at some point, but I quite frankly don't
             // see why it's worth the effort.
         });
 
         try {
             await aliased.enforce(aliasName, ...input);
-            this._log.debug('Alias law uphold');
+            this._log.debug('Alias rule uphold');
         }
         catch (error) {
-            this._log.debug(`Alias law broken`);
-            this.description = error.law.description;
+            this._log.debug(`Alias rule broken`);
+            this.description = error.rule.description;
             throw new Error(error._message);
         }
         finally {
-            aliased.forEach((law) => {
-                law.config = { _asAlias: false };
+            aliased.forEach((rule) => {
+                rule.config = { _asAlias: false };
             });
         }
     }
@@ -390,11 +390,11 @@ export class Law {
         }
 
         if (failResults.length === 0) {
-            this._log.debug(`Law uphold`);
+            this._log.debug(`Rule uphold`);
             await this.raiseVoidEvent('pass', input);
         }
         else {
-            this._log.debug(`Law broken`);
+            this._log.debug(`Rule broken`);
             await this.raiseVoidEvent('fail', input, results);
         }
     }
@@ -411,7 +411,7 @@ export class Law {
             }
         }
         catch (error) {
-            if (error instanceof LawError) {
+            if (error instanceof RuleError) {
                 throw error;
             }
             this.throw(error.message);
@@ -430,8 +430,8 @@ export class Law {
                 'These symbols: /-_|@',
             ]
 
-            throw new Error(`'${name}' is not a valid law name. `
-                + `\nLaw names are restricted to:${demands.join('\n- ')}`);
+            throw new Error(`'${name}' is not a valid rule name. `
+                + `\nRule names are restricted to:${demands.join('\n- ')}`);
         }
 
         return name;

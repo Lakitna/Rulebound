@@ -1,47 +1,47 @@
 import { expect } from 'chai';
-import { Lawbook } from '../../../../../src/lawbook';
-import law from '.';
+import { Rulebook } from '../../../../../src/rulebook';
+import rule from '.';
 
-const lawName = 'openapi-schema/string/format';
+const ruleName = 'openapi-schema/string/format';
 
-describe(`Law: ${lawName}`, function() {
+describe(`Rule: ${ruleName}`, function() {
     beforeEach(async function(this: any) {
-        this.book = new Lawbook({
-            laws: {
-                [lawName]: {
+        this.book = new Rulebook({
+            rules: {
+                [ruleName]: {
                     required: 'must',
                 },
             },
         });
-        await law(this.book);
-        this.law = this.book.filter(lawName).laws[0];
+        await rule(this.book);
+        this.rule = this.book.filter(ruleName).rules[0];
     });
 
     it('has a default config', async function() {
-        const book = new Lawbook();
-        await law(book);
+        const book = new Rulebook();
+        await rule(book);
 
-        expect(book.laws[0].config).to.deep.equal({
+        expect(book.rules[0].config).to.deep.equal({
             required: 'should',
             allowUnkown: false,
         });
     });
 
     it('passes when the schema has no format', async function() {
-        await this.book.enforce(this.law.name, 'foo', {
+        await this.book.enforce(this.rule.name, 'foo', {
             format: undefined,
         });
     });
 
-    it('enforces through a sub-law when the schema has a known format', async function() {
-        await expect(this.book.enforce(this.law.name, 'foo', {
+    it('enforces through a sub-rule when the schema has a known format', async function() {
+        await expect(this.book.enforce(this.rule.name, 'foo', {
             format: 'date',
         }))
             .to.be.rejectedWith(`'foo' is not a valid date`);
     });
 
     it('fails when the schema has an unkown format', async function() {
-        await expect(this.book.enforce(this.law.name, 'foo', {
+        await expect(this.book.enforce(this.rule.name, 'foo', {
             format: 'veryUnexpectedFormat',
         }))
             .to.be.rejectedWith(`Unkown format 'veryUnexpectedFormat'.`);
@@ -49,20 +49,20 @@ describe(`Law: ${lawName}`, function() {
 
     describe('Option: allowUnkown: true', function() {
         beforeEach(async function(this: any) {
-            this.book = new Lawbook({
-                laws: {
-                    [lawName]: {
+            this.book = new Rulebook({
+                rules: {
+                    [ruleName]: {
                         required: 'must',
                         allowUnkown: true,
                     },
                 },
             });
-            await law(this.book);
-            this.law = this.book.filter(lawName).laws[0];
+            await rule(this.book);
+            this.rule = this.book.filter(ruleName).rules[0];
         });
 
         it('passes when the schema has an unkown format', async function() {
-            await this.book.enforce(this.law.name, 'foo', {
+            await this.book.enforce(this.rule.name, 'foo', {
                 format: 'veryUnexpectedFormat',
             });
         });

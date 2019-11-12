@@ -1,5 +1,5 @@
-import { Lawbook } from '../../../../src/lawbook';
+import { Rulebook } from '../../../../src/rulebook';
 
-export default async (lawbook: Lawbook) => {
-    (await import('./is-kown-type')).default(lawbook);
+export default async (rulebook: Rulebook) => {
+    (await import('./is-kown-type')).default(rulebook);
 };

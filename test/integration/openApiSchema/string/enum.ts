@@ -1,8 +1,8 @@
 import { isUndefined } from 'lodash';
-import { Lawbook } from '../../../../src/lawbook';
+import { Rulebook } from '../../../../src/rulebook';
 
-export default (lawbook: Lawbook) => {
-    return lawbook
+export default (rulebook: Rulebook) => {
+    return rulebook
         .add('openapi-schema/string/enum')
         .describe(`
             "You can use the enum keyword to specify possible values of a request parameter or a model property."

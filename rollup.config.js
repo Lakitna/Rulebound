@@ -7,7 +7,7 @@ import del from 'rollup-plugin-delete';
 
 const config = [
     {
-        input: './src/lawbook.ts',
+        input: './src/rulebook.ts',
         output: [
             {
                 file: pkg.main, format: 'cjs',
@@ -43,7 +43,7 @@ const config = [
     },
 
     {
-        input: './src/lawbook.ts',
+        input: './src/rulebook.ts',
         output: [
             { file: pkg.types, format: 'es' }
         ],

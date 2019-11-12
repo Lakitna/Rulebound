@@ -1,26 +1,26 @@
 import sinon from 'sinon';
 import { expect } from 'chai';
 
-import { Law } from '../../src/law';
-import { Lawbook } from '../../src/lawbook';
+import { Rule } from '../../src/rule';
+import { Rulebook } from '../../src/rulebook';
 import c from 'ansi-colors';
 
 
-describe('The class Law', function() {
+describe('The class Rule', function() {
     it('initializes', function() {
-        const law = new Law('foo', {} as Lawbook);
+        const rule = new Rule('foo', {} as Rulebook);
 
-        expect(law).to.be.instanceOf(Law);
-        expect(law.name).to.equal('foo');
+        expect(rule).to.be.instanceOf(Rule);
+        expect(rule.name).to.equal('foo');
     });
 
     describe('Config', function() {
         beforeEach(function() {
-            this.law = new Law('foo', {} as Lawbook);
+            this.rule = new Rule('foo', {} as Rulebook);
         });
 
         it('initializes with defaults', function() {
-            expect(this.law._config).to.deep.equal({
+            expect(this.rule._config).to.deep.equal({
                 required: 'must',
                 _name: '*',
                 _throw: 'error',
@@ -34,21 +34,21 @@ describe('The class Law', function() {
                 foo: 'bar',
             };
 
-            this.law.config = Object.assign({}, config);
+            this.rule.config = Object.assign({}, config);
 
-            expect(this.law.config).to.deep.equal(config);
+            expect(this.rule.config).to.deep.equal(config);
         });
 
         it('does not remove existing config when setting other values', function() {
-            this.law.config = {
+            this.rule.config = {
                 foo: 'bar',
             };
 
-            this.law.config = {
+            this.rule.config = {
                 fizz: 'buzz',
             };
 
-            expect(this.law.config).to.deep.equal({
+            expect(this.rule.config).to.deep.equal({
                 required: 'must',
                 foo: 'bar',
                 fizz: 'buzz',
@@ -56,7 +56,7 @@ describe('The class Law', function() {
         });
 
         it('throws when specifying an unkown severity level', function() {
-            this.law.lawbook.config = {
+            this.rule.rulebook.config = {
                 generic: {
                     severity: {
                         'known level': 'error',
@@ -66,121 +66,121 @@ describe('The class Law', function() {
             };
 
             expect(() => {
-                this.law.config = { required: 'unkown level' };
-            }).to.throw(`Found unkown required level 'unkown level' in the configuration for law 'foo'`);
+                this.rule.config = { required: 'unkown level' };
+            }).to.throw(`Found unkown required level 'unkown level' in the configuration for rule 'foo'`);
         });
     });
 
     describe('on', function() {
         beforeEach(function() {
-            this.law = new Law('foo', {} as Lawbook);
+            this.rule = new Rule('foo', {} as Rulebook);
         });
 
         it('throws when trying to add an unkown event', async function() {
             expect(() => {
-                this.law.on('unkown', () => {});
+                this.rule.on('unkown', () => {});
             }).to.throw(`You tried to subscribe to unkown event 'unkown'`);
         });
 
         it('deletes the default handler when adding the first', async function() {
-            expect(this.law._handler['enforce'].length).to.equal(1);
-            expect(this.law._handler['enforce'][0].name).to.equal('undefined');
+            expect(this.rule._handler['enforce'].length).to.equal(1);
+            expect(this.rule._handler['enforce'][0].name).to.equal('undefined');
 
-            this.law.on('enforce', () => {});
+            this.rule.on('enforce', () => {});
 
-            expect(this.law._handler['enforce'].length).to.equal(1);
-            expect(this.law._handler['enforce'][0].name).to.equal('enforce');
+            expect(this.rule._handler['enforce'].length).to.equal(1);
+            expect(this.rule._handler['enforce'][0].name).to.equal('enforce');
         });
 
         it('does not delete a handler when adding the second first', async function() {
-            expect(this.law._handler['enforce'].length).to.equal(1);
-            expect(this.law._handler['enforce'][0].name).to.equal('undefined');
+            expect(this.rule._handler['enforce'].length).to.equal(1);
+            expect(this.rule._handler['enforce'][0].name).to.equal('undefined');
 
-            this.law.on('enforce', () => {});
-            this.law.on('enforce', () => {});
+            this.rule.on('enforce', () => {});
+            this.rule.on('enforce', () => {});
 
-            expect(this.law._handler['enforce'].length).to.equal(2);
-            expect(this.law._handler['enforce'][0].name).to.equal('enforce');
-            expect(this.law._handler['enforce'][1].name).to.equal('enforce');
+            expect(this.rule._handler['enforce'].length).to.equal(2);
+            expect(this.rule._handler['enforce'][0].name).to.equal('enforce');
+            expect(this.rule._handler['enforce'][1].name).to.equal('enforce');
         });
     });
 
     describe('Definition', function() {
         beforeEach(function() {
-            this.law = new Law('foo', {} as Lawbook);
+            this.rule = new Rule('foo', {} as Rulebook);
         });
 
         it('throws an error when called before its set', async function() {
-            expect(this.law._handler.enforce).to.be.lengthOf(1);
-            expect(this.law._handler.enforce[0].name).to.equal('undefined');
+            expect(this.rule._handler.enforce).to.be.lengthOf(1);
+            expect(this.rule._handler.enforce[0].name).to.equal('undefined');
 
-            await expect(this.law.enforce())
-                .to.be.rejectedWith('Law is undefined');
+            await expect(this.rule.enforce())
+                .to.be.rejectedWith('Rule is undefined');
         });
 
         it('sets the defintion', async function() {
             function noop() { return true; }
 
-            this.law.define(noop);
+            this.rule.define(noop);
 
-            expect(this.law._handler.enforce).to.be.lengthOf(1);
-            expect(this.law._handler.enforce[0].name).to.equal('enforce');
+            expect(this.rule._handler.enforce).to.be.lengthOf(1);
+            expect(this.rule._handler.enforce[0].name).to.equal('enforce');
 
-            await expect(this.law.enforce())
+            await expect(this.rule.enforce())
                 .to.be.fulfilled;
         });
 
         it('takes multiple definitions', async function() {
-            this.law.define(() => true);
-            this.law.define(() => true);
-            this.law.define(() => true);
+            this.rule.define(() => true);
+            this.rule.define(() => true);
+            this.rule.define(() => true);
 
-            expect(this.law._handler.enforce).to.be.lengthOf(3);
-            for (const fn of this.law._handler.enforce) {
+            expect(this.rule._handler.enforce).to.be.lengthOf(3);
+            for (const fn of this.rule._handler.enforce) {
                 expect(fn.name).to.equal('enforce');
             }
-            expect(this.law._handler.enforce[0])
-                .to.not.equal(this.law._handler.enforce[1])
-                .to.not.equal(this.law._handler.enforce[2]);
+            expect(this.rule._handler.enforce[0])
+                .to.not.equal(this.rule._handler.enforce[1])
+                .to.not.equal(this.rule._handler.enforce[2]);
         });
 
         it('is chainable', function() {
-            const returnValue = this.law.define(() => {});
-            expect(returnValue).to.equal(this.law);
+            const returnValue = this.rule.define(() => {});
+            expect(returnValue).to.equal(this.rule);
         });
     });
 
     describe('Description', function() {
         beforeEach(function() {
-            this.law = new Law('foo', {} as Lawbook);
+            this.rule = new Rule('foo', {} as Rulebook);
         });
 
         it('is chainable', function() {
-            expect(this.law.describe('foo')).to.equal(this.law);
+            expect(this.rule.describe('foo')).to.equal(this.rule);
         });
 
         it('removes indentation from each line of a regular string', function() {
-            this.law.describe('  FirstLine\n\tSecondLine');
+            this.rule.describe('  FirstLine\n\tSecondLine');
 
-            expect(this.law.description).to.equal('FirstLine\nSecondLine')
+            expect(this.rule.description).to.equal('FirstLine\nSecondLine')
         });
 
         it('removes indentation from each line of a template literal', function() {
-            this.law.describe(`
+            this.rule.describe(`
                 FirstLine
                 SecondLine
             `);
 
-            expect(this.law.description).to.equal('FirstLine\nSecondLine')
+            expect(this.rule.description).to.equal('FirstLine\nSecondLine')
         });
 
         it('includes the description when an error is thrown', async function() {
-            this.law
+            this.rule
                 .define(() => false)
                 .describe('awesome description');
 
             try {
-                await this.law.enforce();
+                await this.rule.enforce();
             }
             catch (error) {
                 expect(error.message).to.include('awesome description');
@@ -190,113 +190,113 @@ describe('The class Law', function() {
 
     describe('fail', function() {
         beforeEach(function() {
-            this.law = new Law('foo', {} as Lawbook);
+            this.rule = new Rule('foo', {} as Rulebook);
         });
 
         it('throws when called before its set with input', async function() {
-            expect(this.law._handler.fail).to.be.lengthOf(1);
-            expect(this.law._handler.fail[0].name).to.equal('undefined');
+            expect(this.rule._handler.fail).to.be.lengthOf(1);
+            expect(this.rule._handler.fail[0].name).to.equal('undefined');
 
-            expect(this.law._handler.fail[0].bind(this.law, 'bar'))
+            expect(this.rule._handler.fail[0].bind(this.rule, 'bar'))
                 .to.throw('');
         });
 
         it('throws when called with error before its set', function() {
-            expect(this.law._handler.fail).to.be.lengthOf(1);
-            expect(this.law._handler.fail[0].name).to.equal('undefined');
+            expect(this.rule._handler.fail).to.be.lengthOf(1);
+            expect(this.rule._handler.fail[0].name).to.equal('undefined');
 
-            expect(this.law._handler.fail[0].bind(this.law, 'bar', new Error('foo')))
+            expect(this.rule._handler.fail[0].bind(this.rule, 'bar', new Error('foo')))
                 .to.throw('foo');
         });
 
         it('sets the punishment', function() {
             function noop() { return; }
 
-            this.law.punishment(noop);
+            this.rule.punishment(noop);
 
-            expect(this.law._handler.fail).to.be.lengthOf(1);
-            expect(this.law._handler.fail[0].name).to.equal('fail');
+            expect(this.rule._handler.fail).to.be.lengthOf(1);
+            expect(this.rule._handler.fail[0].name).to.equal('fail');
         });
 
         it('takes multiple punishments', async function() {
-            this.law.punishment(() => true);
-            this.law.punishment(() => true);
-            this.law.punishment(() => true);
+            this.rule.punishment(() => true);
+            this.rule.punishment(() => true);
+            this.rule.punishment(() => true);
 
-            expect(this.law._handler.fail).to.be.lengthOf(3);
-            for (const fn of this.law._handler.fail) {
+            expect(this.rule._handler.fail).to.be.lengthOf(3);
+            for (const fn of this.rule._handler.fail) {
                 expect(fn.name).to.equal('fail');
             }
-            expect(this.law._handler.fail[0])
-                .to.not.equal(this.law._handler.fail[1])
-                .to.not.equal(this.law._handler.fail[2]);
+            expect(this.rule._handler.fail[0])
+                .to.not.equal(this.rule._handler.fail[1])
+                .to.not.equal(this.rule._handler.fail[2]);
         });
 
         it('is chainable', function() {
-            expect(this.law.punishment(() => {})).to.equal(this.law);
+            expect(this.rule.punishment(() => {})).to.equal(this.rule);
         });
     });
 
     describe('Reward', function() {
         beforeEach(function() {
-            this.law = new Law('foo', {} as Lawbook);
+            this.rule = new Rule('foo', {} as Rulebook);
         });
 
         it('is a noop when called before its set', function() {
-            expect(this.law._handler.pass).to.be.lengthOf(1);
-            expect(this.law._handler.pass[0].name).to.equal('undefined');
+            expect(this.rule._handler.pass).to.be.lengthOf(1);
+            expect(this.rule._handler.pass[0].name).to.equal('undefined');
 
-            expect(this.law._handler.pass[0])
+            expect(this.rule._handler.pass[0])
                 .to.not.throw();
         });
 
         it('sets the reward', function() {
             function noop() { return; }
 
-            this.law.reward(noop);
+            this.rule.reward(noop);
 
-            expect(this.law._handler.pass).to.be.lengthOf(1);
-            expect(this.law._handler.pass[0].name).to.equal('pass');
+            expect(this.rule._handler.pass).to.be.lengthOf(1);
+            expect(this.rule._handler.pass[0].name).to.equal('pass');
         });
 
         it('takes multiple rewards', async function() {
-            this.law.reward(() => true);
-            this.law.reward(() => true);
-            this.law.reward(() => true);
+            this.rule.reward(() => true);
+            this.rule.reward(() => true);
+            this.rule.reward(() => true);
 
-            expect(this.law._handler.pass).to.be.lengthOf(3);
-            for (const fn of this.law._handler.pass) {
+            expect(this.rule._handler.pass).to.be.lengthOf(3);
+            for (const fn of this.rule._handler.pass) {
                 expect(fn.name).to.equal('pass');
             }
-            expect(this.law._handler.pass[0])
-                .to.not.equal(this.law._handler.pass[1])
-                .to.not.equal(this.law._handler.pass[2]);
+            expect(this.rule._handler.pass[0])
+                .to.not.equal(this.rule._handler.pass[1])
+                .to.not.equal(this.rule._handler.pass[2]);
         });
 
         it('is chainable', function() {
-            expect(this.law.reward(() => {})).to.equal(this.law);
+            expect(this.rule.reward(() => {})).to.equal(this.rule);
         });
     });
 
     describe('Alias', function() {
         beforeEach(function() {
-            this.law = new Law('foo', {} as Lawbook);
+            this.rule = new Rule('foo', {} as Rulebook);
         });
 
         it('is chainable', function() {
-            expect(this.law.alias('foo')).to.be.instanceOf(Law);
+            expect(this.rule.alias('foo')).to.be.instanceOf(Rule);
         });
     });
 
     describe('Enforce', function() {
         beforeEach(function() {
-            this.law = new Law('foo', {} as Lawbook);
+            this.rule = new Rule('foo', {} as Rulebook);
         });
 
-        it('does not check the law if the option _throw=null', function() {
-            this.law.config = { _throw: null };
+        it('does not check the rule if the option _throw=null', function() {
+            this.rule.config = { _throw: null };
 
-            this.law
+            this.rule
                 .define(() => false)
                 .punishment(() => {
                     throw new Error('Enforce should not punish');
@@ -308,7 +308,7 @@ describe('The class Law', function() {
         });
 
         it('punishes when the definition returns false', function(done) {
-            this.law
+            this.rule
                 .define(() => false)
                 .punishment((input: any[], result: boolean) => {
                     expect(input).to.be.lengthOf(0);
@@ -322,7 +322,7 @@ describe('The class Law', function() {
         });
 
         it('punishes when the definition throws an error', function(done) {
-            this.law
+            this.rule
                 .define(() => {
                     throw new Error('Some error');
                 })
@@ -338,7 +338,7 @@ describe('The class Law', function() {
         });
 
         it('punishes when the definition returns an error message', function(done) {
-            this.law
+            this.rule
                 .define(() => 'foo')
                 .punishment((input: any[], result: string) => {
                     expect(input).to.be.lengthOf(0);
@@ -352,7 +352,7 @@ describe('The class Law', function() {
         });
 
         it('punishes when the definition returns a promise resolving to false', function(done) {
-            this.law
+            this.rule
                 .define(() => {
                     return new Promise((resolve) => {
                         resolve(false);
@@ -370,7 +370,7 @@ describe('The class Law', function() {
         });
 
         it('punishes when the definition returns a promise that throws an error', function(done) {
-            this.law
+            this.rule
                 .define(() => {
                     return new Promise(() => {
                         throw new Error('Some error');
@@ -388,7 +388,7 @@ describe('The class Law', function() {
         });
 
         it('punishes when the definition returns a promise resolving in an error message', function(done) {
-            this.law
+            this.rule
                 .define(() => {
                     return new Promise((resolve) => {
                         resolve('foo');
@@ -406,7 +406,7 @@ describe('The class Law', function() {
         });
 
         it('rewards when the definitions returns true', function(done) {
-            this.law
+            this.rule
                 .define(() => true)
                 .punishment(() => {
                     throw new Error('Enforce should not punish');
@@ -418,7 +418,7 @@ describe('The class Law', function() {
         });
 
         it('rewards when the definitions returns a promise resolving true', function(done) {
-            this.law
+            this.rule
                 .define(() => {
                     return new Promise((resolve) => {
                         resolve(true);
@@ -433,24 +433,24 @@ describe('The class Law', function() {
                 .enforce();
         });
 
-        it('returns a promise containing the law object instance', function() {
-            this.law
+        it('returns a promise containing the rule object instance', function() {
+            this.rule
                 .define(() => true)
                 .enforce(true)
-                .then((returnValue: Law) => {
-                    expect(returnValue).to.equal(this.law);
+                .then((returnValue: Rule) => {
+                    expect(returnValue).to.equal(this.rule);
                 });
         });
 
         it('handles an error thrown by reward', async function() {
-            this.law
+            this.rule
                 .define(() => true)
                 .reward(() => {
                     throw new Error('Reward error');
                 });
 
             try {
-                await this.law.enforce();
+                await this.rule.enforce();
                 throw new Error('Expected error to be thrown')
             }
             catch (error) {
@@ -459,14 +459,14 @@ describe('The class Law', function() {
         });
 
         it('handles an error thrown by punishment', async function() {
-            this.law
+            this.rule
                 .define(() => false)
                 .punishment(() => {
                     throw new Error('Punishment error');
                 });
 
             try {
-                await this.law.enforce();
+                await this.rule.enforce();
                 throw new Error('Expected error to be thrown')
             }
             catch (error) {
@@ -474,10 +474,10 @@ describe('The class Law', function() {
             }
         });
 
-        it('rethrows errors thrown by nested laws via the punishment of the parent law', function(done) {
-            this.law
+        it('rethrows errors thrown by nested rules via the punishment of the parent rule', function(done) {
+            this.rule
                 .define(async () => {
-                    await new Law('bar', {} as Lawbook)
+                    await new Rule('bar', {} as Rulebook)
                         .define(() => false)
                         .enforce();
                 })
@@ -488,79 +488,79 @@ describe('The class Law', function() {
                     throw new Error('Enforce should not reward');
                 });
 
-            this.law.enforce()
+            this.rule.enforce()
                 .then(() => {
                     throw new Error('Expected error to be thrown')
                 })
                 .catch((error: any) => {
-                    expect(error.law.name).to.equal('bar');
+                    expect(error.rule.name).to.equal('bar');
                     done();
                 });
         });
 
         describe('Using an alias', function() {
             beforeEach(function() {
-                this.lawbook = new Lawbook();
+                this.rulebook = new Rulebook();
             });
 
-            it('throws an error thrown by the aliased law in name of the alias', async function() {
-                this.lawbook.add('bar').define(() => 'alias failed');
-                this.lawbook.add('foo').alias('bar');
+            it('throws an error thrown by the aliased rule in name of the alias', async function() {
+                this.rulebook.add('bar').define(() => 'alias failed');
+                this.rulebook.add('foo').alias('bar');
 
                 try {
-                    await this.lawbook.enforce('foo');
+                    await this.rulebook.enforce('foo');
                     throw new Error('Expected error to be thrown')
                 }
                 catch (error) {
-                    expect(error.law.name).to.equal('foo');
+                    expect(error.rule.name).to.equal('foo');
                     expect(error.message).to.equal('alias failed');
                 }
             });
 
             it('throws when the alias does not exist', async function() {
-                this.lawbook.add('foo').alias('bar');
+                this.rulebook.add('foo').alias('bar');
 
                 try {
-                    await this.lawbook.enforce('foo');
+                    await this.rulebook.enforce('foo');
                     throw new Error('Expected error to be thrown')
                 }
                 catch (error) {
-                    expect(error.message).to.equal(`Could not find alias law named 'bar'`);
+                    expect(error.message).to.equal(`Could not find alias rule named 'bar'`);
                 }
             });
 
-            it('passes the alias when the aliassed law passes', async function() {
-                this.lawbook.add('bar').define(() => true);
-                this.lawbook.add('foo').alias('bar');
+            it('passes the alias when the aliassed rule passes', async function() {
+                this.rulebook.add('bar').define(() => true);
+                this.rulebook.add('foo').alias('bar');
 
-                await this.lawbook.enforce('foo');
+                await this.rulebook.enforce('foo');
             });
 
-            context('Aliased laws will throw with the severity of the alias', function() {
-                it('throws with the aliased law having the severity null', async function() {
-                    this.lawbook.add('bar', {severity: null}).define(() => 'alias failed');
-                    this.lawbook.add('foo').alias('bar');
+            context('Aliased rules will throw with the severity of the alias', function() {
+                it('throws with the aliased rule having the severity null', async function() {
+                    this.rulebook.add('bar', {severity: null}).define(() => 'alias failed');
+                    this.rulebook.add('foo').alias('bar');
 
                     try {
-                        await this.lawbook.enforce('foo');
+                        await this.rulebook.enforce('foo');
                         throw new Error('Expected error to be thrown')
                     }
                     catch (error) {
-                        expect(error.law.name).to.equal('foo');
+                        expect(error.rule.name).to.equal('foo');
                         expect(error.message).to.equal('alias failed');
                     }
                 });
 
-                it('throws with the aliased law having the severity should', async function() {
-                    this.lawbook.add('bar', {severity: 'should'}).define(() => 'alias failed');
-                    this.lawbook.add('foo').alias('bar');
+                it('throws with the aliased rule having the severity should', async function() {
+                    this.rulebook.add('bar', {severity: 'should'}).define(() => 'alias failed');
+                    this.rulebook.add('foo').alias('bar');
 
                     try {
-                        await this.lawbook.enforce('foo');
+                        await this.rulebook.enforce('foo');
                         throw new Error('Expected error to be thrown')
                     }
                     catch (error) {
-                        expect(error.law.name).to.equal('foo');
+                        expect(error.rule.name).to.equal('foo');
                         expect(error.message).to.equal('alias failed');
                     }
                 });
@@ -571,15 +571,15 @@ describe('The class Law', function() {
                     let aliassed = false;
                     let alias = false;
 
-                    this.lawbook.add('bar')
+                    this.rulebook.add('bar')
                         .define(() => false)
                         .punishment(() => { aliassed = true; });
 
-                    this.lawbook.add('foo')
+                    this.rulebook.add('foo')
                         .alias('bar')
                         .punishment(() => { alias = true; });
 
-                    await this.lawbook.enforce('foo');
+                    await this.rulebook.enforce('foo');
                     expect(aliassed).to.be.true;
                     expect(alias).to.be.false;
                 });
@@ -588,15 +588,15 @@ describe('The class Law', function() {
                     let aliassed = false;
                     let alias = false;
 
-                    this.lawbook.add('bar')
+                    this.rulebook.add('bar')
                         .define(() => true)
                         .reward(() => { aliassed = true; });
 
-                    this.lawbook.add('foo')
+                    this.rulebook.add('foo')
                         .alias('bar')
                         .reward(() => { alias = true; });
 
-                    await this.lawbook.enforce('foo');
+                    await this.rulebook.enforce('foo');
                     expect(aliassed).to.be.true;
                     expect(alias).to.be.false;
                 });
@@ -610,13 +610,13 @@ describe('The class Law', function() {
                 for (let i = 0; i < 100; i++) {
                     called.push([i, 0]);
 
-                    this.law.on('enforce', () => {
+                    this.rule.on('enforce', () => {
                         called[i][1]++;
                         return true;
                     });
                 }
 
-                await this.law.enforce();
+                await this.rule.enforce();
 
                 called.forEach((call: number[]) => {
                     expect(call[1]).to.equal(1);
@@ -626,18 +626,18 @@ describe('The class Law', function() {
             it('calls all fail events in order', async function() {
                 const called: number[][] = [];
 
-                this.law.on('enforce', () => false);
+                this.rule.on('enforce', () => false);
 
                 for (let i = 0; i < 100; i++) {
                     called.push([i, 0]);
 
-                    this.law.on('fail', () => {
+                    this.rule.on('fail', () => {
                         called[i][1]++;
                         return true;
                     });
                 }
 
-                await this.law.enforce();
+                await this.rule.enforce();
 
                 called.forEach((call: number[]) => {
                     expect(call[1]).to.equal(1);
@@ -647,18 +647,18 @@ describe('The class Law', function() {
             it('calls all pass events in order', async function() {
                 const called: number[][] = [];
 
-                this.law.on('enforce', () => true);
+                this.rule.on('enforce', () => true);
 
                 for (let i = 0; i < 100; i++) {
                     called.push([i, 0]);
 
-                    this.law.on('pass', () => {
+                    this.rule.on('pass', () => {
                         called[i][1]++;
                         return true;
                     });
                 }
 
-                await this.law.enforce();
+                await this.rule.enforce();
 
                 called.forEach((call: number[]) => {
                     expect(call[1]).to.equal(1);
@@ -669,22 +669,22 @@ describe('The class Law', function() {
 
     describe('Throw', function() {
         beforeEach(function() {
-            this.law = new Law('foo', {} as Lawbook)
+            this.rule = new Rule('foo', {} as Rulebook)
                 .define(() => false);
         });
 
         it('throws an error when the option throw=error', function() {
-            this.law.config = { _throw: 'error' };
+            this.rule.config = { _throw: 'error' };
 
-            expect(this.law.throw.bind(this.law, 'bar'))
+            expect(this.rule.throw.bind(this.rule, 'bar'))
                 .to.throw('bar');
         });
 
         it('logs an error when the options throw=warn', async function() {
-            const logStub = sinon.stub(this.law._log, 'warn');
+            const logStub = sinon.stub(this.rule._log, 'warn');
 
-            this.law.config = { _throw: 'warn' };
-            this.law.throw('bar');
+            this.rule.config = { _throw: 'warn' };
+            this.rule.throw('bar');
 
             expect(logStub.callCount).to.equal(1);
             expect(c.stripColor(logStub.getCall(0).lastArg)).to.equal('MUST bar');
@@ -693,20 +693,20 @@ describe('The class Law', function() {
         });
 
         it('logs when the options throw=log', async function() {
-            const logStub = sinon.stub(this.law._log, 'info');
+            const logStub = sinon.stub(this.rule._log, 'info');
 
-            this.law.config = { _throw: 'info' };
-            this.law.throw('bar');
+            this.rule.config = { _throw: 'info' };
+            this.rule.throw('bar');
 
             expect(logStub.callCount).to.equal(1);
             expect(c.stripColor(logStub.getCall(0).lastArg)).to.equal('MUST bar');
         });
 
         it('does nothing when the options throw=null', async function() {
-            const logStub = sinon.stub(this.law._log, 'info');
+            const logStub = sinon.stub(this.rule._log, 'info');
 
-            this.law.config = { _throw: null };
-            this.law.throw('bar');
+            this.rule.config = { _throw: null };
+            this.rule.throw('bar');
 
             expect(logStub.callCount).to.equal(0);
         });
@@ -715,12 +715,12 @@ describe('The class Law', function() {
     describe('_validateName', function() {
         it('throws when an invalid name is provided', function() {
             expect(() => {
-                new Law('foo^', {} as Lawbook);
-            }).to.throw(`'foo^' is not a valid law name.`)
+                new Rule('foo^', {} as Rulebook);
+            }).to.throw(`'foo^' is not a valid rule name.`)
         });
 
         it('does nothing when a valid name is provided', function() {
-            new Law('foo', {} as Lawbook);
+            new Rule('foo', {} as Rulebook);
         });
     })
 });

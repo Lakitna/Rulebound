@@ -1,7 +1,7 @@
-import { Lawbook } from '../../src/lawbook';
+import { Rulebook } from '../../src/rulebook';
 
-export default (lawbook: Lawbook) => {
-    lawbook
+export default (rulebook: Rulebook) => {
+    rulebook
         .add('is-power-of')
         .define((number, power) => {
             return (number**(1/power)) % 1 === 0;

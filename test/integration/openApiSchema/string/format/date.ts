@@ -1,8 +1,8 @@
 import assert from 'assert';
-import { Lawbook } from '../../../../../src/lawbook';
+import { Rulebook } from '../../../../../src/rulebook';
 
-export default (lawbook: Lawbook) => {
-    return lawbook
+export default (rulebook: Rulebook) => {
+    return rulebook
         .add('openapi-schema/string/format/date')
         .describe(`
             "full-date notation as defined by RFC 3339, section 5.6, for example, 2017-07-21"

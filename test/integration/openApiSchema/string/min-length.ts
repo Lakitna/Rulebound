@@ -1,8 +1,8 @@
 import { isUndefined } from 'lodash';
-import { Lawbook } from '../../../../src/lawbook';
+import { Rulebook } from '../../../../src/rulebook';
 
-export default (lawbook: Lawbook) => {
-    return lawbook
+export default (rulebook: Rulebook) => {
+    return rulebook
         .add('openapi-schema/string/min-length')
         .describe(`
             "String length can be restricted using \`minLength\` and \`maxLength\`"

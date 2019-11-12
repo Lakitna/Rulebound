@@ -1,18 +1,18 @@
 import { isUndefined } from 'lodash';
-import { Lawbook } from '../../../../../src/lawbook';
+import { Rulebook } from '../../../../../src/rulebook';
 
-export default async (lawbook: Lawbook) => {
+export default async (rulebook: Rulebook) => {
     const formats = [
         'date',
         'date-time',
     ];
 
-    const lawbookChapter = new Lawbook(lawbook.config.full);
+    const rulebookChapter = new Rulebook(rulebook.config.full);
     for (const format of formats) {
-        (await import(`./${format}`)).default(lawbookChapter);
+        (await import(`./${format}`)).default(rulebookChapter);
     }
 
-    return lawbook
+    return rulebook
         .add('openapi-schema/string/format', {
             allowUnkown: false,
             required: 'should',
@@ -30,7 +30,7 @@ export default async (lawbook: Lawbook) => {
                 return true;
             }
             else if (formats.includes(schema.format)) {
-                await lawbookChapter.enforce(`${this.name}/${schema.format}`, string, schema);
+                await rulebookChapter.enforce(`${this.name}/${schema.format}`, string, schema);
             }
             else if (!this.config.allowUnkown) {
                 throw new Error(`Unkown format '${schema.format}'. `

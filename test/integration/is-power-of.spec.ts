@@ -1,39 +1,39 @@
 import { expect } from 'chai';
-import { Lawbook } from '../../src/lawbook';
-import law from './is-power-of';
+import { Rulebook } from '../../src/rulebook';
+import rule from './is-power-of';
 
-const lawName = 'is-power-of';
+const ruleName = 'is-power-of';
 
-describe(`Law: ${lawName}`, function() {
+describe(`Rule: ${ruleName}`, function() {
     beforeEach(async function(this: any) {
-        this.book = new Lawbook({
-            laws: {
-                [lawName]: {
+        this.book = new Rulebook({
+            rules: {
+                [ruleName]: {
                     required: 'must',
                 },
             },
         });
-        await law(this.book);
-        this.law = this.book.filter(lawName).laws[0];
+        await rule(this.book);
+        this.rule = this.book.filter(ruleName).rules[0];
     });
 
     it('has the root default config', function() {
-        const book = new Lawbook();
-        law(book);
+        const book = new Rulebook();
+        rule(book);
 
-        expect(book.laws[0].config).to.deep.equal({
+        expect(book.rules[0].config).to.deep.equal({
             required: 'must',
         });
     });
 
     it('is kept when the number is a power of', async function() {
-        await this.book.enforce(this.law.name, 4, 2);
-        await this.book.enforce(this.law.name, 9, 2);
-        await this.book.enforce(this.law.name, 27, 3);
+        await this.book.enforce(this.rule.name, 4, 2);
+        await this.book.enforce(this.rule.name, 9, 2);
+        await this.book.enforce(this.rule.name, 27, 3);
     });
 
     it('is broken when the number is not a power of', async function() {
-        await expect(this.book.enforce(this.law.name, 3, 1.9))
+        await expect(this.book.enforce(this.rule.name, 3, 1.9))
             .to.be.rejectedWith('3 is not a power of 1.9');
     });
 });

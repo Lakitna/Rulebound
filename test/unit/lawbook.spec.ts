@@ -1,35 +1,35 @@
 import sinon from 'sinon';
 
-import { Lawbook } from '../../src/lawbook';
+import { Rulebook } from '../../src/rulebook';
 import { expect } from 'chai';
-import { Law } from '../../src/law';
-import { lawbookConfigDefault } from '../../src/config/defaults';
+import { Rule } from '../../src/rule';
+import { rulebookConfigDefault } from '../../src/config/defaults';
 
 
-describe('The class Lawbook', function() {
+describe('The class Rulebook', function() {
     it('initializes', function() {
-        const lawBook = new Lawbook();
+        const ruleBook = new Rulebook();
 
-        expect(lawBook).to.be.instanceOf(Lawbook);
-        expect(lawBook.laws).to.be.lengthOf(0);
-        expect(lawBook.config.full).to.deep.equal(lawbookConfigDefault);
+        expect(ruleBook).to.be.instanceOf(Rulebook);
+        expect(ruleBook.rules).to.be.lengthOf(0);
+        expect(ruleBook.config.full).to.deep.equal(rulebookConfigDefault);
     });
 
     describe('forEach', function() {
         beforeEach(function() {
-            this.lawBook = new Lawbook(lawbookConfigDefault);
+            this.ruleBook = new Rulebook(rulebookConfigDefault);
 
-            this.lawBook.laws = [
+            this.ruleBook.rules = [
                 'foo',
                 'bar',
                 'baz',
             ];
         });
 
-        it('loops over all laws in the set', function() {
+        it('loops over all rules in the set', function() {
             const fake = sinon.fake();
 
-            this.lawBook.forEach(fake);
+            this.ruleBook.forEach(fake);
 
             expect(fake.callCount).to.equal(3);
             expect(fake.lastCall.calledWith('baz', 2)).to.be.true;
@@ -38,68 +38,68 @@ describe('The class Lawbook', function() {
 
     describe('add', function() {
         beforeEach(function() {
-            this.lawBook = new Lawbook(lawbookConfigDefault);
+            this.ruleBook = new Rulebook(rulebookConfigDefault);
         });
 
-        it('creates a new law when called with a string', function() {
-            this.lawBook.add('foo');
+        it('creates a new rule when called with a string', function() {
+            this.ruleBook.add('foo');
 
-            expect(this.lawBook.laws).to.be.lengthOf(1);
-            expect(this.lawBook.laws[0]).to.be.instanceOf(Law);
-            expect(this.lawBook.laws[0].name).to.equal('foo');
+            expect(this.ruleBook.rules).to.be.lengthOf(1);
+            expect(this.ruleBook.rules[0]).to.be.instanceOf(Rule);
+            expect(this.ruleBook.rules[0].name).to.equal('foo');
         });
 
-        it('creates a new law with default config', function() {
+        it('creates a new rule with default config', function() {
             const config = { configSet: true };
 
-            this.lawBook.add('foo', config);
+            this.ruleBook.add('foo', config);
 
-            expect(this.lawBook.laws).to.be.lengthOf(1);
-            expect(this.lawBook.laws[0]).to.be.instanceOf(Law);
-            expect(this.lawBook.laws[0].config.configSet).to.equal(true);
+            expect(this.ruleBook.rules).to.be.lengthOf(1);
+            expect(this.ruleBook.rules[0]).to.be.instanceOf(Rule);
+            expect(this.ruleBook.rules[0].config.configSet).to.equal(true);
         });
 
-        it('adds the law when called with a Law', function() {
-            this.lawBook.add(new Law('foo', this.lawBook));
+        it('adds the rule when called with a Rule', function() {
+            this.ruleBook.add(new Rule('foo', this.ruleBook));
 
-            expect(this.lawBook.laws).to.be.lengthOf(1);
-            expect(this.lawBook.laws[0]).to.be.instanceOf(Law);
-            expect(this.lawBook.laws[0].name).to.equal('foo');
+            expect(this.ruleBook.rules).to.be.lengthOf(1);
+            expect(this.ruleBook.rules[0]).to.be.instanceOf(Rule);
+            expect(this.ruleBook.rules[0].name).to.equal('foo');
         });
 
-        it('throws an error when the same law is added twice', function() {
-            this.lawBook.add('foo');
+        it('throws an error when the same rule is added twice', function() {
+            this.ruleBook.add('foo');
 
-            expect(this.lawBook.add.bind(this.lawBook, 'foo'))
-                .to.throw('The law named \'foo\' already exists in the set');
+            expect(this.ruleBook.add.bind(this.ruleBook, 'foo'))
+                .to.throw('The rule named \'foo\' already exists in the set');
         });
 
-        it('sets the law specific config from the lawBook config', function() {
+        it('sets the rule specific config from the ruleBook config', function() {
             const config = {
-                laws: {
+                rules: {
                     foo: { bar: 'fizz' },
                 },
             };
-            this.lawBook.config.set(config);
-            this.lawBook.add('foo');
+            this.ruleBook.config.set(config);
+            this.ruleBook.add('foo');
 
-            expect(this.lawBook.laws[0].config.bar).to.equal('fizz');
+            expect(this.ruleBook.rules[0].config.bar).to.equal('fizz');
         });
 
-        it('overwrites the law default config with the specific config '
-                + 'from the lawBook config', function() {
+        it('overwrites the rule default config with the specific config '
+                + 'from the ruleBook config', function() {
             const config = {
-                laws: {
+                rules: {
                     foo: { sizzle: false },
                 },
             };
-            this.lawBook.config.set(config);
-            this.lawBook.add('foo', {
+            this.ruleBook.config.set(config);
+            this.ruleBook.add('foo', {
                 sizzle: true,
                 fizzle: true,
             });
 
-            expect(this.lawBook.laws[0].config).to.deep.equal({
+            expect(this.ruleBook.rules[0].config).to.deep.equal({
                 required: 'must',
                 sizzle: false,
                 fizzle: true,
@@ -109,152 +109,152 @@ describe('The class Lawbook', function() {
 
     describe('omit', function() {
         beforeEach(function() {
-            this.lawBook = new Lawbook(lawbookConfigDefault);
+            this.ruleBook = new Rulebook(rulebookConfigDefault);
 
-            this.lawBook.add('fizz');
-            this.lawBook.add('buzz');
-            this.lawBook.add('fizzbuzz');
+            this.ruleBook.add('fizz');
+            this.ruleBook.add('buzz');
+            this.ruleBook.add('fizzbuzz');
         });
 
-        it('returns a new set not containing the exact law by name', function() {
-            const newSet = this.lawBook.omit('fizz');
+        it('returns a new set not containing the exact rule by name', function() {
+            const newSet = this.ruleBook.omit('fizz');
 
-            expect(this.lawBook).to.not.equal(newSet);
-            expect(this.lawBook.config.full).to.deep.equal(newSet.config.full);
+            expect(this.ruleBook).to.not.equal(newSet);
+            expect(this.ruleBook.config.full).to.deep.equal(newSet.config.full);
             expect(newSet).to.be.lengthOf(2);
-            expect(newSet.laws[0].name).to.equal('buzz');
-            expect(newSet.laws[1].name).to.equal('fizzbuzz');
+            expect(newSet.rules[0].name).to.equal('buzz');
+            expect(newSet.rules[1].name).to.equal('fizzbuzz');
         });
 
-        it('returns a new set not containing the multiple laws by name pattern', function() {
-            const newSet = this.lawBook.omit('fizz*');
+        it('returns a new set not containing the multiple rules by name pattern', function() {
+            const newSet = this.ruleBook.omit('fizz*');
 
-            expect(this.lawBook).to.not.equal(newSet);
-            expect(this.lawBook.config.full).to.deep.equal(newSet.config.full);
+            expect(this.ruleBook).to.not.equal(newSet);
+            expect(this.ruleBook.config.full).to.deep.equal(newSet.config.full);
             expect(newSet).to.be.lengthOf(1);
-            expect(newSet.laws[0].name).to.equal('buzz');
+            expect(newSet.rules[0].name).to.equal('buzz');
         });
 
-        it('returns a full copy of the set when the name pattern does not match any law', function() {
-            const newSet = this.lawBook.omit('foo');
+        it('returns a full copy of the set when the name pattern does not match any rule', function() {
+            const newSet = this.ruleBook.omit('foo');
 
-            expect(this.lawBook).to.not.equal(newSet);
-            expect(this.lawBook.config.full).to.deep.equal(newSet.config.full);
+            expect(this.ruleBook).to.not.equal(newSet);
+            expect(this.ruleBook.config.full).to.deep.equal(newSet.config.full);
             expect(newSet).to.be.lengthOf(3);
         });
     });
 
     describe('has', function() {
         beforeEach(function() {
-            this.lawBook = new Lawbook(lawbookConfigDefault);
+            this.ruleBook = new Rulebook(rulebookConfigDefault);
 
-            this.lawBook.add('fizz');
-            this.lawBook.add('buzz');
-            this.lawBook.add('fizzbuzz');
+            this.ruleBook.add('fizz');
+            this.ruleBook.add('buzz');
+            this.ruleBook.add('fizzbuzz');
         });
 
-        it('returns true if the set contains the exact law name', function() {
-            expect(this.lawBook.has('fizz')).to.be.true;
+        it('returns true if the set contains the exact rule name', function() {
+            expect(this.ruleBook.has('fizz')).to.be.true;
         });
 
-        it('returns false if the set does not contain the exact law name', function() {
-            expect(this.lawBook.has('foo')).to.be.false;
+        it('returns false if the set does not contain the exact rule name', function() {
+            expect(this.ruleBook.has('foo')).to.be.false;
         });
 
-        it('returns true if the set contains the law name pattern', function() {
-            expect(this.lawBook.has('fizz*')).to.be.true;
+        it('returns true if the set contains the rule name pattern', function() {
+            expect(this.ruleBook.has('fizz*')).to.be.true;
         });
 
-        it('returns false if the set does not contain the law name pattern', function() {
-            expect(this.lawBook.has('foo*')).to.be.false;
+        it('returns false if the set does not contain the rule name pattern', function() {
+            expect(this.ruleBook.has('foo*')).to.be.false;
         });
     });
 
     describe('filter', function() {
         beforeEach(function() {
-            this.lawBook = new Lawbook(lawbookConfigDefault);
+            this.ruleBook = new Rulebook(rulebookConfigDefault);
 
-            this.lawBook.add('fizz');
-            this.lawBook.add('buzz');
-            this.lawBook.add('fizzbuzz');
+            this.ruleBook.add('fizz');
+            this.ruleBook.add('buzz');
+            this.ruleBook.add('fizzbuzz');
         });
 
-        it('returns a new set only containing the exact law by name', function() {
-            const newSet = this.lawBook.filter('fizz');
+        it('returns a new set only containing the exact rule by name', function() {
+            const newSet = this.ruleBook.filter('fizz');
 
-            expect(this.lawBook).to.not.equal(newSet);
-            expect(this.lawBook.config.full).to.deep.equal(newSet.config.full);
+            expect(this.ruleBook).to.not.equal(newSet);
+            expect(this.ruleBook.config.full).to.deep.equal(newSet.config.full);
             expect(newSet).to.be.lengthOf(1);
-            expect(newSet.laws[0].name).to.equal('fizz');
+            expect(newSet.rules[0].name).to.equal('fizz');
         });
 
-        it('returns a new set only containing the multiple laws by name pattern', function() {
-            const newSet = this.lawBook.filter('fizz*');
+        it('returns a new set only containing the multiple rules by name pattern', function() {
+            const newSet = this.ruleBook.filter('fizz*');
 
-            expect(this.lawBook).to.not.equal(newSet);
-            expect(this.lawBook.config.full).to.deep.equal(newSet.config.full);
+            expect(this.ruleBook).to.not.equal(newSet);
+            expect(this.ruleBook.config.full).to.deep.equal(newSet.config.full);
             expect(newSet).to.be.lengthOf(2);
-            expect(newSet.laws[0].name).to.equal('fizz');
-            expect(newSet.laws[1].name).to.equal('fizzbuzz');
+            expect(newSet.rules[0].name).to.equal('fizz');
+            expect(newSet.rules[1].name).to.equal('fizzbuzz');
         });
 
-        it('returns a new empty set when the name pattern does not match any law', function() {
-            const newSet = this.lawBook.filter('foo');
+        it('returns a new empty set when the name pattern does not match any rule', function() {
+            const newSet = this.ruleBook.filter('foo');
 
-            expect(this.lawBook).to.not.equal(newSet);
-            expect(this.lawBook.config.full).to.deep.equal(newSet.config.full);
+            expect(this.ruleBook).to.not.equal(newSet);
+            expect(this.ruleBook.config.full).to.deep.equal(newSet.config.full);
             expect(newSet).to.be.lengthOf(0);
         });
     });
 
     describe('enforce', function() {
         beforeEach(function() {
-            this.lawBook = new Lawbook(lawbookConfigDefault);
+            this.ruleBook = new Rulebook(rulebookConfigDefault);
         });
 
-        it('logs a warning when there are no laws in the set', async function() {
-            const logStub = sinon.stub(this.lawBook.log, 'warn');
+        it('logs a warning when there are no rules in the set', async function() {
+            const logStub = sinon.stub(this.ruleBook.log, 'warn');
 
-            await this.lawBook.enforce('foo');
+            await this.ruleBook.enforce('foo');
 
             expect(logStub.callCount).to.equal(1);
             expect(logStub.getCall(0).lastArg)
-                .to.equal('No laws to enforce. Book is empty');
+                .to.equal('No rules to enforce. Book is empty');
 
             logStub.restore();
         });
 
-        it('logs a warning when no laws match the law name pattern', async function() {
-            const logStub = sinon.stub(this.lawBook.log, 'warn');
+        it('logs a warning when no rules match the rule name pattern', async function() {
+            const logStub = sinon.stub(this.ruleBook.log, 'warn');
 
-            this.lawBook.add('fizz');
-            await this.lawBook.enforce('untraceable');
+            this.ruleBook.add('fizz');
+            await this.ruleBook.enforce('untraceable');
 
             expect(logStub.callCount).to.equal(1);
             expect(logStub.getCall(0).lastArg)
-                .to.equal(`No laws to enforce for name pattern 'untraceable'`);
+                .to.equal(`No rules to enforce for name pattern 'untraceable'`);
 
             logStub.restore();
         });
 
-        it('enforces all laws in ascending order of specificity', async function() {
+        it('enforces all rules in ascending order of specificity', async function() {
             let order = 0;
 
-            this.lawBook.add('fizz-bar-buzz')
+            this.ruleBook.add('fizz-bar-buzz')
                 .define(() => {
                     order++;
                     expect(order).to.equal(3);
                     return true;
                 });
 
-            this.lawBook.add('fizz')
+            this.ruleBook.add('fizz')
                 .define(() => {
                     order++;
                     expect(order).to.equal(1);
                     return true;
                 });
 
-            this.lawBook.add('fizz-buzz')
+            this.ruleBook.add('fizz-buzz')
                 .define(() => {
                     order++;
                     expect(order).to.equal(2);
@@ -262,7 +262,7 @@ describe('The class Lawbook', function() {
                 });
 
 
-            await this.lawBook.enforce('fizz*');
+            await this.ruleBook.enforce('fizz*');
             expect(order).to.equal(3);
         });
     });
