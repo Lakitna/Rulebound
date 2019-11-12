@@ -1,9 +1,9 @@
 import assert from 'assert';
 import { isUndefined } from 'lodash';
-import { Lawbook } from '../../../../../src/lawbook';
+import { Rulebook } from '../../../../../src/rulebook';
 
-export default (lawbook: Lawbook) => {
-    return lawbook
+export default (rulebook: Rulebook) => {
+    return rulebook
         .add('openapi-schema/string/format/date-time')
         .describe(`
             "the date-time notation as defined by RFC 3339, section 5.6, for example, 2017-07-21T17:32:28Z"
@@ -18,7 +18,7 @@ export default (lawbook: Lawbook) => {
             let time = split[1];
 
             try {
-                await this.lawbook.enforce('openapi-schema/string/format/date', date);
+                await this.rulebook.enforce('openapi-schema/string/format/date', date);
             }
             catch (error) {
                 return false;

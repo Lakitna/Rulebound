@@ -1,8 +1,8 @@
 import { isString } from 'lodash';
-import { Lawbook } from '../../../../src/lawbook';
+import { Rulebook } from '../../../../src/rulebook';
 
-export default async (lawbook: Lawbook) => {
-    const subLaws = [
+export default async (rulebook: Rulebook) => {
+    const subRules = [
         'format',
         'not-empty',
         'max-length',
@@ -11,11 +11,11 @@ export default async (lawbook: Lawbook) => {
         'enum',
     ];
 
-    for (const law of subLaws) {
-        await (await import(`./${law}`)).default(lawbook);
+    for (const rule of subRules) {
+        await (await import(`./${rule}`)).default(rulebook);
     }
 
-    return lawbook
+    return rulebook
         .add('openapi-schema/string/type')
         .define(async function(string) {
             if (!isString(string)) {

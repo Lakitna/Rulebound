@@ -1,6 +1,6 @@
-import { Lawbook } from '../../../../src/lawbook';
+import { Rulebook } from '../../../../src/rulebook';
 
-export default (lawbook: Lawbook) => {
+export default (rulebook: Rulebook) => {
     const types = [
         'number',
         'integer',
@@ -9,7 +9,7 @@ export default (lawbook: Lawbook) => {
         'array',
     ];
 
-    return lawbook
+    return rulebook
         .add('openapi-schema/schema/is-kown-type')
         .define(async function(schema) {
             if (!types.includes(schema.type)) {

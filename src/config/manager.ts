@@ -4,8 +4,8 @@ import isGlob from 'is-glob';
 import { cosmiconfigSync } from 'cosmiconfig';
 
 import { logger, Logger } from '../log';
-import { lawbookConfigDefault, lawConfigDefault } from './defaults';
-import { LawbookConfig, LawConfig, ParsedLawbookConfig, ParsedLawConfig } from './types';
+import { rulebookConfigDefault, ruleConfigDefault } from './defaults';
+import { RulebookConfig, RuleConfig, ParsedRulebookConfig, ParsedRuleConfig } from './types';
 import { specificity } from '../utils';
 
 
@@ -13,15 +13,15 @@ import { specificity } from '../utils';
  * Configuration handling
  */
 export class ConfigManager {
-    public config: ParsedLawbookConfig;
+    public config: ParsedRulebookConfig;
     private log: Logger;
 
-    public constructor(partialConfig?: Partial<LawbookConfig>) {
-        const configFile = cosmiconfigSync('lawful').search();
+    public constructor(partialConfig?: Partial<RulebookConfig>) {
+        const configFile = cosmiconfigSync('rulebound').search();
 
         const config = defaultsDeep(cloneDeep(partialConfig),
             (configFile === null) ? {} : cloneDeep(configFile.config),
-            cloneDeep(lawbookConfigDefault)) as LawbookConfig;
+            cloneDeep(rulebookConfigDefault)) as RulebookConfig;
 
         logger.level = config.verboseness;
         this.log = logger.child({});
@@ -35,30 +35,30 @@ export class ConfigManager {
         });
     }
 
-    public get laws() {
-        return this.config._laws;
+    public get rules() {
+        return this.config._rules;
     }
 
     public get generic() {
-        return omit(this.config, ['_laws', 'laws']);
+        return omit(this.config, ['_rules', 'rules']);
     }
 
-    public set(config: LawbookConfig) {
+    public set(config: RulebookConfig) {
         config = defaultsDeep(config, this.config);
         this.config = this.parse(config);
     }
 
     /**
-     * Find the most specific config for a law
+     * Find the most specific config for a rule
      */
-    public get(lawName: string) {
-        let config = lawConfigDefault;
+    public get(ruleName: string) {
+        let config = ruleConfigDefault;
 
-        this.config._laws.forEach((lawConfig) => {
-            if (micromatch.isMatch(lawName, lawConfig._name)
+        this.config._rules.forEach((ruleConfig) => {
+            if (micromatch.isMatch(ruleName, ruleConfig._name)
                     && !isUndefined(config._specificity)
-                    && config._specificity < lawConfig._specificity) {
-                config = lawConfig;
+                    && config._specificity < ruleConfig._specificity) {
+                config = ruleConfig;
             }
         });
 
@@ -66,66 +66,66 @@ export class ConfigManager {
     }
 
     /**
-     * Apply config cascading based on law name specificity
+     * Apply config cascading based on rule name specificity
      */
-    public parse(config: LawbookConfig): ParsedLawbookConfig {
-        const parsedConfig = config as ParsedLawbookConfig;
-        parsedConfig._laws = parsedConfig._laws || [];
+    public parse(config: RulebookConfig): ParsedRulebookConfig {
+        const parsedConfig = config as ParsedRulebookConfig;
+        parsedConfig._rules = parsedConfig._rules || [];
 
-        if (Object.keys(config.laws).length === 0) {
+        if (Object.keys(config.rules).length === 0) {
             // There is nothing to parse
             return parsedConfig;
         }
 
         this.log.debug('Unparsed configuration found. Parsing...');
 
-        // Map from `laws` to `_laws`
-        Object.entries(parsedConfig.laws)
-            .map((law) => {
-                law[1]._name = law[0];
-                return law[1];
+        // Map from `rules` to `_rules`
+        Object.entries(parsedConfig.rules)
+            .map((rule) => {
+                rule[1]._name = rule[0];
+                return rule[1];
             })
-            .forEach((law) => {
-                const existingIndex = parsedConfig._laws.findIndex((l) => {
-                    return l._name === law._name;
+            .forEach((rule) => {
+                const existingIndex = parsedConfig._rules.findIndex((l) => {
+                    return l._name === rule._name;
                 });
 
                 if (existingIndex >= 0) {
-                    // Update existing law config
-                    parsedConfig._laws[existingIndex] =
-                        defaultsDeep(law, parsedConfig._laws[existingIndex]);
+                    // Update existing rule config
+                    parsedConfig._rules[existingIndex] =
+                        defaultsDeep(rule, parsedConfig._rules[existingIndex]);
                 }
                 else {
-                    // Add new law config
-                    parsedConfig._laws.push(law as ParsedLawConfig);
+                    // Add new rule config
+                    parsedConfig._rules.push(rule as ParsedRuleConfig);
                 }
             });
 
         // Config cascading by specificity
-        parsedConfig._laws = this._sortBySpecificity(parsedConfig._laws, '_name');
-        parsedConfig._laws.forEach((sourceLaw, sourceI, laws) => {
-            if (isGlob(sourceLaw._name)) {
-                // Source law config will act as defaults for
-                // more specific target laws matching the name pattern
-                for (let targetI = sourceI; targetI < laws.length; targetI++) {
-                    let targetLaw = laws[targetI];
-                    if (micromatch.isMatch(targetLaw._name!, sourceLaw._name!)
-                            && targetLaw._specificity! > sourceLaw._specificity!) {
-                        targetLaw = defaultsDeep(targetLaw, sourceLaw);
+        parsedConfig._rules = this._sortBySpecificity(parsedConfig._rules, '_name');
+        parsedConfig._rules.forEach((sourceRule, sourceI, rules) => {
+            if (isGlob(sourceRule._name)) {
+                // Source rule config will act as defaults for
+                // more specific target rules matching the name pattern
+                for (let targetI = sourceI; targetI < rules.length; targetI++) {
+                    let targetRule = rules[targetI];
+                    if (micromatch.isMatch(targetRule._name!, sourceRule._name!)
+                            && targetRule._specificity! > sourceRule._specificity!) {
+                        targetRule = defaultsDeep(targetRule, sourceRule);
                     }
                 }
             }
         });
 
-        parsedConfig.laws = {};
+        parsedConfig.rules = {};
         return parsedConfig;
     }
 
     /**
      * Sort a list of objects by the specificity of the provided key
      */
-    private _sortBySpecificity(targets: LawConfig[], patternKey: string) {
-        const parsedTargets = targets as ParsedLawConfig[];
+    private _sortBySpecificity(targets: RuleConfig[], patternKey: string) {
+        const parsedTargets = targets as ParsedRuleConfig[];
 
         parsedTargets.map((target) => {
             target._specificity = specificity(target[patternKey]);

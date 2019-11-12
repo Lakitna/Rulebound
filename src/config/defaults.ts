@@ -1,6 +1,6 @@
-import { LawbookConfig, ParsedLawConfig } from './types';
+import { RulebookConfig, ParsedRuleConfig } from './types';
 
-export const lawbookConfigDefault: LawbookConfig = {
+export const rulebookConfigDefault: RulebookConfig = {
     verboseness: 'info',
     severity: {
         must: 'error',
@@ -8,10 +8,10 @@ export const lawbookConfigDefault: LawbookConfig = {
         may: 'info',
         optional: 'info',
     },
-    laws: {},
+    rules: {},
 };
 
-export const lawConfigDefault: ParsedLawConfig = {
+export const ruleConfigDefault: ParsedRuleConfig = {
     required: 'must',
     _name: '*',
     _specificity: 0,

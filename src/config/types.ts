@@ -1,15 +1,15 @@
-export interface LawConfig {
+export interface RuleConfig {
     [config: string]: any;
 
     /**
-     * Define the required of the law.
-     * note: `omit` will always result in the law not being enforced
+     * Define the required of the rule.
+     * note: `omit` will always result in the rule not being enforced
      * @default must
      */
     required: 'must'|'should'|'may'|'optional'|'omit';
 }
 
-export interface ParsedLawConfig extends LawConfig {
+export interface ParsedRuleConfig extends RuleConfig {
     /**
      * Define the behaviour of a failure.
      * @private
@@ -30,7 +30,7 @@ export interface ParsedLawConfig extends LawConfig {
 
 export type severityLevel = 'error'|'warn'|'info'|null;
 
-export interface LawbookConfig {
+export interface RulebookConfig {
     /**
      * Define what log level you want to output
      * @default log
@@ -63,17 +63,17 @@ export interface LawbookConfig {
     };
 
     /**
-     * List of law configurations
+     * List of rule configurations
      */
-    laws: {
-        [lawName: string]: LawConfig;
+    rules: {
+        [ruleName: string]: RuleConfig;
     };
 }
 
-export interface ParsedLawbookConfig extends LawbookConfig {
+export interface ParsedRulebookConfig extends RulebookConfig {
     /**
      * @private
-     * List of laws and their parsed configurations.
+     * List of rules and their parsed configurations.
      */
-    _laws: ParsedLawConfig[];
+    _rules: ParsedRuleConfig[];
 }

@@ -1,29 +1,29 @@
 import { expect } from 'chai';
-import { Lawbook } from '../../../../src/lawbook';
-import law from './pattern';
+import { Rulebook } from '../../../../src/rulebook';
+import rule from './pattern';
 import alias from './pattern-alias';
 
-const lawName = 'openapi-schema/string/pattern-alias';
+const ruleName = 'openapi-schema/string/pattern-alias';
 
-describe(`Law: ${lawName}`, function() {
+describe(`Rule: ${ruleName}`, function() {
     beforeEach(async function(this: any) {
-        this.book = new Lawbook({
-            laws: {
-                [lawName]: {
+        this.book = new Rulebook({
+            rules: {
+                [ruleName]: {
                     required: 'must',
                 },
             },
         });
-        await law(this.book);
+        await rule(this.book);
         await alias(this.book);
-        this.alias = this.book.filter(lawName).laws[0];
+        this.alias = this.book.filter(ruleName).rules[0];
     });
 
     it('has a default config', function() {
-        const book = new Lawbook();
-        law(book);
+        const book = new Rulebook();
+        rule(book);
 
-        expect(book.laws[0].config).to.deep.equal({
+        expect(book.rules[0].config).to.deep.equal({
             required: 'must',
             flags: 'g',
         });
@@ -47,21 +47,21 @@ describe(`Law: ${lawName}`, function() {
         })).to.be.rejectedWith(`'abc' does not match pattern /[A-Z]{3}/g`);
     });
 
-    // TODO: #19 Pass config of alias to target law
+    // TODO: #19 Pass config of alias to target rule
     // eslint-disable-next-line mocha/no-setup-in-describe
     describe.skip('Option: flags = i', function() {
         beforeEach(async function(this: any) {
-            this.book = new Lawbook({
-                laws: {
-                    [lawName]: {
+            this.book = new Rulebook({
+                rules: {
+                    [ruleName]: {
                         required: 'must',
                         flags: 'i',
                     },
                 },
             });
-            await law(this.book);
+            await rule(this.book);
             await alias(this.book);
-            this.alias = this.book.filter(lawName).laws[0];
+            this.alias = this.book.filter(ruleName).rules[0];
         });
 
         it('passes when the string matches case insensitive', async function() {

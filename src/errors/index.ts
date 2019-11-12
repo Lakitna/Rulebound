@@ -1,7 +1,7 @@
 /* istanbul ignore file */
 
-export { LawbookError } from './lawbook-error';
-export { LawError } from './law-error';
+export { RulebookError } from './rulebook-error';
+export { RuleError } from './rule-error';
 export { ConfigError } from './config-error';
 
 /**

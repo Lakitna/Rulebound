@@ -1,21 +1,21 @@
 import { isObject } from 'lodash';
-import { Lawbook } from '../../../src/lawbook';
+import { Rulebook } from '../../../src/rulebook';
 
-export default async (lawbook: Lawbook) => {
-    const subLaws = [
+export default async (rulebook: Rulebook) => {
+    const subRules = [
         'schema',
         'string',
     ];
-    for (const law of subLaws) {
-        await (await import(`./${law}/index`)).default(lawbook);
+    for (const rule of subRules) {
+        await (await import(`./${rule}/index`)).default(rulebook);
     }
 
-    return lawbook
+    return rulebook
         .add('openapi-schema')
         .describe(`
             JSON schema is at the heart of OpenAPI.
 
-            Note that this is a partial implementation created to test Lawful.
+            Note that this is a partial implementation created to test Ruleful.
         `)
         .define(async function(json, schema) {
             this.context.trail = [];
@@ -42,10 +42,10 @@ export default async (lawbook: Lawbook) => {
                     this.context.trail.push(key);
 
                     // Some basic checks on the schema
-                    await lawbook.enforce('openapi-schema/schema/*', subSchema);
+                    await rulebook.enforce('openapi-schema/schema/*', subSchema);
 
                     // Enforce more specific rules
-                    await lawbook.enforce(
+                    await rulebook.enforce(
                         `openapi-schema/${subSchema.type}/*`,
                         subJson,
                         subSchema);

@@ -29,8 +29,8 @@ function fullWidthLine(left: string, right: string) {
 
 function logFormat(info: TransformableInfo) {
     const logLine = `${levelMarkers[info.level]()} ${info.message}`;
-    if (info.law) {
-        return fullWidthLine(logLine, c.grey(`${info.law}`));
+    if (info.rule) {
+        return fullWidthLine(logLine, c.grey(`${info.rule}`));
     }
     return logLine;
 }
