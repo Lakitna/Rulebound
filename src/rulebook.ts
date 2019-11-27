@@ -61,6 +61,16 @@ export class Rulebook {
         rule.config = config;
 
         this.rules.push(rule);
+        this.rules.sort((a, b) => {
+            if (a.specificity > b.specificity) {
+                return 1;
+            }
+            if (a.specificity < b.specificity) {
+                return -1;
+            }
+            return 0;
+        });
+
         return rule;
     }
 
@@ -116,16 +126,7 @@ export class Rulebook {
 
         const matcher = micromatch.matcher(globPattern);
         const subSet = this.rules
-            .filter((rule) => matcher(rule.name))
-            .sort((a, b) => {
-                if (a.specificity > b.specificity) {
-                    return 1;
-                }
-                if (a.specificity < b.specificity) {
-                    return -1;
-                }
-                return 0;
-            });
+            .filter((rule) => matcher(rule.name));
 
         if (subSet.length === 0) {
             this.log.warn(`No rules to enforce for name pattern '${globPattern}'`);

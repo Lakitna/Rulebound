@@ -86,6 +86,24 @@ describe('The class Rulebook', function() {
             expect(this.ruleBook.rules[0].config.bar).to.equal('fizz');
         });
 
+        it('orders the rules by specificity', function() {
+            this.ruleBook.add('foo');
+            this.ruleBook.add('foo-bar-lor');
+            this.ruleBook.add('foo-bar/xxx-aaa');
+            this.ruleBook.add('foo-baz');
+            this.ruleBook.add('bar-oof/foo');
+            this.ruleBook.add('bar-oof');
+
+            expect(this.ruleBook.rules.map((rule: Rule) => rule.name)).to.deep.equal([
+                'foo',
+                'foo-baz',
+                'bar-oof',
+                'foo-bar-lor',
+                'bar-oof/foo',
+                'foo-bar/xxx-aaa',
+            ]);
+        });
+
         it('overwrites the rule default config with the specific config '
                 + 'from the ruleBook config', function() {
             const config = {
