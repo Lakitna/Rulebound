@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## 1.1.0
+
+### Changed
+
+- Moved sorting of rules in rulebook from `enforce()` to `add()`. Because of this `forEach()` will now be in sorted order.
+
 ## 1.0.0
 
 ### Added
