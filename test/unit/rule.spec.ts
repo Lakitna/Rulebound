@@ -722,5 +722,27 @@ describe('The class Rule', function() {
         it('does nothing when a valid name is provided', function() {
             new Rule('foo', {} as Rulebook);
         });
-    })
+
+        // eslint-disable-next-line mocha/no-setup-in-describe
+        [
+            '/', '|', '@', '-', '_',
+        ].forEach((symbol) => {
+            it(`considers ${symbol} valid`, function() {
+                new Rule(`foo${symbol}bar`, {} as Rulebook);
+            });
+        });
+
+        // eslint-disable-next-line mocha/no-setup-in-describe
+        [
+            '\\', '*', '+', '^', '&', '(', ')', '{', '}',
+            '[', ']', '=', '$', '#', '!', '%', '~', '\'',
+            '"', '`', '<', '>', '.', ',', ';', ':', '?',
+        ].forEach((symbol) => {
+            it(`considers ${symbol} invalid`, function() {
+                expect(() => {
+                    new Rule(`foo${symbol}bar`, {} as Rulebook);
+                }).to.throw();
+            });
+        });
+    });
 });

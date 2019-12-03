@@ -51,6 +51,7 @@ module.exports = {
                 'sonarjs/no-identical-functions': 'off',
 
                 '@typescript-eslint/no-object-literal-type-assertion': 'off',
+                '@typescript-eslint/no-empty-function': 'off',
 
                 'lodash/prefer-noop': 'off',
                 'lodash/prefer-constant': 'off',

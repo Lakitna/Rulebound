@@ -336,7 +336,6 @@ export class Rule {
         }
         if (throwingRuleConfig._throw === 'info') {
             this._log.info(ruleError.toString());
-            return;
         }
     }
 
@@ -419,7 +418,7 @@ export class Rule {
     }
 
     private validateName(name: string) {
-        const re = new RegExp(/^[A-Za-z0-9/\-_@|]+$/, 'g');
+        const re = new RegExp(/^[\w-/@|]+$/, 'g');
 
         if (re.exec(name) === null) {
             const demands = [
