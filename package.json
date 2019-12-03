@@ -16,7 +16,7 @@
     "test:unit": "nyc mocha test/unit",
     "test:integration": "mocha test/integration",
     "lint": "eslint ./*/**/*.{ts,js}",
-    "prepublishOnly": "npm run lint && npm run test:unit -- --forbid-only && npm run test:integration -- --forbid-only && npm run build"
+    "prepublishOnly": "npm run lint && (npm run test:unit -- --forbid-only & npm run test:integration -- --forbid-only) && npm run build"
   },
   "author": {
     "name": "Sander van Beek"
@@ -36,7 +36,7 @@
     "rule-based"
   ],
   "devDependencies": {
-    "@types/chai": "^4.2.5",
+    "@types/chai": "^4.2.6",
     "@types/chai-as-promised": "^7.1.2",
     "@types/is-glob": "^4.0.1",
     "@types/lodash": "^4.14.149",
@@ -64,7 +64,7 @@
     "rollup-plugin-delete": "^1.1.0",
     "rollup-plugin-dts": "^1.1.12",
     "rollup-plugin-eslint": "^7.0.0",
-    "rollup-plugin-typescript2": "^0.25.2",
+    "rollup-plugin-typescript2": "^0.25.3",
     "sinon": "^7.5.0",
     "ts-node": "^8.5.4",
     "tslib": "^1.10.0",

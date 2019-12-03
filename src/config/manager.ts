@@ -1,4 +1,4 @@
-import { cloneDeep, defaultsDeep, omit, omitBy, isUndefined } from 'lodash';
+import { cloneDeep, defaultsDeep, omit, omitBy, isUndefined, isNull } from 'lodash';
 import micromatch from 'micromatch';
 import isGlob from 'is-glob';
 import { cosmiconfigSync } from 'cosmiconfig';
@@ -17,11 +17,7 @@ export class ConfigManager {
     private log: Logger;
 
     public constructor(partialConfig?: Partial<RulebookConfig>) {
-        const configFile = cosmiconfigSync('rulebound').search();
-
-        const config = defaultsDeep(cloneDeep(partialConfig),
-            (configFile === null) ? {} : cloneDeep(configFile.config),
-            cloneDeep(rulebookConfigDefault)) as RulebookConfig;
+        const config = this._resolveConfigFile(partialConfig);
 
         logger.level = config.verboseness;
         this.log = logger.child({});
@@ -86,8 +82,8 @@ export class ConfigManager {
                 return rule[1];
             })
             .forEach((rule) => {
-                const existingIndex = parsedConfig._rules.findIndex((l) => {
-                    return l._name === rule._name;
+                const existingIndex = parsedConfig._rules.findIndex((r) => {
+                    return r._name === rule._name;
                 });
 
                 if (existingIndex >= 0) {
@@ -142,5 +138,24 @@ export class ConfigManager {
                 }
                 return 0;
             });
+    }
+
+    /**
+     * Resolve full config using all sources
+     */
+    private _resolveConfigFile(partialConfig?: Partial<RulebookConfig>) {
+        let configFile = cosmiconfigSync('rulebound').search();
+        if (isNull(configFile)) {
+            configFile = {
+                filepath: '',
+                config: {},
+            };
+        }
+
+        return defaultsDeep(
+            cloneDeep(partialConfig),
+            cloneDeep(configFile.config),
+            cloneDeep(rulebookConfigDefault)
+        ) as RulebookConfig;
     }
 }
