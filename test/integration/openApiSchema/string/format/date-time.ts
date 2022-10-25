@@ -1,16 +1,18 @@
-import assert from 'assert';
-import { isUndefined } from 'lodash';
+import { isUndefined } from 'lodash-es';
+import assert from 'node:assert';
 import { Rulebook } from '../../../../../src/rulebook';
 
 export default (rulebook: Rulebook) => {
     return rulebook
         .add('openapi-schema/string/format/date-time')
-        .describe(`
+        .describe(
+            `
             "the date-time notation as defined by RFC 3339, section 5.6, for example, 2017-07-21T17:32:28Z"
 
             https://swagger.io/docs/specification/data-models/data-types/#format
-        `)
-        .define(async function(string) {
+        `
+        )
+        .define(async function (string) {
             const split = string.split('T');
             assert(split.length == 2);
 
@@ -19,8 +21,7 @@ export default (rulebook: Rulebook) => {
 
             try {
                 await this.rulebook.enforce('openapi-schema/string/format/date', date);
-            }
-            catch (error) {
+            } catch {
                 return false;
             }
 
@@ -28,8 +29,7 @@ export default (rulebook: Rulebook) => {
             if (isUndefined(timeZone)) {
                 assert(time.endsWith('Z'));
                 time = time.replace(/Z$/, '');
-            }
-            else {
+            } else {
                 const timeZoneSplit = timeZone.split(':');
                 assert(timeZoneSplit.length === 2);
 
@@ -55,16 +55,15 @@ export default (rulebook: Rulebook) => {
 
             return true;
         })
-        .punishment(function(inputs) {
+        .punishment(function (inputs) {
             this.throw(`'${inputs[0]}' is not valid date-time`);
         });
 };
-
 
 function assertZeroPaddedTimePartial(value: string, maximum: number) {
     assert(value.length == 2);
 
     const numeric = Number(value);
-    assert(!isNaN(numeric));
+    assert(!Number.isNaN(numeric));
     assert(0 <= numeric && numeric < maximum);
 }

@@ -1,15 +1,17 @@
-import assert from 'assert';
+import assert from 'node:assert';
 import { Rulebook } from '../../../../../src/rulebook';
 
 export default (rulebook: Rulebook) => {
     return rulebook
         .add('openapi-schema/string/format/date')
-        .describe(`
+        .describe(
+            `
             "full-date notation as defined by RFC 3339, section 5.6, for example, 2017-07-21"
 
             https://swagger.io/docs/specification/data-models/data-types/#format
-        `)
-        .define(function(string) {
+        `
+        )
+        .define(function (string) {
             const split = string.split('-');
             assert(split.length == 3);
 
@@ -28,9 +30,9 @@ export default (rulebook: Rulebook) => {
             d = Number(d);
 
             // Always numbers
-            assert(!isNaN(y));
-            assert(!isNaN(m));
-            assert(!isNaN(d));
+            assert(!Number.isNaN(y));
+            assert(!Number.isNaN(m));
+            assert(!Number.isNaN(d));
 
             // Always in range
             const daysPerMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
@@ -40,7 +42,7 @@ export default (rulebook: Rulebook) => {
 
             return true;
         })
-        .punishment(function(inputs) {
+        .punishment(function (inputs) {
             this.throw(`'${inputs[0]}' is not a valid date`);
         });
 };

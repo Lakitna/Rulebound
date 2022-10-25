@@ -1,12 +1,17 @@
-import { omitBy, defaultsDeep, keys, isError, has, isString, isUndefined } from 'lodash';
+import { defaultsDeep, has, isError, isString, isUndefined, keys, omitBy } from 'lodash-es';
 
+import { ruleConfigDefault } from './config/defaults';
+import { ParsedRuleConfig, RuleConfig } from './config/types';
+import { ConfigError, RuleError } from './errors';
 import { logger, Logger } from './log';
-import { RuleError, ConfigError } from './errors';
 import { Rulebook } from './rulebook';
 import { specificity } from './utils';
-import { RuleConfig, ParsedRuleConfig } from './config/types';
-import { ruleConfigDefault } from './config/defaults';
 
+type ruleEventHandlers = {
+    enforce: { (this: Rule, ...input: any): boolean | unknown }[];
+    pass: { (this: Rule, input: any[]): void }[];
+    fail: { (this: Rule, input: any[], result: unknown[] | Error): void }[];
+};
 
 /**
  * A testing rule
@@ -36,21 +41,17 @@ export class Rule {
     private _alias: string | null;
     private _config: ParsedRuleConfig;
     private _log: Logger;
-    private _handler: {
-        enforce: { (this: Rule, ...input: any): boolean|any }[];
-        pass: { (this: Rule, input: any[]): void }[];
-        fail: { (this: Rule, input: any[], result: any[]|Error): void }[];
-    };
+    private _handler: ruleEventHandlers;
 
     /**
      * Use context to share state between events
      */
     public context: {
         [key: string]: any;
-    }
+    };
     public ctx: {
         [key: string]: any;
-    }
+    };
 
     public constructor(name: string, rulebook: Rulebook) {
         this.name = this.validateName(name);
@@ -70,7 +71,9 @@ export class Rule {
             ],
             pass: [
                 // eslint-disable-next-line no-shadow-restricted-names
-                function undefined() { return; },
+                function undefined() {
+                    return;
+                },
             ],
             fail: [
                 // eslint-disable-next-line no-shadow-restricted-names
@@ -78,12 +81,11 @@ export class Rule {
                     this.throw(result);
                 },
             ],
-        }
+        };
 
         this.context = {};
         this.ctx = this.context;
     }
-
 
     /**
      * Get config, omitting keys that start with `_`.
@@ -114,13 +116,13 @@ export class Rule {
                 throw new ConfigError(
                     `Found unkown required level '${this._config.required}' in the`,
                     `configuration for rule '${this.name}'. Expected one of`,
-                    `['${keys(rulebookConfig.severity).join(`', '`)}', null]`);
+                    `['${keys(rulebookConfig.severity).join("', '")}', null]`
+                );
             }
 
             this._config._throw = rulebookConfig.severity[this._config.required];
         }
     }
-
 
     /**
      * Subscribe to an event
@@ -140,26 +142,24 @@ export class Rule {
      *     console.log('Yay! The rule is uphold. Let\'s party!');
      * });
      */
-    public on(event: 'enforce'|'fail'|'pass', fn: (this: Rule, ...params: any) => any) {
+    public on<E extends keyof ruleEventHandlers>(event: E, function_: ruleEventHandlers[E][0]) {
         this._log.debug(`Handler for event '${event}' added`);
 
-        Object.defineProperty(fn, 'name', { value: event });
+        Object.defineProperty(function_, 'name', { value: event });
 
         if (event !== 'enforce' && event !== 'fail' && event !== 'pass') {
-            throw new RuleError(this,
-                `You tried to subscribe to unkown event '${event}'`);
+            throw new RuleError(this, `You tried to subscribe to unkown event '${event}'`);
         }
 
         // Delete default `undefined` handler function
-        const handlers = this._handler[event];
-        if (handlers.length === 1 && handlers[0].name.startsWith('undefined')) {
+        const handlers = this._handler[event] as ruleEventHandlers[E];
+        if (handlers.length === 1 && handlers[0].name === 'undefined') {
             handlers.shift();
         }
 
-        this._handler[event].push(fn);
+        this._handler[event].push(function_);
         return this;
     }
-
 
     /**
      * Define the rule logic.
@@ -171,10 +171,9 @@ export class Rule {
      *     return val > 5;
      * });
      */
-    public define(fn: (this: Rule, ...input: any) => boolean|any) {
-        return this.on('enforce', fn);
+    public define(function_: (this: Rule, ...input: any) => boolean | any) {
+        return this.on('enforce', function_);
     }
-
 
     /**
      * Define what will happen if the rule fails.  The returned/thrown value is
@@ -190,10 +189,9 @@ export class Rule {
      *     this.throw(`Enforcing resulted in ${result}`);
      * });
      */
-    public punishment(fn: (this: Rule, input: any, err: any) => void) {
-        return this.on('fail', fn);
+    public punishment(function_: (this: Rule, input: any, error: any) => void) {
+        return this.on('fail', function_);
     }
-
 
     /**
      * Define what will happen if the rule passes.
@@ -203,10 +201,9 @@ export class Rule {
      *     console.log('Yay! The rule is uphold. Let\'s party!');
      * });
      */
-    public reward(fn: (this: Rule, input: any[]) => void) {
-        return this.on('pass', fn);
+    public reward(function_: (this: Rule, input: any[]) => void) {
+        return this.on('pass', function_);
     }
-
 
     /**
      * Provide a human readable description of the rule.
@@ -222,9 +219,10 @@ export class Rule {
             // Get rid of whitespace at the start of each line
             .replace(/^[^\S\n]+/gm, '');
 
+        // TODO: reflow text in a MD-like fashion
+
         return this;
     }
-
 
     /**
      * When enforcing use another rule(s) under the namespace of the current rule.
@@ -248,7 +246,6 @@ export class Rule {
         return this;
     }
 
-
     /**
      * Enforce a rule.
      *
@@ -266,30 +263,24 @@ export class Rule {
 
         this._log.debug(`Event triggered: 'enforce'`);
 
-        let result = null;
-        if (this._alias !== null) {
-            try {
+        let result: Error | any[];
+        try {
+            if (this._alias !== null) {
                 await this.enforceAlias(this._alias, input);
-
                 // The aliased rule did not throw. Stop enforcing now to prevent
-                // doing things twice. This also means that the current rule will
-                // not reward.
+                // doing things twice. This also means that the current rule will not reward.
                 return this;
             }
-            catch (error) {
-                result = error;
+
+            result = [];
+            for (const enforceHandler of this._handler.enforce) {
+                result.push(await enforceHandler.call(this, ...input));
             }
-        }
-        else {
-            try {
-                result = [];
-                for (const fn of this._handler.enforce) {
-                    result.push(await fn.call(this, ...input));
-                }
+        } catch (error) {
+            if (!isError(error)) {
+                throw new TypeError(`Rule ${this.name} threw non-error: ` + error);
             }
-            catch (error) {
-                result = error;
-            }
+            result = error;
         }
 
         await this.handleEnforceResult(input, result);
@@ -303,7 +294,7 @@ export class Rule {
      * @example
      * Rule.throw('An error has occured');
      */
-    public throw(...message: (any|Error)[]) {
+    public throw(...message: (any | Error)[]) {
         this._log.debug(`Throwing error`);
 
         let ruleError = message.find((partialMessage) => {
@@ -313,8 +304,7 @@ export class Rule {
             const errorMessages = message.map((value: any) => {
                 if (isError(value)) {
                     return value.message;
-                }
-                else if (!isString(value)) {
+                } else if (!isString(value)) {
                     return value.toString();
                 }
                 return value;
@@ -336,10 +326,8 @@ export class Rule {
         }
         if (throwingRuleConfig._throw === 'info') {
             this._log.info(ruleError.toString());
-            return;
         }
     }
-
 
     /**
      * Enforce by the definition of another rule
@@ -351,49 +339,50 @@ export class Rule {
             throw new Error(`Could not find alias rule named '${aliasName}'`);
         }
 
+        // eslint-disable-next-line unicorn/no-array-callback-reference
         const aliased = this.rulebook.filter(aliasName);
-        aliased.forEach((rule) => {
+        for (const rule of aliased.rules) {
             // Tell the rule it's being enforced as an alias
             rule.config = { _asAlias: true };
 
             // We are not copying the config of the current rule to the alias.
             // We may want to add that at some point, but I quite frankly don't
             // see why it's worth the effort.
-        });
+        }
 
         try {
             await aliased.enforce(aliasName, ...input);
             this._log.debug('Alias rule uphold');
-        }
-        catch (error) {
-            this._log.debug(`Alias rule broken`);
-            this.description = error.rule.description;
-            throw new Error(error._message);
-        }
-        finally {
-            aliased.forEach((rule) => {
+        } catch (error) {
+            if (error instanceof RuleError) {
+                this._log.debug(`Alias rule broken`);
+                this.description = error.rule.description;
+                throw new Error(error._message);
+            }
+            throw error;
+        } finally {
+            // Reset the alias flag behind ourselves
+            for (const rule of aliased.rules) {
                 rule.config = { _asAlias: false };
-            });
+            }
         }
     }
 
     /**
      * Determine what to do with the enforce results
      */
-    private async handleEnforceResult(input: any[], results: any[]|Error) {
+    private async handleEnforceResult(input: any[], results: any[] | Error) {
         let failResults = [];
         if (isError(results)) {
             failResults.push(results);
-        }
-        else {
+        } else {
             failResults = results.filter((r: any) => r !== true);
         }
 
         if (failResults.length === 0) {
             this._log.debug(`Rule uphold`);
             await this.raiseVoidEvent('pass', input);
-        }
-        else {
+        } else {
             this._log.debug(`Rule broken`);
             await this.raiseVoidEvent('fail', input, results);
         }
@@ -406,20 +395,23 @@ export class Rule {
         this._log.debug(`Event triggered: '${event}'`);
 
         try {
-            for (const fn of this._handler[event]) {
-                await fn.call(this, ...parameters);
+            for (const function_ of this._handler[event]) {
+                await function_.call(this, ...parameters);
             }
-        }
-        catch (error) {
+        } catch (error) {
             if (error instanceof RuleError) {
                 throw error;
             }
-            this.throw(error.message);
+            if (isError(error)) {
+                this.throw(error.message);
+            }
+            // Unexpected error
+            throw error;
         }
     }
 
     private validateName(name: string) {
-        const re = new RegExp(/^[A-Za-z0-9/\-_@|]+$/, 'g');
+        const re = new RegExp(/^[\w/@|-]+$/, 'g');
 
         if (re.exec(name) === null) {
             const demands = [
@@ -428,10 +420,12 @@ export class Rule {
                 'Uppercase letters',
                 'Numbers',
                 'These symbols: /-_|@',
-            ]
+            ];
 
-            throw new Error(`'${name}' is not a valid rule name. `
-                + `\nRule names are restricted to:${demands.join('\n- ')}`);
+            throw new Error(
+                `'${name}' is not a valid rule name. ` +
+                    `\nRule names are restricted to:${demands.join('\n- ')}`
+            );
         }
 
         return name;
