@@ -163,18 +163,19 @@ describe('The class Rule', function () {
         });
 
         it('removes indentation from each line of a regular string', function () {
-            this.rule.describe('  FirstLine\n\tSecondLine');
+            this.rule.describe('  FirstLine\n\n\tSecondLine');
 
-            expect(this.rule.description).to.equal('FirstLine\nSecondLine');
+            expect(this.rule.description).to.equal('FirstLine\n\nSecondLine');
         });
 
         it('removes indentation from each line of a template literal', function () {
             this.rule.describe(`
                 FirstLine
+
                 SecondLine
             `);
 
-            expect(this.rule.description).to.equal('FirstLine\nSecondLine');
+            expect(this.rule.description).to.equal('FirstLine\n\nSecondLine');
         });
 
         it('includes the description when an error is thrown', async function () {
