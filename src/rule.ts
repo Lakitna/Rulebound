@@ -217,9 +217,10 @@ export class Rule {
         this.description = description
             .trim()
             // Get rid of whitespace at the start of each line
-            .replace(/^[^\S\n]+/gm, '');
-
-        // TODO: reflow text in a MD-like fashion
+            .replace(/^[^\S\n]+/gm, '')
+            // Simplify whitespace in a markdown-like fashion
+            // Will allow for paragraph line breaks and stuff
+            .replace(/([\d"',.:;A-Za-z])\n(["',.:;A-Za-z]|\d+[^\d.])/g, '$1 $2');
 
         return this;
     }

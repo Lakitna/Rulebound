@@ -6,7 +6,8 @@ export default (rulebook: Rulebook) => {
         .add('openapi-schema/string/enum')
         .describe(
             `
-            "You can use the enum keyword to specify possible values of a request parameter or a model property."
+            "You can use the enum keyword to specify possible values of a request parameter or a
+            model property."
 
             "All values in an enum must adhere to the specified type."
 
