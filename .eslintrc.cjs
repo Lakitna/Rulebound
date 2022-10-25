@@ -2,7 +2,7 @@ module.exports = {
     parser: '@typescript-eslint/parser',
     parserOptions: {
         ecmaFeatures: {
-            jsx: true
+            jsx: true,
         },
         useJSXTextNode: true,
         project: './tsconfig.json',
@@ -41,11 +41,13 @@ module.exports = {
         '@typescript-eslint/no-non-null-assertion': 'off',
         '@typescript-eslint/no-explicit-any': 'off',
         '@typescript-eslint/no-use-before-define': 'off',
+
+        'unicorn/no-null': 'off',
     },
     overrides: [
         {
-            "files": ["test/**/*.ts"],
-            "rules": {
+            files: ['test/**/*.ts'],
+            rules: {
                 'sonarjs/no-duplicate-string': 'off',
                 'sonarjs/cognitive-complexity': 'off',
                 'sonarjs/no-identical-functions': 'off',
@@ -59,8 +61,8 @@ module.exports = {
                 'chai-expect/no-inner-compare': 'error',
                 'chai-expect/terminating-properties': 'error',
 
-                'mocha/handle-done-callback': 'error',
-                'mocha/max-top-level-suites': ['error', {limit: 1}],
+                'mocha/handle-done-callback': 'off',
+                'mocha/max-top-level-suites': ['error', { limit: 1 }],
                 'mocha/no-exclusive-tests': 'warn',
                 'mocha/no-global-tests': 'error',
                 'mocha/no-hooks': 'off',
@@ -81,6 +83,8 @@ module.exports = {
                 'mocha/no-async-describe': 'error',
 
                 'unicorn/consistent-function-scoping': 'off',
+                'unicorn/no-array-for-each': 'off',
+                'unicorn/no-array-callback-reference': 'off',
             },
         },
     ],

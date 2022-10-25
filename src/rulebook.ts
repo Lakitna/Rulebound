@@ -1,12 +1,11 @@
+import { defaultsDeep } from 'lodash-es';
 import micromatch from 'micromatch';
-import { defaultsDeep } from 'lodash';
 
 import { ConfigManager } from './config/manager';
-import { Rule } from './rule';
-import { logger, Logger } from './log';
 import { RulebookConfig, RuleConfig } from './config/types';
 import { RulebookError } from './errors';
-
+import { logger, Logger } from './log';
+import { Rule } from './rule';
 
 /**
  * Collection to manage rules
@@ -30,8 +29,13 @@ export class Rulebook {
     /**
      * Loop over the rules in the set
      */
-    public forEach(fn: (value: Rule, index: number, array: Rule[]) => void, thisArgument?: any) {
-        this.rules.forEach(fn, thisArgument);
+    public forEach(
+        function_: (value: Rule, index: number, array: Rule[]) => void,
+        thisArgument?: any
+    ) {
+        for (const [index, rule] of this.rules.entries()) {
+            function_.call(thisArgument, rule, index, this.rules);
+        }
     }
 
     /**
@@ -46,17 +50,16 @@ export class Rulebook {
         if (this.has(rule.name)) {
             throw new RulebookError(
                 `The rule named '${rule.name}' already exists in the set.`,
-                `Rule names must be unique.`);
+                `Rule names must be unique.`
+            );
         }
 
         let config = this.config.get(rule.name);
         if (defaultConfig) {
-            if (config._specificity === 0) {
-                config = defaultsDeep(defaultConfig, config);
-            }
-            else {
-                config = defaultsDeep(config, defaultConfig);
-            }
+            config =
+                config._specificity === 0
+                    ? defaultsDeep(defaultConfig, config)
+                    : defaultsDeep(config, defaultConfig);
         }
         rule.config = config;
 
@@ -77,39 +80,30 @@ export class Rulebook {
     /**
      * Returns true if the set contains the given rule name pattern
      */
-    public has(globPattern: string) {
+    public has(globPattern: string): boolean {
         const matcher = micromatch.matcher(globPattern);
-
-        let has = false;
-        this.forEach((rule) => {
-            if (matcher(rule.name)) {
-                has = true;
-            }
-        });
-        return has;
+        return this.rules.some((rule) => matcher(rule.name));
     }
 
     /**
      * Return rules matching filter in a new rule book
      * Opposite of omit()
-     * @return new Rulebook
      */
-    public filter(globPattern: string) {
+    public filter(globPattern: string): Rulebook {
         const matcher = micromatch.matcher(globPattern);
 
         const set = new Rulebook(this.config.full);
-        this.forEach((rule) => {
+        for (const rule of this.rules) {
             if (matcher(rule.name)) {
                 set.add(rule);
             }
-        });
+        }
         return set;
     }
 
     /**
      * Return rules not matching filter in a new rule book
      * Opposite of filter()
-     * @return new Rulebook
      */
     public omit(globPattern: string) {
         return this.filter('!' + globPattern);
@@ -125,8 +119,7 @@ export class Rulebook {
         }
 
         const matcher = micromatch.matcher(globPattern);
-        const subSet = this.rules
-            .filter((rule) => matcher(rule.name));
+        const subSet = this.rules.filter((rule) => matcher(rule.name));
 
         if (subSet.length === 0) {
             this.log.warn(`No rules to enforce for name pattern '${globPattern}'`);
@@ -140,5 +133,3 @@ export class Rulebook {
         return this;
     }
 }
-
-export default Rulebook;

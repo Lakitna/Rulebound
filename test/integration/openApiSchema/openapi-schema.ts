@@ -1,23 +1,23 @@
-import { isObject } from 'lodash';
+import { isObject } from 'lodash-es';
 import { Rulebook } from '../../../src/rulebook';
 
 export default async (rulebook: Rulebook) => {
-    const subRules = [
-        'schema',
-        'string',
-    ];
+    const subRules = ['schema', 'string'];
     for (const rule of subRules) {
-        await (await import(`./${rule}/index`)).default(rulebook);
+        const module = await import(`./${rule}/index`);
+        await module.default(rulebook);
     }
 
     return rulebook
         .add('openapi-schema')
-        .describe(`
+        .describe(
+            `
             JSON schema is at the heart of OpenAPI.
 
             Note that this is a partial implementation created to test Ruleful.
-        `)
-        .define(async function(json, schema) {
+        `
+        )
+        .define(async function (json, schema) {
             this.context.trail = [];
 
             if (!isObject(schema)) {
@@ -48,17 +48,15 @@ export default async (rulebook: Rulebook) => {
                     await rulebook.enforce(
                         `openapi-schema/${subSchema.type}/*`,
                         subJson,
-                        subSchema);
+                        subSchema
+                    );
 
                     // Go deeper if we can
                     if (subSchema.type === 'object') {
                         await recurse(subJson, subSchema.properties);
-                    }
-                    else if (subSchema.type === 'array') {
+                    } else if (subSchema.type === 'array') {
                         for (const [index, jsonItem] of subJson.entries()) {
-                            await recurse(
-                                {[index]: jsonItem},
-                                {[index]: subSchema.items});
+                            await recurse({ [index]: jsonItem }, { [index]: subSchema.items });
                         }
                     }
 
@@ -70,12 +68,10 @@ export default async (rulebook: Rulebook) => {
             return true;
         })
         .punishment(function (input, error) {
-            if (this.context.trail.length > 0) {
-                error.message += `\n@ ${this.context.trail.join(' > ')}`;
-            }
-            else {
-                error.message += `\n@ object root`
-            }
+            error.message +=
+                this.context.trail.length > 0
+                    ? `\n@ ${this.context.trail.join(' > ')}`
+                    : `\n@ object root`;
 
             throw error;
         });

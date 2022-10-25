@@ -1,3 +1,5 @@
+import { logLevelNames } from '../log';
+
 export interface RuleConfig {
     [config: string]: any;
 
@@ -6,7 +8,7 @@ export interface RuleConfig {
      * note: `omit` will always result in the rule not being enforced
      * @default must
      */
-    required: 'must'|'should'|'may'|'optional'|'omit';
+    required: 'must' | 'should' | 'may' | 'optional' | 'omit';
 }
 
 export interface ParsedRuleConfig extends RuleConfig {
@@ -14,7 +16,7 @@ export interface ParsedRuleConfig extends RuleConfig {
      * Define the behaviour of a failure.
      * @private
      */
-    _throw?: 'error'|'warn'|'info'|null;
+    _throw?: severityLevel;
 
     /**
      * @private
@@ -28,14 +30,13 @@ export interface ParsedRuleConfig extends RuleConfig {
     _specificity: number;
 }
 
-export type severityLevel = 'error'|'warn'|'info'|null;
+export type severityLevel = 'error' | 'warn' | 'info' | null;
 
 export interface RulebookConfig {
     /**
      * Define what log level you want to output
-     * @default log
      */
-    verboseness: 'error'|'warn'|'info'|'debug';
+    verboseness: logLevelNames;
 
     /**
      * Describe the effect a failure has in a given severity category

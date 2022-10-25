@@ -4,8 +4,8 @@ import rule from './not-empty';
 
 const ruleName = 'openapi-schema/string/not-empty';
 
-describe(`Rule: ${ruleName}`, function() {
-    beforeEach(async function(this: any) {
+describe(`Rule: ${ruleName}`, function () {
+    beforeEach(async function (this: any) {
         this.book = new Rulebook({
             rules: {
                 [ruleName]: {
@@ -17,30 +17,33 @@ describe(`Rule: ${ruleName}`, function() {
         this.rule = this.book.filter(ruleName).rules[0];
     });
 
-    it('passes on valid string', async function() {
+    it('passes on valid string', async function () {
         await this.book.enforce(this.rule.name, 'foo');
     });
 
-    it('passes a string starting with whitespace', async function() {
+    it('passes a string starting with whitespace', async function () {
         await this.book.enforce(this.rule.name, ' foo');
     });
 
-    it('passes a string ending with whitespace', async function() {
+    it('passes a string ending with whitespace', async function () {
         await this.book.enforce(this.rule.name, 'foo ');
     });
 
-    it('throws on empty string without whitespace', async function() {
-        await expect(this.book.enforce(this.rule.name, '')
-            ).to.be.rejectedWith(`String is empty. Empty strings should be omitted.`);
+    it('throws on empty string without whitespace', async function () {
+        await expect(this.book.enforce(this.rule.name, '')).to.be.rejectedWith(
+            `String is empty. Empty strings should be omitted.`
+        );
     });
 
-    it('throws on empty string with single space', async function() {
-        await expect(this.book.enforce(this.rule.name, ' ')
-            ).to.be.rejectedWith(`String is empty. Empty strings should be omitted.`);
+    it('throws on empty string with single space', async function () {
+        await expect(this.book.enforce(this.rule.name, ' ')).to.be.rejectedWith(
+            `String is empty. Empty strings should be omitted.`
+        );
     });
 
-    it('throws on empty string with complex whitespace', async function() {
-        await expect(this.book.enforce(this.rule.name, '  \t \n  \t\t')
-            ).to.be.rejectedWith(`String is empty. Empty strings should be omitted.`);
+    it('throws on empty string with complex whitespace', async function () {
+        await expect(this.book.enforce(this.rule.name, '  \t \n  \t\t')).to.be.rejectedWith(
+            `String is empty. Empty strings should be omitted.`
+        );
     });
 });

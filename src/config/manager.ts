@@ -1,13 +1,12 @@
-import { cloneDeep, defaultsDeep, omit, omitBy, isUndefined } from 'lodash';
-import micromatch from 'micromatch';
-import isGlob from 'is-glob';
 import { cosmiconfigSync } from 'cosmiconfig';
+import isGlob from 'is-glob';
+import { cloneDeep, defaultsDeep, isUndefined, omit, omitBy } from 'lodash-es';
+import micromatch from 'micromatch';
 
 import { logger, Logger } from '../log';
-import { rulebookConfigDefault, ruleConfigDefault } from './defaults';
-import { RulebookConfig, RuleConfig, ParsedRulebookConfig, ParsedRuleConfig } from './types';
 import { specificity } from '../utils';
-
+import { rulebookConfigDefault, ruleConfigDefault } from './defaults';
+import { ParsedRulebookConfig, ParsedRuleConfig, RulebookConfig, RuleConfig } from './types';
 
 /**
  * Configuration handling
@@ -19,9 +18,11 @@ export class ConfigManager {
     public constructor(partialConfig?: Partial<RulebookConfig>) {
         const configFile = cosmiconfigSync('rulebound').search();
 
-        const config = defaultsDeep(cloneDeep(partialConfig),
-            (configFile === null) ? {} : cloneDeep(configFile.config),
-            cloneDeep(rulebookConfigDefault)) as RulebookConfig;
+        const config = defaultsDeep(
+            cloneDeep(partialConfig),
+            configFile === null ? {} : cloneDeep(configFile.config),
+            cloneDeep(rulebookConfigDefault)
+        ) as RulebookConfig;
 
         logger.level = config.verboseness;
         this.log = logger.child({});
@@ -54,13 +55,15 @@ export class ConfigManager {
     public get(ruleName: string) {
         let config = ruleConfigDefault;
 
-        this.config._rules.forEach((ruleConfig) => {
-            if (micromatch.isMatch(ruleName, ruleConfig._name)
-                    && !isUndefined(config._specificity)
-                    && config._specificity < ruleConfig._specificity) {
+        for (const ruleConfig of this.config._rules) {
+            if (
+                micromatch.isMatch(ruleName, ruleConfig._name) &&
+                !isUndefined(config._specificity) &&
+                config._specificity < ruleConfig._specificity
+            ) {
                 config = ruleConfig;
             }
-        });
+        }
 
         return cloneDeep(config);
     }
@@ -85,6 +88,7 @@ export class ConfigManager {
                 rule[1]._name = rule[0];
                 return rule[1];
             })
+            // eslint-disable-next-line unicorn/no-array-for-each
             .forEach((rule) => {
                 const existingIndex = parsedConfig._rules.findIndex((l) => {
                     return l._name === rule._name;
@@ -92,10 +96,11 @@ export class ConfigManager {
 
                 if (existingIndex >= 0) {
                     // Update existing rule config
-                    parsedConfig._rules[existingIndex] =
-                        defaultsDeep(rule, parsedConfig._rules[existingIndex]);
-                }
-                else {
+                    parsedConfig._rules[existingIndex] = defaultsDeep(
+                        rule,
+                        parsedConfig._rules[existingIndex]
+                    );
+                } else {
                     // Add new rule config
                     parsedConfig._rules.push(rule as ParsedRuleConfig);
                 }
@@ -103,16 +108,21 @@ export class ConfigManager {
 
         // Config cascading by specificity
         parsedConfig._rules = this._sortBySpecificity(parsedConfig._rules, '_name');
+        // eslint-disable-next-line unicorn/no-array-for-each
         parsedConfig._rules.forEach((sourceRule, sourceI, rules) => {
-            if (isGlob(sourceRule._name)) {
-                // Source rule config will act as defaults for
-                // more specific target rules matching the name pattern
-                for (let targetI = sourceI; targetI < rules.length; targetI++) {
-                    let targetRule = rules[targetI];
-                    if (micromatch.isMatch(targetRule._name!, sourceRule._name!)
-                            && targetRule._specificity! > sourceRule._specificity!) {
-                        targetRule = defaultsDeep(targetRule, sourceRule);
-                    }
+            if (!isGlob(sourceRule._name)) {
+                return;
+            }
+
+            // Source rule config will act as defaults for
+            // more specific target rules matching the name pattern
+            for (let targetI = sourceI; targetI < rules.length; targetI++) {
+                let targetRule = rules[targetI];
+                if (
+                    micromatch.isMatch(targetRule._name!, sourceRule._name!) &&
+                    targetRule._specificity! > sourceRule._specificity!
+                ) {
+                    targetRule = defaultsDeep(targetRule, sourceRule);
                 }
             }
         });
@@ -127,20 +137,14 @@ export class ConfigManager {
     private _sortBySpecificity(targets: RuleConfig[], patternKey: string) {
         const parsedTargets = targets as ParsedRuleConfig[];
 
-        parsedTargets.map((target) => {
+        for (const target of parsedTargets) {
             target._specificity = specificity(target[patternKey]);
-            return target;
-        });
+        }
 
-        return parsedTargets
-            .sort((a, b) => {
-                if (a._specificity > b._specificity) {
-                    return 1;
-                }
-                if (a._specificity < b._specificity) {
-                    return -1;
-                }
-                return 0;
-            });
+        return parsedTargets.sort((a, b) => {
+            if (a._specificity > b._specificity) return 1;
+            if (a._specificity < b._specificity) return -1;
+            return 0;
+        });
     }
 }

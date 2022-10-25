@@ -4,8 +4,8 @@ import rule from './is-power-of';
 
 const ruleName = 'is-power-of';
 
-describe(`Rule: ${ruleName}`, function() {
-    beforeEach(async function(this: any) {
+describe(`Rule: ${ruleName}`, function () {
+    beforeEach(async function (this: any) {
         this.book = new Rulebook({
             rules: {
                 [ruleName]: {
@@ -17,7 +17,7 @@ describe(`Rule: ${ruleName}`, function() {
         this.rule = this.book.filter(ruleName).rules[0];
     });
 
-    it('has the root default config', function() {
+    it('has the root default config', function () {
         const book = new Rulebook();
         rule(book);
 
@@ -26,14 +26,15 @@ describe(`Rule: ${ruleName}`, function() {
         });
     });
 
-    it('is kept when the number is a power of', async function() {
+    it('is kept when the number is a power of', async function () {
         await this.book.enforce(this.rule.name, 4, 2);
         await this.book.enforce(this.rule.name, 9, 2);
         await this.book.enforce(this.rule.name, 27, 3);
     });
 
-    it('is broken when the number is not a power of', async function() {
-        await expect(this.book.enforce(this.rule.name, 3, 1.9))
-            .to.be.rejectedWith('3 is not a power of 1.9');
+    it('is broken when the number is not a power of', async function () {
+        await expect(this.book.enforce(this.rule.name, 3, 1.9)).to.be.rejectedWith(
+            '3 is not a power of 1.9'
+        );
     });
 });
