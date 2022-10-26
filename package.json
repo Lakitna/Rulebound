@@ -3,8 +3,7 @@
   "version": "1.2.0",
   "description": "A simple rule based testing framework",
   "license": "MIT",
-  "main": "dist/rulebound.js",
-  "module": "dist/rulebound.mjs",
+  "main": "dist/rulebound.mjs",
   "types": "dist/rulebound.d.ts",
   "files": [
     "dist"
