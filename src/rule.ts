@@ -35,7 +35,7 @@ type ruleEventHandlers = {
 export class Rule {
     public name: string;
     public description?: string;
-    public rulebook: Rulebook;
+    public rulebook?: Rulebook;
     public specificity: number;
 
     private _alias: string | null;
@@ -53,7 +53,26 @@ export class Rule {
         [key: string]: any;
     };
 
-    public constructor(name: string, rulebook: Rulebook) {
+    /**
+     * A testing rule
+     *
+     * @example
+     * new Rule('foo')
+     *     .describe(`
+     *         An example rule
+     *     `)
+     *     .define(function(val) {
+     *         return val <= 5;
+     *     })
+     *     .punishment(function(val) {
+     *         throw new Error(`${val} is above 5`);
+     *     })
+     *     .reward(function(val) {
+     *         console.log(`${val} is below or equal to 5`);
+     *     })
+     *     .enforce(1);
+     */
+    public constructor(name: string, rulebook?: Rulebook) {
         this.name = this.validateName(name);
         this._alias = null;
         this.rulebook = rulebook;
@@ -109,7 +128,7 @@ export class Rule {
 
         this._config.required = this._config.required.toLowerCase() as RuleConfig['required'];
 
-        if (this.rulebook.config) {
+        if (this.rulebook?.config) {
             const rulebookConfig = this.rulebook.config.generic;
 
             if (!has(rulebookConfig.severity, this._config.required)) {
@@ -336,6 +355,9 @@ export class Rule {
     private async enforceAlias(aliasName: string, input: any[]) {
         this._log.debug(`Enforcing via alias ${this._alias}`);
 
+        if (!this.rulebook) {
+            throw new Error(`Rule is not part of a Rulebook. Can't look for alias '${aliasName}'`);
+        }
         if (!this.rulebook.has(aliasName)) {
             throw new Error(`Could not find alias rule named '${aliasName}'`);
         }
