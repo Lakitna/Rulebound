@@ -1,4 +1,13 @@
-import { defaultsDeep, has, isError, isString, isUndefined, keys, omitBy } from 'lodash-es';
+import {
+    cloneDeep,
+    defaultsDeep,
+    has,
+    isError,
+    isString,
+    isUndefined,
+    keys,
+    omitBy,
+} from 'lodash-es';
 
 import { ruleConfigDefault } from './config/defaults';
 import { ParsedRuleConfig, RuleConfig } from './config/types';
@@ -106,19 +115,15 @@ export class Rule {
         this.ctx = this.context;
     }
 
-    /**
-     * Get config, omitting keys that start with `_`.
-     */
-    public get config() {
-        return omitBy(this._config, (_, key) => {
-            return key.startsWith('_');
-        }) as Partial<ParsedRuleConfig>;
-    }
+    public config(): RuleConfig;
+    public config(config: Partial<RuleConfig>): undefined;
+    public config(config?: Partial<RuleConfig>): undefined | RuleConfig {
+        if (!config) {
+            return omitBy(this._config, (_, key) => {
+                return key.startsWith('_');
+            }) as RuleConfig;
+        }
 
-    /**
-     * Set config while treating existing config as defaults.
-     */
-    public set config(config: Partial<RuleConfig>) {
         this._config = defaultsDeep(config, this._config);
 
         if (this._config.required === null) {
@@ -366,7 +371,7 @@ export class Rule {
         const aliased = this.rulebook.filter(aliasName);
         for (const rule of aliased.rules) {
             // Tell the rule it's being enforced as an alias
-            rule.config = { _asAlias: true };
+            rule.config({ _asAlias: true });
 
             // We are not copying the config of the current rule to the alias.
             // We may want to add that at some point, but I quite frankly don't
@@ -386,7 +391,7 @@ export class Rule {
         } finally {
             // Reset the alias flag behind ourselves
             for (const rule of aliased.rules) {
-                rule.config = { _asAlias: false };
+                rule.config({ _asAlias: false });
             }
         }
     }

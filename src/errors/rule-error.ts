@@ -1,6 +1,6 @@
 import c from 'ansi-colors';
-import { Rule } from '../rule';
 import { ParsedRuleConfig } from '../config/types';
+import { Rule } from '../rule';
 
 export class RuleError extends Error {
     /**
@@ -28,7 +28,7 @@ export class RuleError extends Error {
         super(message.join(' '));
 
         this.rule = rule;
-        this.required = this.rule.config.required || '';
+        this.required = this.rule.config().required || '';
         this.name = `RuleError | ${this.required.toUpperCase()} ${this.rule.name}`;
         this._message = _message;
     }
