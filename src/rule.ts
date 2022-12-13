@@ -16,9 +16,13 @@ import { logger, Logger } from './log';
 import { Rulebook } from './rulebook';
 import { specificity } from './utils';
 
-type enforceHandler<I> = (this: Rule<I>, input: I, ruleConfig: RuleConfig) => true | unknown;
-type passHandler<I> = (this: Rule<I>, input: I) => void;
-type failHander<I> = (this: Rule<I>, input: I, result: unknown[] | Error) => void;
+type enforceHandler<I> = (
+    this: Rule<I>,
+    input: I,
+    ruleConfig: RuleConfig
+) => true | unknown | Promise<true | unknown>;
+type passHandler<I> = (this: Rule<I>, input: I) => void | Promise<void>;
+type failHander<I> = (this: Rule<I>, input: I, result: unknown[] | Error) => void | Promise<void>;
 
 interface ruleEventHandlers {
     enforce: enforceHandler<any>[];
@@ -326,10 +330,11 @@ export class Rule<I = unknown> {
                 result.push(await enforceHandler.call(this as Rule<I>, input, this.config()));
             }
         } catch (error) {
-            if (!isError(error)) {
-                throw new TypeError(`Rule ${this.name} threw non-error: ` + error);
-            }
-            result = error;
+            result = isError(error)
+                ? error
+                : new TypeError(
+                      `Rule ${this.name} threw non-error (typeof ${typeof error}): ` + error
+                  );
         }
 
         await this.handleEnforceResult(input, result);
@@ -423,12 +428,12 @@ export class Rule<I = unknown> {
     /**
      * Determine what to do with the enforce results
      */
-    private async handleEnforceResult(input: I, results: any[] | Error) {
-        let failResults = [];
+    private async handleEnforceResult(input: I, results: unknown[] | Error) {
+        let failResults: unknown[] = [];
         if (isError(results)) {
             failResults.push(results);
         } else {
-            failResults = results.filter((r: any) => r !== true);
+            failResults = results.filter((r) => r !== true);
         }
 
         await (failResults.length === 0
@@ -439,12 +444,17 @@ export class Rule<I = unknown> {
     /**
      * Raise void event and handle any errors
      */
-    private async raiseVoidEvent(event: string, ...parameters: any) {
+    private async raiseVoidEvent(event: 'pass' | 'fail', input: I, results?: Error | unknown[]) {
         this._log.debug(`Event: '${event}'`);
 
         try {
             for (const function_ of this._handler[event]) {
-                await function_.call(this, ...parameters);
+                await function_.call(
+                    this,
+                    input,
+                    // @ts-expect-error Some handlers get this val, some don't.
+                    results
+                );
             }
         } catch (error) {
             if (error instanceof RuleError) {
@@ -453,7 +463,7 @@ export class Rule<I = unknown> {
             if (isError(error)) {
                 this.throw(error.message);
             }
-            // Unexpected error
+            // Unexpected non-error
             throw error;
         }
     }
