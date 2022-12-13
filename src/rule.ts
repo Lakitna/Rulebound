@@ -185,7 +185,7 @@ export class Rule<I = unknown> {
             ? passHandler<I>
             : never
     ) {
-        this._log.debug(`Handler for event '${event}' added`);
+        this._log.debug(`Handler added for event '${event}'`);
 
         Object.defineProperty(function_, 'name', { value: event });
 
@@ -308,7 +308,7 @@ export class Rule<I = unknown> {
             return this;
         }
 
-        this._log.debug(`Event triggered: 'enforce'`);
+        this._log.debug(`Event: 'enforce'`);
 
         let result: Error | any[];
         try {
@@ -429,20 +429,16 @@ export class Rule<I = unknown> {
             failResults = results.filter((r: any) => r !== true);
         }
 
-        if (failResults.length === 0) {
-            this._log.debug(`Rule uphold`);
-            await this.raiseVoidEvent('pass', input);
-        } else {
-            this._log.debug(`Rule broken`);
-            await this.raiseVoidEvent('fail', input, results);
-        }
+        await (failResults.length === 0
+            ? this.raiseVoidEvent('pass', input)
+            : this.raiseVoidEvent('fail', input, results));
     }
 
     /**
      * Raise void event and handle any errors
      */
     private async raiseVoidEvent(event: string, ...parameters: any) {
-        this._log.debug(`Event triggered: '${event}'`);
+        this._log.debug(`Event: '${event}'`);
 
         try {
             for (const function_ of this._handler[event]) {

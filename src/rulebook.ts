@@ -147,7 +147,7 @@ export class Rulebook<RI = unknown> {
      */
     public async enforce(globPattern: string, input: RI) {
         if (this.length === 0) {
-            this.log.warn('No rules to enforce. Book is empty');
+            this.log.warn('No rules to enforce. Rulebook is empty');
             return this;
         }
 
