@@ -6,7 +6,7 @@ import rule from './not-empty';
 const ruleName = 'openapi-schema/string/not-empty';
 
 describe(`Rule: ${ruleName}`, function () {
-    beforeEach(async function (this: any) {
+    beforeEach(async function () {
         this.book = new Rulebook<OasRuleParametersString>({
             rules: {
                 [ruleName]: {

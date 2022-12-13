@@ -6,7 +6,7 @@ import rule from './min-length';
 const ruleName = 'openapi-schema/string/min-length';
 
 describe(`Rule: ${ruleName}`, function () {
-    beforeEach(async function (this: any) {
+    beforeEach(async function () {
         this.book = new Rulebook<OasRuleParametersString>({
             rules: {
                 [ruleName]: {

@@ -6,7 +6,7 @@ import { Rulebook } from '../../../../../src/rulebook';
 const ruleName = 'openapi-schema/string/format';
 
 describe(`Rule: ${ruleName}`, function () {
-    beforeEach(async function (this: any) {
+    beforeEach(async function () {
         this.book = new Rulebook<OasRuleParametersString>({
             rules: {
                 [ruleName]: {
@@ -60,7 +60,7 @@ describe(`Rule: ${ruleName}`, function () {
     });
 
     describe('Option: allowUnkown: true', function () {
-        beforeEach(async function (this: any) {
+        beforeEach(async function () {
             this.book = new Rulebook({
                 rules: {
                     [ruleName]: {

@@ -6,7 +6,7 @@ import rule from './date';
 const ruleName = 'openapi-schema/string/format/date';
 
 describe(`Rule: ${ruleName}`, function () {
-    beforeEach(async function (this: any) {
+    beforeEach(async function () {
         this.book = new Rulebook<OasRuleParametersString>({
             rules: {
                 [ruleName]: {

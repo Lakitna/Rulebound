@@ -5,7 +5,7 @@ import rule, { RuleParameters } from './is-devisible';
 const ruleName = 'is-devisible';
 
 describe(`Rule: ${ruleName}`, function () {
-    beforeEach(async function (this: any) {
+    beforeEach(async function () {
         this.book = new Rulebook<RuleParameters>({
             rules: {
                 [ruleName]: {

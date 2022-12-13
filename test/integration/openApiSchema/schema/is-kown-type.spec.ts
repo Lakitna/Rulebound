@@ -5,7 +5,7 @@ import rule from './is-kown-type';
 const ruleName = 'openapi-schema/schema/is-kown-type';
 
 describe(`Rule: ${ruleName}`, function () {
-    beforeEach(async function (this: any) {
+    beforeEach(async function () {
         this.book = new Rulebook({
             rules: {
                 [ruleName]: {

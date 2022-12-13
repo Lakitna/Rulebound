@@ -6,7 +6,7 @@ import rule from './enum';
 const ruleName = 'openapi-schema/string/enum';
 
 describe(`Rule: ${ruleName}`, function () {
-    beforeEach(async function (this: any) {
+    beforeEach(async function () {
         this.book = new Rulebook<OasRuleParametersString>({
             rules: {
                 [ruleName]: {

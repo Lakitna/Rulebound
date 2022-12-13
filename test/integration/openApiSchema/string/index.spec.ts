@@ -5,7 +5,7 @@ import { Rulebook } from '../../../../src/rulebook';
 const ruleName = 'openapi-schema/string/type';
 
 describe(`Rule: ${ruleName}`, function () {
-    beforeEach(async function (this: any) {
+    beforeEach(async function () {
         this.book = new Rulebook<OasRuleParametersString>({
             rules: {
                 [ruleName]: {

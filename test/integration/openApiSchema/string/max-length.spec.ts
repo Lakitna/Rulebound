@@ -6,7 +6,7 @@ import rule from './max-length';
 const ruleName = 'openapi-schema/string/max-length';
 
 describe(`Rule: ${ruleName}`, function () {
-    beforeEach(async function (this: any) {
+    beforeEach(async function () {
         this.book = new Rulebook<OasRuleParametersString>({
             rules: {
                 [ruleName]: {

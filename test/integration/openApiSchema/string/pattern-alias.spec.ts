@@ -7,7 +7,7 @@ import alias from './pattern-alias';
 const ruleName = 'openapi-schema/string/pattern-alias';
 
 describe(`Rule: ${ruleName}`, function () {
-    beforeEach(async function (this: any) {
+    beforeEach(async function () {
         this.book = new Rulebook<OasRuleParametersString>({
             rules: {
                 [ruleName]: {
@@ -62,7 +62,7 @@ describe(`Rule: ${ruleName}`, function () {
     // TODO: #19 Pass config of alias to target rule
     // eslint-disable-next-line mocha/no-setup-in-describe
     describe.skip('Option: flags = i', function () {
-        beforeEach(async function (this: any) {
+        beforeEach(async function () {
             this.book = new Rulebook({
                 rules: {
                     [ruleName]: {
