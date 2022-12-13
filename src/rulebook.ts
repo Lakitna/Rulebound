@@ -77,7 +77,7 @@ export class Rulebook<RI = unknown> {
         if (isFunction(rule)) {
             rule = rule();
         }
-        if (rule instanceof Rule<RI>) {
+        if (rule instanceof Rule) {
             normalizedRule = rule.rulebook instanceof Rulebook ? rule.clone() : rule;
             normalizedRule.rulebook = this;
         } else {
