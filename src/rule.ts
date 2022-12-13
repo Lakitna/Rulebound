@@ -16,11 +16,15 @@ import { logger, Logger } from './log';
 import { Rulebook } from './rulebook';
 import { specificity } from './utils';
 
-type ruleEventHandlers = {
-    enforce: { (this: Rule, ...input: any): boolean | unknown }[];
-    pass: { (this: Rule, input: any[]): void }[];
-    fail: { (this: Rule, input: any[], result: unknown[] | Error): void }[];
-};
+type enforceHandler<I> = (this: Rule<I>, input: I, ruleConfig: RuleConfig) => true | unknown;
+type passHandler<I> = (this: Rule<I>, input: I) => void;
+type failHander<I> = (this: Rule<I>, input: I, result: unknown[] | Error) => void;
+
+interface ruleEventHandlers {
+    enforce: enforceHandler<any>[];
+    pass: passHandler<any>[];
+    fail: failHander<any>[];
+}
 
 /**
  * A testing rule
@@ -41,7 +45,7 @@ type ruleEventHandlers = {
  *     })
  *     .enforce(1);
  */
-export class Rule {
+export class Rule<I = unknown> {
     public name: string;
     public description?: string;
     public rulebook?: Rulebook;
@@ -94,7 +98,7 @@ export class Rule {
             enforce: [
                 // eslint-disable-next-line no-shadow-restricted-names
                 function undefined() {
-                    throw new RuleError(this, 'Rule is undefined');
+                    throw new RuleError(this as Rule, 'Rule is undefined');
                 },
             ],
             pass: [
@@ -148,6 +152,11 @@ export class Rule {
         }
     }
 
+    public clone(): Rule<I> {
+        // TODO: Does this work like I think it does?
+        return cloneDeep(this);
+    }
+
     /**
      * Subscribe to an event
      *
@@ -163,10 +172,19 @@ export class Rule {
      *
      * @example
      * Rule.on('pass', (val) => {
-     *     console.log('Yay! The rule is uphold. Let\'s party!');
+     *     console.log(`Yay! The rule is uphold. Let's party!`);
      * });
      */
-    public on<E extends keyof ruleEventHandlers>(event: E, function_: ruleEventHandlers[E][0]) {
+    public on<E extends keyof ruleEventHandlers>(
+        event: E,
+        function_: E extends 'enforce'
+            ? enforceHandler<I>
+            : E extends 'fail'
+            ? failHander<I>
+            : E extends 'pass'
+            ? passHandler<I>
+            : never
+    ) {
         this._log.debug(`Handler for event '${event}' added`);
 
         Object.defineProperty(function_, 'name', { value: event });
@@ -175,13 +193,14 @@ export class Rule {
             throw new RuleError(this, `You tried to subscribe to unkown event '${event}'`);
         }
 
+        const handlers = this._handler[event] as typeof function_[];
+
         // Delete default `undefined` handler function
-        const handlers = this._handler[event] as ruleEventHandlers[E];
-        if (handlers.length === 1 && handlers[0].name === 'undefined') {
+        if (handlers.length === 1 && handlers[0].name.startsWith('undefined')) {
             handlers.shift();
         }
 
-        this._handler[event].push(function_);
+        handlers.push(function_);
         return this;
     }
 
@@ -195,8 +214,9 @@ export class Rule {
      *     return val > 5;
      * });
      */
-    public define(function_: (this: Rule, ...input: any) => boolean | any) {
-        return this.on('enforce', function_);
+    public define(function_: enforceHandler<I>) {
+        this.on('enforce', function_);
+        return this;
     }
 
     /**
@@ -213,8 +233,9 @@ export class Rule {
      *     this.throw(`Enforcing resulted in ${result}`);
      * });
      */
-    public punishment(function_: (this: Rule, input: any, error: any) => void) {
-        return this.on('fail', function_);
+    public punishment(function_: failHander<I>) {
+        this.on('fail', function_);
+        return this;
     }
 
     /**
@@ -225,8 +246,9 @@ export class Rule {
      *     console.log('Yay! The rule is uphold. Let\'s party!');
      * });
      */
-    public reward(function_: (this: Rule, input: any[]) => void) {
-        return this.on('pass', function_);
+    public reward(function_: passHandler<I>) {
+        this.on('pass', function_);
+        return this;
     }
 
     /**
@@ -280,7 +302,7 @@ export class Rule {
      * @example
      * Rule.enforce('foo', 'bar', 1, 86, 9302);
      */
-    public async enforce(...input: any) {
+    public async enforce(input: I) {
         if (this._config._throw === null && !this._config._asAlias) {
             // Skip rule
             return this;
@@ -299,7 +321,7 @@ export class Rule {
 
             result = [];
             for (const enforceHandler of this._handler.enforce) {
-                result.push(await enforceHandler.call(this, ...input));
+                result.push(await enforceHandler.call(this as Rule<I>, input, this.config()));
             }
         } catch (error) {
             if (!isError(error)) {
@@ -335,7 +357,7 @@ export class Rule {
                 return value;
             }) as string[];
 
-            ruleError = new RuleError(this, ...errorMessages);
+            ruleError = new RuleError(this as Rule, ...errorMessages);
         }
 
         const throwingRuleConfig = ruleError.rule._config;
@@ -357,7 +379,7 @@ export class Rule {
     /**
      * Enforce by the definition of another rule
      */
-    private async enforceAlias(aliasName: string, input: any[]) {
+    private async enforceAlias(aliasName: string, input: I) {
         this._log.debug(`Enforcing via alias ${this._alias}`);
 
         if (!this.rulebook) {
@@ -379,7 +401,7 @@ export class Rule {
         }
 
         try {
-            await aliased.enforce(aliasName, ...input);
+            await aliased.enforce(aliasName, input);
             this._log.debug('Alias rule uphold');
         } catch (error) {
             if (error instanceof RuleError) {
@@ -399,7 +421,7 @@ export class Rule {
     /**
      * Determine what to do with the enforce results
      */
-    private async handleEnforceResult(input: any[], results: any[] | Error) {
+    private async handleEnforceResult(input: I, results: any[] | Error) {
         let failResults = [];
         if (isError(results)) {
             failResults.push(results);
