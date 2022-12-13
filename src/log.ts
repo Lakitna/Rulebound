@@ -25,8 +25,7 @@ const levels: Record<logLevelNames, LogLevel> = {
     },
 } as const;
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-export class Logger<M extends Record<string, string | number> = {}> {
+export class Logger<M extends Record<string, string | number> = Record<string, string | number>> {
     public level: logLevelNames;
     public rank: number;
     private meta?: M;
