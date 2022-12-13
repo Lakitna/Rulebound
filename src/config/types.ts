@@ -34,7 +34,9 @@ export type severityLevel = 'error' | 'warn' | 'info' | null;
 
 export interface RulebookConfig {
     /**
-     * Define what log level you want to output
+     * What log level you want to output to the console
+     *
+     * @default 'info'
      */
     verboseness: logLevelNames;
 
@@ -62,6 +64,21 @@ export interface RulebookConfig {
          */
         optional: severityLevel;
     };
+
+    /**
+     * Paralellize enforcing rules
+     *
+     * This can speed up enforcement when you have rules that use a lots of I/O.
+     *
+     * If `true`: All rules will be enforced asynchrounously without waiting on eachother. Order of
+     * enforcing is not guaranteed in any way.
+     *
+     * If `false`: Each rule is enforced after the previous is done enforcing. Enforcing is done in
+     * order of rule specificity (least specific to most specific).
+     *
+     * @default false
+     */
+    enforceParallel: boolean;
 
     /**
      * List of rule configurations

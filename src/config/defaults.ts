@@ -1,4 +1,4 @@
-import { RulebookConfig, ParsedRuleConfig } from './types';
+import { ParsedRuleConfig, RulebookConfig } from './types';
 
 export const rulebookConfigDefault: RulebookConfig = {
     verboseness: 'info',
@@ -8,6 +8,7 @@ export const rulebookConfigDefault: RulebookConfig = {
         may: 'info',
         optional: 'info',
     },
+    enforceParallel: false,
     rules: {},
 };
 

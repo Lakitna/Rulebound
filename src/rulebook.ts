@@ -171,8 +171,14 @@ export class Rulebook<RI = unknown> {
             return this;
         }
 
-        for (const rule of subSet) {
-            await rule.enforce(input);
+        if (this.config.full.enforceParallel === true) {
+            this.log.debug('Enforce in parallel');
+            await Promise.all(subSet.map((rule) => rule.enforce(input)));
+        } else {
+            this.log.debug('Enforce serially');
+            for (const rule of subSet) {
+                await rule.enforce(input);
+            }
         }
 
         return this;
