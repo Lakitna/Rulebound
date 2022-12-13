@@ -40,7 +40,7 @@ export class ConfigManager {
         return this.config._rules;
     }
 
-    public get generic(): Omit<ParsedRuleConfig, '_rules' | 'rules'> {
+    public get generic(): Omit<RulebookConfig, '_rules' | 'rules'> {
         return omit(this.config, ['_rules', 'rules']);
     }
 
