@@ -32,6 +32,25 @@ describe('The class Rulebook', function () {
         });
     });
 
+    describe('iterable', function () {
+        beforeEach(function () {
+            this.ruleBook = new Rulebook(rulebookConfigDefault);
+
+            this.ruleBook.rules = ['foo', 'bar', 'baz'];
+        });
+
+        it('iterates over all rules in the set', function () {
+            const fake = sinon.fake();
+
+            for (const rule of this.ruleBook) {
+                fake(rule);
+            }
+
+            expect(fake.callCount).to.equal(3);
+            expect(fake.lastCall.calledWith('baz')).to.be.true;
+        });
+    });
+
     describe('add', function () {
         beforeEach(function () {
             this.ruleBook = new Rulebook(rulebookConfigDefault);
@@ -39,6 +58,16 @@ describe('The class Rulebook', function () {
 
         it('creates a new rule when called with a string', function () {
             this.ruleBook.add('foo');
+
+            expect(this.ruleBook.rules).to.be.lengthOf(1);
+            expect(this.ruleBook.rules[0]).to.be.instanceOf(Rule);
+            expect(this.ruleBook.rules[0].name).to.equal('foo');
+        });
+
+        it('creates a new rule when called with a function resolving to a string', function () {
+            this.ruleBook.add(() => {
+                return 'foo';
+            });
 
             expect(this.ruleBook.rules).to.be.lengthOf(1);
             expect(this.ruleBook.rules[0]).to.be.instanceOf(Rule);
@@ -57,6 +86,26 @@ describe('The class Rulebook', function () {
 
         it('adds the rule when called with a Rule', function () {
             this.ruleBook.add(new Rule('foo', this.ruleBook));
+
+            expect(this.ruleBook.rules).to.be.lengthOf(1);
+            expect(this.ruleBook.rules[0]).to.be.instanceOf(Rule);
+            expect(this.ruleBook.rules[0].name).to.equal('foo');
+        });
+
+        it('adds the rule when called with a function resolving to a Rule', function () {
+            this.ruleBook.add(() => {
+                return new Rule('foo', this.ruleBook);
+            });
+
+            expect(this.ruleBook.rules).to.be.lengthOf(1);
+            expect(this.ruleBook.rules[0]).to.be.instanceOf(Rule);
+            expect(this.ruleBook.rules[0].name).to.equal('foo');
+        });
+
+        it('adds the rule when called with a function resolving to a Rule without Rulebook', function () {
+            this.ruleBook.add(() => {
+                return new Rule('foo');
+            });
 
             expect(this.ruleBook.rules).to.be.lengthOf(1);
             expect(this.ruleBook.rules[0]).to.be.instanceOf(Rule);
@@ -236,7 +285,7 @@ describe('The class Rulebook', function () {
             await this.ruleBook.enforce('foo');
 
             expect(logStub.callCount).to.equal(1);
-            expect(logStub.getCall(0).lastArg).to.equal('No rules to enforce. Book is empty');
+            expect(logStub.getCall(0).lastArg).to.equal('No rules to enforce. Rulebook is empty');
 
             logStub.restore();
         });
@@ -256,6 +305,8 @@ describe('The class Rulebook', function () {
         });
 
         it('enforces all rules in ascending order of specificity', async function () {
+            this.ruleBook.config.set({ enforceParallel: false });
+
             let order = 0;
 
             this.ruleBook.add('fizz-bar-buzz').define(() => {
@@ -278,6 +329,30 @@ describe('The class Rulebook', function () {
 
             await this.ruleBook.enforce('fizz*');
             expect(order).to.equal(3);
+        });
+
+        it('enforces all rules in parallel mode', async function () {
+            this.ruleBook.config.set({ enforceParallel: true });
+
+            let count = 0;
+
+            this.ruleBook.add('fizz-bar-buzz').define(() => {
+                count++;
+                return true;
+            });
+
+            this.ruleBook.add('fizz').define(() => {
+                count++;
+                return true;
+            });
+
+            this.ruleBook.add('fizz-buzz').define(() => {
+                count++;
+                return true;
+            });
+
+            await this.ruleBook.enforce('fizz*');
+            expect(count).to.equal(3);
         });
     });
 });

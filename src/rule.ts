@@ -159,7 +159,6 @@ export class Rule<I = unknown> {
     }
 
     public clone(): Rule<I> {
-        // TODO: Does this work like I think it does?
         return cloneDeep(this);
     }
 

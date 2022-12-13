@@ -15,6 +15,59 @@ describe('The class Rule', function () {
         expect(rule.name).to.equal('foo');
     });
 
+    describe('clone', function () {
+        it('clones a simple rule', function () {
+            const original = new Rule('foo');
+            const clone = original.clone();
+
+            // Not the same object reference
+            expect(original).to.not.equal(clone);
+            // The same object contents
+            expect(original).to.deep.equal(clone);
+        });
+
+        it('clones a rule with config', function () {
+            const original = new Rule('foo').config({ lorum: 'ipsum', dolor: 123 });
+            const clone = original.clone();
+
+            // Not the same object reference
+            expect(original).to.not.equal(clone);
+            // The same object contents
+            expect(original).to.deep.equal(clone);
+            expect(original.config()).to.deep.equal(clone.config());
+        });
+
+        it('the cloned rule has methods', function () {
+            const original = new Rule('foo');
+            const clone = original.clone().config({ lorum: 'ipsum', dolor: 123 });
+
+            // Not the same object reference
+            expect(original).to.not.equal(clone);
+            expect(original.config()).to.deep.equal({ required: 'must' });
+            expect(clone.config()).to.deep.equal({ required: 'must', lorum: 'ipsum', dolor: 123 });
+        });
+
+        it('clones a rule with handlers', function () {
+            const original = new Rule('foo')
+                .define(() => true)
+                .define(() => true)
+                .punishment(() => {})
+                .reward(() => {});
+            const clone = original.clone();
+
+            // Not the same object reference
+            expect(original).to.not.equal(clone);
+            // The same object contents
+            expect(original).to.deep.equal(clone);
+
+            // @ts-expect-error using a private var
+            const cloneHandlers = clone._handler;
+            expect(cloneHandlers.enforce.length).to.equal(2);
+            expect(cloneHandlers.pass.length).to.equal(1);
+            expect(cloneHandlers.fail.length).to.equal(1);
+        });
+    });
+
     describe('Config', function () {
         beforeEach(function () {
             this.rule = new Rule('foo', {} as Rulebook);
@@ -341,6 +394,22 @@ describe('The class Rule', function () {
                 .enforce();
         });
 
+        it('punishes when the definition throws a non-error string', function (done) {
+            this.rule
+                .define(() => {
+                    throw 'Some non-error';
+                })
+                .punishment((input: undefined, result: Error) => {
+                    expect(input).to.be.undefined;
+                    expect(result).to.be.instanceOf(Error);
+                    done();
+                })
+                .reward(() => {
+                    throw new Error('Enforce should not reward');
+                })
+                .enforce();
+        });
+
         it('punishes when the definition returns an error message', function (done) {
             this.rule
                 .define(() => 'foo')
@@ -502,6 +571,19 @@ describe('The class Rule', function () {
         describe('Using an alias', function () {
             beforeEach(function () {
                 this.rulebook = new Rulebook();
+            });
+
+            it('throws when the rule does not have a rulebook', async function () {
+                const rule = new Rule('foo').alias('bar');
+
+                try {
+                    await rule.enforce('foo');
+                    throw new Error('Expected error to be thrown');
+                } catch (error) {
+                    expect((error as Error).message).to.equal(
+                        `Rule is not part of a Rulebook. Can't look for alias 'bar'`
+                    );
+                }
             });
 
             it('throws an error thrown by the aliased rule in name of the alias', async function () {

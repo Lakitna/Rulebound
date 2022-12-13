@@ -75,6 +75,7 @@ describe('The class ConfigManager', function () {
             it('returns the config for everything except the rules', function () {
                 expect(this.manager.generic).to.deep.equal({
                     verboseness: 'info',
+                    enforceParallel: false,
                     severity: {
                         must: 'error',
                         should: 'warn',
