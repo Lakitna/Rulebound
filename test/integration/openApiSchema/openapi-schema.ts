@@ -1,7 +1,12 @@
-import { isObject } from 'lodash-es';
+import { isError, isObject } from 'lodash-es';
 import { Rulebook } from '../../../src/rulebook';
 
-export default async (rulebook: Rulebook) => {
+export interface OasRuleParameters {
+    json: Record<string, any>;
+    schema: Record<string, any>;
+}
+
+export default async (rulebook: Rulebook<OasRuleParameters>) => {
     const subRules = ['schema', 'string'];
     for (const rule of subRules) {
         const module = await import(`./${rule}/index`);
@@ -17,7 +22,7 @@ export default async (rulebook: Rulebook) => {
             Note that this is a partial implementation created to test Ruleful.
         `
         )
-        .define(async function (json, schema) {
+        .define(async function ({ json, schema }) {
             this.context.trail = [];
 
             if (!isObject(schema)) {
@@ -42,14 +47,16 @@ export default async (rulebook: Rulebook) => {
                     this.context.trail.push(key);
 
                     // Some basic checks on the schema
-                    await rulebook.enforce('openapi-schema/schema/*', subSchema);
+                    await rulebook.enforce('openapi-schema/schema/*', {
+                        json: {},
+                        schema: subSchema,
+                    });
 
                     // Enforce more specific rules
-                    await rulebook.enforce(
-                        `openapi-schema/${subSchema.type}/*`,
-                        subJson,
-                        subSchema
-                    );
+                    await rulebook.enforce(`openapi-schema/${subSchema.type}/*`, {
+                        json: subJson,
+                        schema: subSchema,
+                    });
 
                     // Go deeper if we can
                     if (subSchema.type === 'object') {
@@ -67,12 +74,16 @@ export default async (rulebook: Rulebook) => {
 
             return true;
         })
-        .punishment(function (input, error) {
-            error.message +=
-                this.context.trail.length > 0
-                    ? `\n@ ${this.context.trail.join(' > ')}`
-                    : `\n@ object root`;
+        .punishment(function (_, error) {
+            if (isError(error)) {
+                error.message +=
+                    this.context.trail.length > 0
+                        ? `\n@ ${this.context.trail.join(' > ')}`
+                        : `\n@ object root`;
 
-            throw error;
+                throw error;
+            }
+
+            throw new Error('Unexpected non-error returned');
         });
 };

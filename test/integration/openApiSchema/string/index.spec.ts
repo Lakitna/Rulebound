@@ -1,12 +1,12 @@
 import { expect } from 'chai';
-import rule from '.';
+import rule, { OasRuleParametersString } from '.';
 import { Rulebook } from '../../../../src/rulebook';
 
 const ruleName = 'openapi-schema/string/type';
 
 describe(`Rule: ${ruleName}`, function () {
     beforeEach(async function (this: any) {
-        this.book = new Rulebook({
+        this.book = new Rulebook<OasRuleParametersString>({
             rules: {
                 [ruleName]: {
                     required: 'must',
@@ -18,36 +18,36 @@ describe(`Rule: ${ruleName}`, function () {
     });
 
     it('passes on valid string', async function () {
-        await this.book.enforce(this.rule.name, 'fooBar');
+        await this.book.enforce(this.rule.name, { json: 'fooBar' });
     });
 
     it('fails on null', async function () {
-        await expect(this.book.enforce(this.rule.name, null)).to.be.rejectedWith(
+        await expect(this.book.enforce(this.rule.name, { json: null })).to.be.rejectedWith(
             `'null' is not a string`
         );
     });
 
     it('fails on undefined', async function () {
-        await expect(this.book.enforce(this.rule.name)).to.be.rejectedWith(
+        await expect(this.book.enforce(this.rule.name, { json: undefined })).to.be.rejectedWith(
             `'undefined' is not a string`
         );
     });
 
     it('fails on a number', async function () {
-        await expect(this.book.enforce(this.rule.name, 123)).to.be.rejectedWith(
+        await expect(this.book.enforce(this.rule.name, { json: 123 })).to.be.rejectedWith(
             `'123' is not a string`
         );
     });
 
     it('fails on an array', async function () {
-        await expect(this.book.enforce(this.rule.name, ['foo'])).to.be.rejectedWith(
+        await expect(this.book.enforce(this.rule.name, { json: ['foo'] })).to.be.rejectedWith(
             `'[foo]' is not a string`
         );
     });
 
     it('fails on an object', async function () {
-        await expect(this.book.enforce(this.rule.name, { foo: 'bar' })).to.be.rejectedWith(
-            `'[object Object]' is not a string`
-        );
+        await expect(
+            this.book.enforce(this.rule.name, { json: { foo: 'bar' } })
+        ).to.be.rejectedWith(`'[object Object]' is not a string`);
     });
 });

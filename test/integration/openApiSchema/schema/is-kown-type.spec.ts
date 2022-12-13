@@ -19,38 +19,50 @@ describe(`Rule: ${ruleName}`, function () {
 
     it('passes on valid type string', async function () {
         await this.book.enforce(this.rule.name, {
-            type: 'string',
+            schema: {
+                type: 'string',
+            },
         });
     });
 
     it('passes on valid type integer', async function () {
         await this.book.enforce(this.rule.name, {
-            type: 'integer',
+            schema: {
+                type: 'integer',
+            },
         });
     });
 
     it('passes on valid type number', async function () {
         await this.book.enforce(this.rule.name, {
-            type: 'number',
+            schema: {
+                type: 'number',
+            },
         });
     });
 
     it('passes on valid type object', async function () {
         await this.book.enforce(this.rule.name, {
-            type: 'object',
+            schema: {
+                type: 'object',
+            },
         });
     });
 
     it('passes on valid type array', async function () {
         await this.book.enforce(this.rule.name, {
-            type: 'array',
+            schema: {
+                type: 'array',
+            },
         });
     });
 
     it('fails on type null', async function () {
         await expect(
             this.book.enforce(this.rule.name, {
-                type: null,
+                schema: {
+                    type: null,
+                },
             })
         ).to.be.rejectedWith(`Unkown type 'null'`);
     });
@@ -58,7 +70,9 @@ describe(`Rule: ${ruleName}`, function () {
     it('fails on type undefined', async function () {
         await expect(
             this.book.enforce(this.rule.name, {
-                type: undefined,
+                schema: {
+                    type: undefined,
+                },
             })
         ).to.be.rejectedWith(`Unkown type 'undefined'`);
     });
@@ -66,7 +80,9 @@ describe(`Rule: ${ruleName}`, function () {
     it('fails on an invalid type', async function () {
         await expect(
             this.book.enforce(this.rule.name, {
-                type: 'badType',
+                schema: {
+                    type: 'badType',
+                },
             })
         ).to.be.rejectedWith(`Unkown type 'badType'`);
     });

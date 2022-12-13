@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import { OasRuleParametersString } from '.';
 import { Rulebook } from '../../../../src/rulebook';
 import rule from './min-length';
 
@@ -6,7 +7,7 @@ const ruleName = 'openapi-schema/string/min-length';
 
 describe(`Rule: ${ruleName}`, function () {
     beforeEach(async function (this: any) {
-        this.book = new Rulebook({
+        this.book = new Rulebook<OasRuleParametersString>({
             rules: {
                 [ruleName]: {
                     required: 'must',
@@ -18,27 +19,39 @@ describe(`Rule: ${ruleName}`, function () {
     });
 
     it('passes when there is no minLength in the schema', async function () {
-        await this.book.enforce(this.rule.name, 'value', {
-            minLength: undefined,
+        await this.book.enforce(this.rule.name, {
+            string: 'value',
+            schema: {
+                minLength: undefined,
+            },
         });
     });
 
     it('passes when string.length > minLength', async function () {
-        await this.book.enforce(this.rule.name, 'value', {
-            minLength: 4,
+        await this.book.enforce(this.rule.name, {
+            string: 'value',
+            schema: {
+                minLength: 4,
+            },
         });
     });
 
     it('passes when string.length === minLength', async function () {
-        await this.book.enforce(this.rule.name, 'value', {
-            minLength: 5,
+        await this.book.enforce(this.rule.name, {
+            string: 'value',
+            schema: {
+                minLength: 5,
+            },
         });
     });
 
     it('throws when string.length < minLength', async function () {
         await expect(
-            this.book.enforce(this.rule.name, 'value', {
-                minLength: 6,
+            this.book.enforce(this.rule.name, {
+                string: 'value',
+                schema: {
+                    minLength: 6,
+                },
             })
         ).to.be.rejectedWith(`'value' is too short. Expected at least 6 characters but got 5`);
     });

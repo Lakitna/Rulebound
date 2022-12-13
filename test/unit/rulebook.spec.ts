@@ -52,7 +52,7 @@ describe('The class Rulebook', function () {
 
             expect(this.ruleBook.rules).to.be.lengthOf(1);
             expect(this.ruleBook.rules[0]).to.be.instanceOf(Rule);
-            expect(this.ruleBook.rules[0].config.configSet).to.equal(true);
+            expect(this.ruleBook.rules[0].config().configSet).to.equal(true);
         });
 
         it('adds the rule when called with a Rule', function () {
@@ -80,7 +80,7 @@ describe('The class Rulebook', function () {
             this.ruleBook.config.set(config);
             this.ruleBook.add('foo');
 
-            expect(this.ruleBook.rules[0].config.bar).to.equal('fizz');
+            expect(this.ruleBook.rules[0].config().bar).to.equal('fizz');
         });
 
         it('orders the rules by specificity', function () {
@@ -116,7 +116,7 @@ describe('The class Rulebook', function () {
                     fizzle: true,
                 });
 
-                expect(this.ruleBook.rules[0].config).to.deep.equal({
+                expect(this.ruleBook.rules[0].config()).to.deep.equal({
                     required: 'must',
                     sizzle: false,
                     fizzle: true,

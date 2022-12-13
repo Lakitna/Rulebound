@@ -35,21 +35,21 @@ describe('The class Rule', function () {
                 foo: 'bar',
             };
 
-            this.rule.config = Object.assign({}, config);
+            this.rule.config(Object.assign({}, config));
 
-            expect(this.rule.config).to.deep.equal(config);
+            expect(this.rule.config()).to.deep.equal(config);
         });
 
         it('does not remove existing config when setting other values', function () {
-            this.rule.config = {
+            this.rule.config({
                 foo: 'bar',
-            };
+            });
 
-            this.rule.config = {
+            this.rule.config({
                 fizz: 'buzz',
-            };
+            });
 
-            expect(this.rule.config).to.deep.equal({
+            expect(this.rule.config()).to.deep.equal({
                 required: 'must',
                 foo: 'bar',
                 fizz: 'buzz',
@@ -67,7 +67,7 @@ describe('The class Rule', function () {
             };
 
             expect(() => {
-                this.rule.config = { required: 'unkown level' };
+                this.rule.config({ required: 'unkown level' });
             }).to.throw(
                 `Found unkown required level 'unkown level' in the configuration for rule 'foo'`
             );
@@ -298,7 +298,7 @@ describe('The class Rule', function () {
         });
 
         it('does not check the rule if the option _throw=null', function () {
-            this.rule.config = { _throw: null };
+            this.rule.config({ _throw: null });
 
             this.rule
                 .define(() => false)
@@ -314,8 +314,8 @@ describe('The class Rule', function () {
         it('punishes when the definition returns false', function (done) {
             this.rule
                 .define(() => false)
-                .punishment((input: any[], result: boolean) => {
-                    expect(input).to.be.lengthOf(0);
+                .punishment((input: undefined, result: boolean) => {
+                    expect(input).to.be.undefined;
                     expect(result).to.deep.equal([false]);
                     done();
                 })
@@ -330,8 +330,8 @@ describe('The class Rule', function () {
                 .define(() => {
                     throw new Error('Some error');
                 })
-                .punishment((input: any[], result: Error) => {
-                    expect(input).to.be.lengthOf(0);
+                .punishment((input: undefined, result: Error) => {
+                    expect(input).to.be.undefined;
                     expect(result).to.be.instanceOf(Error);
                     done();
                 })
@@ -344,8 +344,8 @@ describe('The class Rule', function () {
         it('punishes when the definition returns an error message', function (done) {
             this.rule
                 .define(() => 'foo')
-                .punishment((input: any[], result: string) => {
-                    expect(input).to.be.lengthOf(0);
+                .punishment((input: undefined, result: string) => {
+                    expect(input).to.be.undefined;
                     expect(result).to.deep.equal(['foo']);
                     done();
                 })
@@ -362,8 +362,8 @@ describe('The class Rule', function () {
                         resolve(false);
                     });
                 })
-                .punishment((input: any[], result: boolean) => {
-                    expect(input).to.be.lengthOf(0);
+                .punishment((input: undefined, result: boolean) => {
+                    expect(input).to.be.undefined;
                     expect(result).to.deep.equal([false]);
                     done();
                 })
@@ -380,8 +380,8 @@ describe('The class Rule', function () {
                         throw new Error('Some error');
                     });
                 })
-                .punishment((input: any[], result: Error) => {
-                    expect(input).to.be.lengthOf(0);
+                .punishment((input: undefined, result: Error) => {
+                    expect(input).to.be.undefined;
                     expect(result).to.be.instanceOf(Error);
                     done();
                 })
@@ -398,8 +398,8 @@ describe('The class Rule', function () {
                         resolve('foo');
                     });
                 })
-                .punishment((input: any[], result: string) => {
-                    expect(input).to.be.lengthOf(0);
+                .punishment((input: undefined, result: string) => {
+                    expect(input).to.be.undefined;
                     expect(result).to.deep.equal(['foo']);
                     done();
                 })
@@ -479,7 +479,7 @@ describe('The class Rule', function () {
         it('rethrows errors thrown by nested rules via the punishment of the parent rule', function (done) {
             this.rule
                 .define(async () => {
-                    await new Rule('bar', {} as Rulebook).define(() => false).enforce();
+                    await new Rule('bar', {} as Rulebook).define(() => false).enforce('**');
                 })
                 .punishment((input: undefined, error: Error) => {
                     throw error;
@@ -684,7 +684,7 @@ describe('The class Rule', function () {
         });
 
         it('throws an error when the option throw=error', function () {
-            this.rule.config = { _throw: 'error' };
+            this.rule.config({ _throw: 'error' });
 
             expect(this.rule.throw.bind(this.rule, 'bar')).to.throw('bar');
         });
@@ -692,7 +692,7 @@ describe('The class Rule', function () {
         it('logs an error when the options throw=warn', async function () {
             const logStub = sinon.stub(this.rule._log, 'warn');
 
-            this.rule.config = { _throw: 'warn' };
+            this.rule.config({ _throw: 'warn' });
             this.rule.throw('bar');
 
             expect(logStub.callCount).to.equal(1);
@@ -704,7 +704,7 @@ describe('The class Rule', function () {
         it('logs when the options throw=log', async function () {
             const logStub = sinon.stub(this.rule._log, 'info');
 
-            this.rule.config = { _throw: 'info' };
+            this.rule.config({ _throw: 'info' });
             this.rule.throw('bar');
 
             expect(logStub.callCount).to.equal(1);
@@ -714,7 +714,7 @@ describe('The class Rule', function () {
         it('does nothing when the options throw=null', async function () {
             const logStub = sinon.stub(this.rule._log, 'info');
 
-            this.rule.config = { _throw: null };
+            this.rule.config({ _throw: null });
             this.rule.throw('bar');
 
             expect(logStub.callCount).to.equal(0);
