@@ -66,6 +66,18 @@ export class Rulebook<RI = unknown> {
     }
 
     /**
+     * Makes Rulebook an iterator allowing you to loop over rules easily.
+     *
+     * @example
+     * for (const rule of rulebook) {
+     *     console.log(rule);
+     * }
+     */
+    [Symbol.iterator]() {
+        return this.rules.values();
+    }
+
+    /**
      * Add a rule or create a new empty one
      * Sets configuration
      */
