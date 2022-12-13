@@ -120,8 +120,8 @@ export class Rule<I = unknown> {
     }
 
     public config(): RuleConfig;
-    public config(config: Partial<RuleConfig>): undefined;
-    public config(config?: Partial<RuleConfig>): undefined | RuleConfig {
+    public config(config: Partial<RuleConfig>): Rule<I>;
+    public config(config?: Partial<RuleConfig>): Rule<I> | RuleConfig {
         if (!config) {
             return omitBy(this._config, (_, key) => {
                 return key.startsWith('_');
@@ -132,7 +132,7 @@ export class Rule<I = unknown> {
 
         if (this._config.required === null) {
             this._config._throw = null;
-            return;
+            return this;
         }
 
         this._config.required = this._config.required.toLowerCase() as RuleConfig['required'];
@@ -150,6 +150,8 @@ export class Rule<I = unknown> {
 
             this._config._throw = rulebookConfig.severity[this._config.required];
         }
+
+        return this;
     }
 
     public clone(): Rule<I> {
