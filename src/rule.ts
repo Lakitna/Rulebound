@@ -10,7 +10,7 @@ import {
 } from 'lodash-es';
 
 import { ruleConfigDefault } from './config/defaults';
-import { ParsedRuleConfig, RuleConfig } from './config/types';
+import { ParsedRuleConfig, RuleConfig, severityLevel } from './config/types';
 import { ConfigError, RuleError } from './errors';
 import { logger, Logger } from './log';
 import { Rulebook } from './rulebook';
@@ -160,6 +160,10 @@ export class Rule<I = unknown> {
 
     public clone(): Rule<I> {
         return cloneDeep(this);
+    }
+
+    get severity(): severityLevel {
+        return this._config._throw;
     }
 
     /**
@@ -350,34 +354,32 @@ export class Rule<I = unknown> {
     public throw(...message: (any | Error)[]) {
         this._log.debug(`Throwing error`);
 
-        let ruleError = message.find((partialMessage) => {
+        let ruleError: RuleError | undefined = message.find((partialMessage) => {
             return partialMessage instanceof RuleError;
         });
         if (isUndefined(ruleError)) {
-            const errorMessages = message.map((value: any) => {
+            const errorMessages = message.flat().map((value: any) => {
                 if (isError(value)) {
                     return value.message;
                 } else if (!isString(value)) {
                     return value.toString();
                 }
                 return value;
-            }) as string[];
+            });
 
             ruleError = new RuleError(this as Rule, ...errorMessages);
         }
 
-        const throwingRuleConfig = ruleError.rule._config;
-
         // Always throw when called as an aliased rule so we can handle the
         // error in the alias.
-        if (throwingRuleConfig._throw === 'error' || this._config._asAlias) {
+        if (ruleError.severity === 'error' || this._config._asAlias) {
             throw ruleError;
         }
-        if (throwingRuleConfig._throw === 'warn') {
+        if (ruleError.severity === 'warn') {
             this._log.warn(ruleError.toString());
             return;
         }
-        if (throwingRuleConfig._throw === 'info') {
+        if (ruleError.severity === 'info') {
             this._log.info(ruleError.toString());
         }
     }
@@ -412,8 +414,8 @@ export class Rule<I = unknown> {
         } catch (error) {
             if (error instanceof RuleError) {
                 this._log.debug(`Alias rule broken`);
-                this.description = error.rule.description;
-                throw new Error(error._message);
+                // this.description = error.rule.description;
+                throw new Error(error.message);
             }
             throw error;
         } finally {

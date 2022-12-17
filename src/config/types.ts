@@ -16,7 +16,7 @@ export interface ParsedRuleConfig extends RuleConfig {
      * Define the behaviour of a failure.
      * @private
      */
-    _throw?: severityLevel;
+    _throw: severityLevel;
 
     /**
      * @private
