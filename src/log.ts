@@ -1,28 +1,28 @@
 import c from 'ansi-colors';
 
-export type logLevelNames = 'debug' | 'info' | 'warn' | 'error';
+export type logLevelNames = keyof typeof levels;
 interface LogLevel {
     marker: () => string;
     rank: number;
 }
 
-const levels: Record<logLevelNames, LogLevel> = {
+const levels = {
     debug: {
         marker: () => c.grey('»'),
         rank: 0,
-    },
+    } as LogLevel,
     info: {
         marker: () => c.blueBright('i'),
         rank: 1,
-    },
+    } as LogLevel,
     warn: {
-        marker: () => '\n' + c.bgYellow.black(` WARN `),
+        marker: () => c.bgYellow.black(` WARN `),
         rank: 2,
-    },
+    } as LogLevel,
     error: {
         marker: () => '\n' + c.bgRed.black(` ERROR `),
         rank: 3,
-    },
+    } as LogLevel,
 } as const;
 
 export class Logger<M extends Record<string, string | number> = Record<string, string | number>> {
@@ -39,7 +39,7 @@ export class Logger<M extends Record<string, string | number> = Record<string, s
     /**
      * Returns a child logger
      */
-    child(meta: M): Logger<M> {
+    child<CM extends M>(meta: CM): Logger<CM> {
         return new Logger(this.level, meta);
     }
 

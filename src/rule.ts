@@ -57,7 +57,7 @@ export class Rule<I = unknown> {
 
     private _alias: string | null;
     private _config: ParsedRuleConfig;
-    private _log: Logger;
+    private _log: Logger<{ rule: string }>;
     private _handler: ruleEventHandlers;
 
     /**
