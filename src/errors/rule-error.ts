@@ -13,6 +13,7 @@ export class RuleError extends Error {
      */
     public required: ParsedRuleConfig['required'];
     public severity: severityLevel;
+    public description?: string;
 
     public constructor(rule: Rule, ...message: string[]) {
         const message_ = message.join('\n');
@@ -21,16 +22,9 @@ export class RuleError extends Error {
         this.rule = rule.name;
         this.required = rule.config().required;
         this.severity = rule.severity;
-        this.name = `RuleError | ${this.required.toUpperCase()} ${this.rule}`;
+        this.description = rule.description;
 
-        if (rule.description) {
-            // Insert the description between the error message and the stack
-            const preStack = this.name + (message_.length > 0 ? ': ' + message_ : '');
-            this.stack = this.stack?.replace(
-                preStack,
-                preStack + '\n' + c.yellow(rule.description)
-            );
-        }
+        this.name = `RuleError | ${this.required.toUpperCase()} ${this.rule}`;
     }
 
     public toString() {
