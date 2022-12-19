@@ -1,4 +1,3 @@
-import { cosmiconfigSync } from 'cosmiconfig';
 import isGlob from 'is-glob';
 import { cloneDeep, defaultsDeep, isUndefined, omit, omitBy } from 'lodash-es';
 import micromatch from 'micromatch';
@@ -16,11 +15,8 @@ export class ConfigManager {
     private log: Logger;
 
     public constructor(partialConfig?: Partial<RulebookConfig>) {
-        const configFile = cosmiconfigSync('rulebound').search();
-
         const config = defaultsDeep(
             cloneDeep(partialConfig),
-            configFile === null ? {} : cloneDeep(configFile.config),
             cloneDeep(rulebookConfigDefault)
         ) as RulebookConfig;
 
@@ -31,7 +27,7 @@ export class ConfigManager {
     }
 
     public get full() {
-        return omitBy(this.config, (value, key) => {
+        return omitBy(this.config, (_value, key) => {
             return key.startsWith('_');
         });
     }
