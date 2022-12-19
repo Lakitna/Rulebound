@@ -44,9 +44,9 @@ export class ConfigManager {
         return omit(this.config, ['_rules', 'rules']);
     }
 
-    public set(config: RulebookConfig) {
+    public set(config: Partial<RulebookConfig>) {
         config = defaultsDeep(config, this.config);
-        this.config = this.parse(config);
+        this.config = this.parse(config as RulebookConfig);
     }
 
     /**

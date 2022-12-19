@@ -57,7 +57,7 @@ export class Rulebook<RI = unknown> {
      * rulebook.forEach((rule, index, allRules) => {...})
      */
     public forEach(
-        function_: (value: Rule, index: number, array: Rule[]) => void,
+        function_: (value: Rule<RI>, index: number, array: Rule<RI>[]) => void,
         thisArgument?: any
     ): void {
         for (const [index, rule] of this.rules.entries()) {
@@ -91,9 +91,9 @@ export class Rulebook<RI = unknown> {
         }
         if (rule instanceof Rule) {
             normalizedRule = rule.rulebook instanceof Rulebook ? rule.clone() : rule;
-            normalizedRule.rulebook = this;
+            normalizedRule.rulebook = this as Rulebook;
         } else {
-            normalizedRule = new Rule<RI>(rule, this);
+            normalizedRule = new Rule<RI>(rule, this as Rulebook);
         }
 
         if (this.has(normalizedRule.name)) {
