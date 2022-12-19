@@ -8,6 +8,7 @@ import {
     keys,
     omitBy,
 } from 'lodash-es';
+import util from 'node:util';
 
 import { ruleConfigDefault } from './config/defaults';
 import { ParsedRuleConfig, RuleConfig, severityLevel } from './config/types';
@@ -16,19 +17,47 @@ import { logger, Logger } from './log';
 import { Rulebook } from './rulebook';
 import { specificity } from './utils';
 
+type enableHandler<I> = (
+    this: Rule<I>,
+    input: I,
+    ruleConfig: RuleConfig
+) => true | unknown | Promise<true | unknown>;
 type enforceHandler<I> = (
     this: Rule<I>,
     input: I,
     ruleConfig: RuleConfig
 ) => true | unknown | Promise<true | unknown>;
-type passHandler<I> = (this: Rule<I>, input: I) => void | Promise<void>;
-type failHander<I> = (this: Rule<I>, input: I, result: unknown[] | Error) => void | Promise<void>;
+type passHandler<I> = (this: Rule<I>, input: I, ruleConfig: RuleConfig) => void | Promise<void>;
+type failHandler<I> = (
+    this: Rule<I>,
+    input: I,
+    ruleConfig: RuleConfig,
+    result: unknown[] | Error
+) => void | Promise<void>;
 
-interface ruleEventHandlers {
-    enforce: enforceHandler<any>[];
-    pass: passHandler<any>[];
-    fail: failHander<any>[];
+interface ruleEventHandlers<I> {
+    enable: enableHandler<I>[];
+    enforce: enforceHandler<I>[];
+    pass: passHandler<I>[];
+    fail: failHandler<I>[];
 }
+
+const defaultEnableHandler: enableHandler<any> = function enable() {
+    // No handler -> Enable rule
+    return true;
+};
+const defaultEnforceHandler: enforceHandler<any> = function enforce() {
+    // No handler -> Throw error
+    return new RuleError(this as Rule, 'Rule not defined');
+};
+const defaultPassHandler: passHandler<any> = function pass() {
+    // No handler -> Do nothing
+    return;
+};
+const defaultFailHandler: failHandler<any> = function fail(_input, _config, results) {
+    // No handler -> Rethrow error
+    return this.throw(results);
+};
 
 /**
  * A testing rule
@@ -58,7 +87,7 @@ export class Rule<I = unknown> {
     private _alias: string | null;
     private _config: ParsedRuleConfig;
     private _log: Logger<{ rule: string }>;
-    private _handler: ruleEventHandlers;
+    private _handler: ruleEventHandlers<I>;
 
     /**
      * Use context to share state between events
@@ -99,24 +128,10 @@ export class Rule<I = unknown> {
         this._config = ruleConfigDefault;
 
         this._handler = {
-            enforce: [
-                // eslint-disable-next-line no-shadow-restricted-names
-                function undefined() {
-                    throw new RuleError(this as Rule, 'Rule is undefined');
-                },
-            ],
-            pass: [
-                // eslint-disable-next-line no-shadow-restricted-names
-                function undefined() {
-                    return;
-                },
-            ],
-            fail: [
-                // eslint-disable-next-line no-shadow-restricted-names
-                function undefined(_, result) {
-                    this.throw(result);
-                },
-            ],
+            enable: [],
+            enforce: [],
+            pass: [],
+            fail: [],
         };
 
         this.context = {};
@@ -184,12 +199,14 @@ export class Rule<I = unknown> {
      *     console.log(`Yay! The rule is uphold. Let's party!`);
      * });
      */
-    public on<E extends keyof ruleEventHandlers>(
+    public on<E extends keyof ruleEventHandlers<I>>(
         event: E,
-        function_: E extends 'enforce'
+        function_: E extends 'enable'
+            ? enableHandler<I>
+            : E extends 'enforce'
             ? enforceHandler<I>
             : E extends 'fail'
-            ? failHander<I>
+            ? failHandler<I>
             : E extends 'pass'
             ? passHandler<I>
             : never
@@ -198,18 +215,18 @@ export class Rule<I = unknown> {
 
         Object.defineProperty(function_, 'name', { value: event });
 
-        if (event !== 'enforce' && event !== 'fail' && event !== 'pass') {
-            throw new RuleError(this, `You tried to subscribe to unkown event '${event}'`);
+        if (event !== 'enable' && event !== 'enforce' && event !== 'fail' && event !== 'pass') {
+            throw new RuleError(this as Rule, `You tried to subscribe to unkown event '${event}'`);
         }
 
         const handlers = this._handler[event] as typeof function_[];
-
-        // Delete default `undefined` handler function
-        if (handlers.length === 1 && handlers[0].name.startsWith('undefined')) {
-            handlers.shift();
-        }
-
         handlers.push(function_);
+
+        return this;
+    }
+
+    public enable(function_: enableHandler<I>) {
+        this.on('enable', function_);
         return this;
     }
 
@@ -242,7 +259,7 @@ export class Rule<I = unknown> {
      *     this.throw(`Enforcing resulted in ${result}`);
      * });
      */
-    public punishment(function_: failHander<I>) {
+    public punishment(function_: failHandler<I>) {
         this.on('fail', function_);
         return this;
     }
@@ -296,8 +313,7 @@ export class Rule<I = unknown> {
         // here, but at this point not all rules have been defined yet.
         // Instead we'll check as a part of `.enforce()`.
 
-        // TODO: Find out if aliasses can be daisy chained
-        this._log.debug(`Alias set to ${globPattern}`);
+        this._log.debug(`Alias set to '${globPattern}'`);
         this._alias = globPattern;
         return this;
     }
@@ -309,7 +325,10 @@ export class Rule<I = unknown> {
      * Rule.enforce('foo');
      *
      * @example
-     * Rule.enforce('foo', 'bar', 1, 86, 9302);
+     * Rule.enforce({ foo: 123, bar: 'lorum' });
+     *
+     * @example
+     * Rule.enforce(['foo', 'bar', 1, 86, 9302]);
      */
     public async enforce(input: I) {
         if (this._config._throw === null && !this._config._asAlias) {
@@ -317,36 +336,46 @@ export class Rule<I = unknown> {
             return this;
         }
 
-        this._log.debug(`Event: 'enforce'`);
-
-        let result: Error | any[];
-        try {
-            if (this._alias !== null) {
-                await this.enforceAlias(this._alias, input);
-                // The aliased rule did not throw. Stop enforcing now to prevent
-                // doing things twice. This also means that the current rule will not reward.
-                return this;
+        // Is the rule enabled?
+        const enableResult = await this.raiseEvent('enable', defaultEnableHandler, input).catch(
+            (error: unknown) => {
+                if (isError(error)) return error;
+                return [error];
             }
-
-            result = [];
-            for (const enforceHandler of this._handler.enforce) {
-                result.push(await enforceHandler.call(this as Rule<I>, input, this.config()));
-            }
-        } catch (error) {
-            result = isError(error)
-                ? error
-                : new TypeError(
-                      `Rule ${this.name} threw non-error (typeof ${typeof error}): ` + error
-                  );
+        );
+        const enabled = this.handleEnableResult(enableResult);
+        if (!enabled) {
+            return this;
         }
 
-        await this.handleEnforceResult(input, result);
+        let enforceResult: Error | unknown[];
+        if (isString(this._alias)) {
+            // Enforce the aliased rule
+            try {
+                await this.enforceAlias(this._alias, input);
+                // We don't know the results of the alias, but we do know it did not fail.
+                await this.handleEnforceResult(input, []);
+                return this;
+            } catch (error: unknown) {
+                enforceResult = isError(error) ? error : [error];
+            }
+        } else {
+            // Enforce the rule
+            enforceResult = await this.raiseEvent('enforce', defaultEnforceHandler, input).catch(
+                (error: unknown) => {
+                    if (isError(error)) return error;
+                    return [error];
+                }
+            );
+        }
+
+        await this.handleEnforceResult(input, enforceResult);
         return this;
     }
 
     /**
      * Throw an error or log a warning for this rule.
-     * Required decides if it'll throw or log at which level.
+     * Rule config decides if it'll throw or log at which level.
      *
      * @example
      * Rule.throw('An error has occured');
@@ -384,6 +413,99 @@ export class Rule<I = unknown> {
         }
     }
 
+    private async raiseEvent<E extends keyof ruleEventHandlers<I>>(
+        event: E,
+        defaultHandler: E extends 'enable'
+            ? enableHandler<I>
+            : E extends 'enforce'
+            ? enforceHandler<I>
+            : E extends 'fail'
+            ? failHandler<I>
+            : E extends 'pass'
+            ? passHandler<I>
+            : never,
+        input: I,
+        enforceResults?: E extends 'fail' ? Error | unknown[] : undefined
+    ): Promise<unknown[]> {
+        this._log.debug(`Event: '${event}'`);
+
+        const handlers = this._handler[event] as typeof defaultHandler[];
+        if (handlers.length === 0) {
+            handlers.push(defaultHandler);
+        }
+
+        let result: Error | unknown[];
+        try {
+            result = await Promise.all(
+                handlers.map((handler) =>
+                    handler.call(
+                        this as Rule<I>,
+                        input,
+                        this.config(),
+                        // @ts-expect-error TS being overeager
+                        enforceResults
+                    )
+                )
+            );
+        } catch (error) {
+            if (isError(error)) {
+                throw error;
+            }
+            throw new TypeError(
+                `Rule ${this.name} threw non-error (typeof ${typeof error}) in ${event} handler: ` +
+                    error
+            );
+        }
+
+        return result;
+    }
+
+    private handleEnableResult(results: Error | unknown[]): boolean {
+        if (isError(results)) {
+            results = [results];
+        }
+
+        let enabled = true;
+        for (const result of results) {
+            if (result === true) {
+                continue;
+            }
+
+            enabled = false;
+
+            if (result === false) {
+                this._log.debug('Rule disabled');
+            } else if (isError(result)) {
+                this._log.error('Rule disabled: ' + result.message);
+            } else {
+                this._log.info(
+                    'Rule disabled: ' + (isString(result) ? result : util.inspect(result))
+                );
+            }
+            break;
+        }
+
+        return enabled;
+    }
+
+    /**
+     * Determine what to do with the enforce results
+     */
+    private async handleEnforceResult(input: I, results: unknown[] | Error) {
+        let failResults: unknown[] = [];
+        if (isError(results)) {
+            failResults.push(results);
+        } else {
+            failResults = results.filter((r) => r !== true);
+        }
+
+        if (failResults.length === 0) {
+            return this.raiseEvent('pass', defaultPassHandler, input);
+        }
+
+        return this.raiseEvent('fail', defaultFailHandler, input, results);
+    }
+
     /**
      * Enforce by the definition of another rule
      */
@@ -391,10 +513,13 @@ export class Rule<I = unknown> {
         this._log.debug(`Enforcing via alias ${this._alias}`);
 
         if (!this.rulebook) {
-            throw new Error(`Rule is not part of a Rulebook. Can't look for alias '${aliasName}'`);
+            throw new RuleError(
+                this as Rule,
+                `Rule is not part of a Rulebook. Can't look for alias '${aliasName}'`
+            );
         }
         if (!this.rulebook.has(aliasName)) {
-            throw new Error(`Could not find alias rule named '${aliasName}'`);
+            throw new RuleError(this as Rule, `Could not find alias rule named '${aliasName}'`);
         }
 
         // eslint-disable-next-line unicorn/no-array-callback-reference
@@ -409,12 +534,12 @@ export class Rule<I = unknown> {
         }
 
         try {
-            await aliased.enforce(aliasName, input);
+            await this.rulebook.enforce(aliasName, input);
             this._log.debug('Alias rule uphold');
         } catch (error) {
             if (error instanceof RuleError) {
                 this._log.debug(`Alias rule broken`);
-                // this.description = error.rule.description;
+                this.description = this.description ?? error.description;
                 throw new Error(error.message);
             }
             throw error;
@@ -423,49 +548,6 @@ export class Rule<I = unknown> {
             for (const rule of aliased.rules) {
                 rule.config({ _asAlias: false });
             }
-        }
-    }
-
-    /**
-     * Determine what to do with the enforce results
-     */
-    private async handleEnforceResult(input: I, results: unknown[] | Error) {
-        let failResults: unknown[] = [];
-        if (isError(results)) {
-            failResults.push(results);
-        } else {
-            failResults = results.filter((r) => r !== true);
-        }
-
-        await (failResults.length === 0
-            ? this.raiseVoidEvent('pass', input)
-            : this.raiseVoidEvent('fail', input, results));
-    }
-
-    /**
-     * Raise void event and handle any errors
-     */
-    private async raiseVoidEvent(event: 'pass' | 'fail', input: I, results?: Error | unknown[]) {
-        this._log.debug(`Event: '${event}'`);
-
-        try {
-            for (const function_ of this._handler[event]) {
-                await function_.call(
-                    this,
-                    input,
-                    // @ts-expect-error Some handlers get this val, some don't.
-                    results
-                );
-            }
-        } catch (error) {
-            if (error instanceof RuleError) {
-                throw error;
-            }
-            if (isError(error)) {
-                this.throw(error.message);
-            }
-            // Unexpected non-error
-            throw error;
         }
     }
 

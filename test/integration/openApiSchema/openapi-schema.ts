@@ -74,7 +74,7 @@ export default async (rulebook: Rulebook<OasRuleParameters>) => {
 
             return true;
         })
-        .punishment(function (_, error) {
+        .punishment(function (_input, _config, error) {
             if (isError(error)) {
                 error.message +=
                     this.context.trail.length > 0

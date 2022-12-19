@@ -37,6 +37,7 @@ module.exports = {
     rules: {
         'lodash/prefer-lodash-method': 'off',
         'lodash/import-scope': ['error', 'member'],
+        'lodash/prefer-constant': 'off',
 
         '@typescript-eslint/explicit-function-return-type': 'off',
         '@typescript-eslint/no-non-null-assertion': 'off',
@@ -56,7 +57,6 @@ module.exports = {
                 '@typescript-eslint/no-object-literal-type-assertion': 'off',
 
                 'lodash/prefer-noop': 'off',
-                'lodash/prefer-constant': 'off',
 
                 'chai-expect/missing-assertion': 'error',
                 'chai-expect/no-inner-compare': 'error',
