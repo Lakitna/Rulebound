@@ -153,7 +153,7 @@ export class Rule {
 
         // Delete default `undefined` handler function
         const handlers = this._handler[event] as ruleEventHandlers[E];
-        if (handlers.length === 1 && handlers[0].name === 'undefined') {
+        if (handlers.length === 1 && handlers[0].name.startsWith('undefined')) {
             handlers.shift();
         }
 
