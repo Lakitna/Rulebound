@@ -137,7 +137,7 @@ describe('The class Rule', function () {
         it('throws when trying to add an unkown event', async function () {
             expect(() => {
                 this.rule.on('unkown', () => {});
-            }).to.throw(`You tried to subscribe to unkown event 'unkown'`);
+            }).to.throw(`Tried to subscribe to unkown event 'unkown'`);
         });
 
         it('adds a handler', async function () {
@@ -571,6 +571,20 @@ describe('The class Rule', function () {
             it('throws an error thrown by the aliased rule in name of the alias', async function () {
                 this.rulebook.add('bar').define(() => 'alias failed');
                 this.rulebook.add('foo').alias('bar');
+
+                try {
+                    await this.rulebook.enforce('foo');
+                    throw new Error('Expected error to be thrown');
+                } catch (error) {
+                    expect(error).to.be.instanceOf(RuleError);
+                    expect((error as RuleError).rule).to.equal('foo');
+                    expect((error as Error).message).to.equal('alias failed');
+                }
+            });
+
+            it('throws an error with the severity of the alias', async function () {
+                this.rulebook.add('bar', { required: 'should' }).define(() => 'alias failed');
+                this.rulebook.add('foo', { required: 'must' }).alias('bar');
 
                 try {
                     await this.rulebook.enforce('foo');

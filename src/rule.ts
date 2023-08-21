@@ -204,32 +204,24 @@ export class Rule<I = unknown> {
      */
     public on<E extends keyof ruleEventHandlers<I>>(
         event: E,
-        function_: E extends 'enable'
-            ? enableHandler<I>
-            : E extends 'enforce'
-            ? enforceHandler<I>
-            : E extends 'fail'
-            ? failHandler<I>
-            : E extends 'pass'
-            ? passHandler<I>
-            : never
+        handlerFunction: ruleEventHandlers<I>[E][0]
     ) {
         this._log.trace(`Handler added for event '${event}'`);
 
-        Object.defineProperty(function_, 'name', { value: event });
+        Object.defineProperty(handlerFunction, 'name', { value: event });
 
-        if (event !== 'enable' && event !== 'enforce' && event !== 'fail' && event !== 'pass') {
-            throw new RuleError(this as Rule, `You tried to subscribe to unkown event '${event}'`);
+        if (this._handler[event] === undefined) {
+            throw new RuleError(this as Rule, `Tried to subscribe to unkown event '${event}'`);
         }
 
-        const handlers = this._handler[event] as (typeof function_)[];
-        handlers.push(function_);
+        const handlers = this._handler[event] as (typeof handlerFunction)[];
+        handlers.push(handlerFunction);
 
         return this;
     }
 
-    public enable(function_: enableHandler<I>) {
-        this.on('enable', function_);
+    public enable(handlerFunction: enableHandler<I>) {
+        this.on('enable', handlerFunction);
         return this;
     }
 
@@ -243,8 +235,8 @@ export class Rule<I = unknown> {
      *     return val > 5;
      * });
      */
-    public define(function_: enforceHandler<I>) {
-        this.on('enforce', function_);
+    public define(handlerFunction: enforceHandler<I>) {
+        this.on('enforce', handlerFunction);
         return this;
     }
 
@@ -262,8 +254,8 @@ export class Rule<I = unknown> {
      *     this.throw(`Enforcing resulted in ${result}`);
      * });
      */
-    public punishment(function_: failHandler<I>) {
-        this.on('fail', function_);
+    public punishment(handlerFunction: failHandler<I>) {
+        this.on('fail', handlerFunction);
         return this;
     }
 
@@ -275,8 +267,8 @@ export class Rule<I = unknown> {
      *     console.log('Yay! The rule is uphold. Let\'s party!');
      * });
      */
-    public reward(function_: passHandler<I>) {
-        this.on('pass', function_);
+    public reward(handlerFunction: passHandler<I>) {
+        this.on('pass', handlerFunction);
         return this;
     }
 
@@ -294,7 +286,6 @@ export class Rule<I = unknown> {
             // Get rid of whitespace at the start of each line
             .replace(/^[^\S\n]+/gm, '')
             // Simplify whitespace in a markdown-like fashion
-            // Will allow for paragraph line breaks and stuff
             .replace(/([\d"',.:;A-Za-z])\n(["',.:;A-Za-z]|\d+[^\d.])/g, '$1 $2');
 
         return this;
@@ -314,7 +305,7 @@ export class Rule<I = unknown> {
     public alias(globPattern: string) {
         // Ideally we would check for the existence of the aliased rule
         // here, but at this point not all rules have been defined yet.
-        // Instead we'll check as a part of `.enforce()`.
+        // Instead we'll check during `.enforce()`.
 
         this._log.debug(`Alias set to '${globPattern}'`);
         this._alias = globPattern;
@@ -340,37 +331,28 @@ export class Rule<I = unknown> {
             return this;
         }
 
-        // Is the rule enabled?
-        const enableResult = await this.raiseEvent('enable', defaultEnableHandler, input).catch(
-            (error: unknown) => {
-                if (isError(error)) return error;
-                return [error];
-            }
-        );
+        let enableResult: Error | unknown[];
+        try {
+            enableResult = await this.raiseEvent('enable', defaultEnableHandler, input);
+        } catch (error: unknown) {
+            enableResult = isError(error) ? error : [error];
+        }
         const enabled = this.handleEnableResult(enableResult);
         if (!enabled) {
             return this;
         }
 
         let enforceResult: Error | unknown[];
-        if (isString(this._alias)) {
-            // Enforce the aliased rule
-            try {
+        try {
+            if (isString(this._alias)) {
                 await this.enforceAlias(this._alias, input);
                 // We don't know the results of the alias, but we do know it did not fail.
-                await this.handleEnforceResult(input, []);
-                return this;
-            } catch (error: unknown) {
-                enforceResult = isError(error) ? error : [error];
+                enforceResult = [];
+            } else {
+                enforceResult = await this.raiseEvent('enforce', defaultEnforceHandler, input);
             }
-        } else {
-            // Enforce the rule
-            enforceResult = await this.raiseEvent('enforce', defaultEnforceHandler, input).catch(
-                (error: unknown) => {
-                    if (isError(error)) return error;
-                    return [error];
-                }
-            );
+        } catch (error: unknown) {
+            enforceResult = isError(error) ? error : [error];
         }
 
         await this.handleEnforceResult(input, enforceResult);
