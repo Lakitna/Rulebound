@@ -23,6 +23,7 @@ export class Rulebook<RI = unknown> {
     public config: ConfigManager;
     public rules: Rule<RI>[];
     private log: Logger;
+    private rulesSorted = false;
 
     /**
      * A collection of rules
@@ -114,11 +115,7 @@ export class Rulebook<RI = unknown> {
         normalizedRule.config(config);
 
         this.rules.push(normalizedRule);
-        this.rules.sort((a, b) => {
-            if (a.specificity > b.specificity) return 1;
-            if (a.specificity < b.specificity) return -1;
-            return 0;
-        });
+        this.rulesSorted = false;
 
         return normalizedRule;
     }
@@ -132,7 +129,10 @@ export class Rulebook<RI = unknown> {
     }
 
     /**
-     * Return rules matching filter in a new rule book
+     * Return rules matching filter in a new rule book.
+     *
+     * Rules will be cloned.
+     *
      * Opposite of omit()
      */
     public filter(globPattern: string): Rulebook<RI> {
@@ -148,7 +148,10 @@ export class Rulebook<RI = unknown> {
     }
 
     /**
-     * Return rules not matching filter in a new rule book
+     * Return rules not matching filter in a new rule book.
+     *
+     * Rules will be cloned.
+     *
      * Opposite of filter()
      */
     public omit(globPattern: string) {
@@ -178,6 +181,9 @@ export class Rulebook<RI = unknown> {
             this.log.warn('No rules to enforce. Rulebook is empty');
             return this;
         }
+        if (this.rulesSorted === false) {
+            this.sortRules();
+        }
 
         const matcher = micromatch.matcher(globPattern);
         const subSet = this.rules.filter((rule) => matcher(rule.name));
@@ -198,5 +204,17 @@ export class Rulebook<RI = unknown> {
         }
 
         return this;
+    }
+
+    private sortRules() {
+        const sortObjects = this.rules.map((rule) => {
+            return {
+                specificity: rule.specificity,
+                glob: rule.name,
+                rule: rule,
+            };
+        });
+        this.rules = sortByGlobSpecificity(sortObjects).map((o) => o.rule);
+        this.rulesSorted = true;
     }
 }
