@@ -75,7 +75,7 @@ export class ConfigManager {
             return parsedConfig;
         }
 
-        this.log.debug('Unparsed configuration found. Parsing...');
+        this.log.trace('Unparsed configuration found. Parsing...');
 
         // Map from `rules` to `_rules`
         Object.entries(parsedConfig.rules)

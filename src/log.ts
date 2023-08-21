@@ -7,21 +7,25 @@ interface LogLevel {
 }
 
 const levels = {
+    trace: {
+        marker: () => c.grey('-'),
+        rank: 0,
+    } as LogLevel,
     debug: {
         marker: () => c.grey('»'),
-        rank: 0,
+        rank: 1,
     } as LogLevel,
     info: {
         marker: () => c.blueBright('i'),
-        rank: 1,
+        rank: 2,
     } as LogLevel,
     warn: {
         marker: () => c.bgYellow.black(` WARN `),
-        rank: 2,
+        rank: 3,
     } as LogLevel,
     error: {
         marker: () => '\n' + c.bgRed.black(` ERROR `),
-        rank: 3,
+        rank: 4,
     } as LogLevel,
 } as const;
 
@@ -41,6 +45,10 @@ export class Logger<M extends Record<string, string | number> = Record<string, s
      */
     child<CM extends M>(meta: CM): Logger<CM> {
         return new Logger(this.level, meta);
+    }
+
+    trace(message: string) {
+        return this._log(levels.trace, message);
     }
 
     debug(message: string) {
