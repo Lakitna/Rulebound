@@ -19,8 +19,8 @@ export default async (rulebook: Rulebook<OasRuleParameters>) => {
             `
             JSON schema is at the heart of OpenAPI.
 
-            Note that this is a partial implementation created to test Ruleful.
-        `
+            Note that this is a partial implementation created to test Rulebound.
+            `
         )
         .define(async function ({ json, schema }) {
             this.context.trail = [];
@@ -34,7 +34,9 @@ export default async (rulebook: Rulebook<OasRuleParameters>) => {
 
             const recurse = async (json: object, schema: object) => {
                 for (const key in schema) {
+                    // @ts-expect-error Softly typed OAS object for simplicity sake during testing
                     const subSchema = schema[key];
+                    // @ts-expect-error Softly typed OAS object for simplicity sake during testing
                     const subJson = json[key];
 
                     if (subJson === undefined) {
