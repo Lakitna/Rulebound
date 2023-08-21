@@ -59,9 +59,7 @@ describe(`Rule: ${ruleName}`, function () {
         ).to.be.rejectedWith(`'abc' does not match pattern /[A-Z]{3}/g`);
     });
 
-    // TODO: #19 Pass config of alias to target rule
-    // eslint-disable-next-line mocha/no-setup-in-describe
-    describe.skip('Option: flags = i', function () {
+    describe('Option: flags = i', function () {
         beforeEach(async function () {
             this.book = new Rulebook({
                 rules: {
@@ -94,6 +92,26 @@ describe(`Rule: ${ruleName}`, function () {
                     },
                 })
             ).to.be.rejectedWith(`'ab1' does not match pattern /[A-Z]{3}/i`);
+        });
+
+        it('restores the original config of the aliased rule', async function () {
+            await expect(
+                this.book.enforce(this.alias.name, {
+                    string: 'ab1',
+                    schema: {
+                        pattern: '[A-Z]{3}',
+                    },
+                })
+            ).to.be.rejectedWith(`'ab1' does not match pattern /[A-Z]{3}/i`);
+
+            await expect(
+                this.book.enforce(this.alias._alias, {
+                    string: 'ab1',
+                    schema: {
+                        pattern: '[A-Z]{3}',
+                    },
+                })
+            ).to.be.rejectedWith(`'ab1' does not match pattern /[A-Z]{3}/g`);
         });
     });
 });

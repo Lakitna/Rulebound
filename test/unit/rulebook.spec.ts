@@ -51,6 +51,32 @@ describe('The class Rulebook', function () {
         });
     });
 
+    describe('sortRules', function () {
+        beforeEach(function () {
+            this.ruleBook = new Rulebook(rulebookConfigDefault);
+        });
+
+        it('orders the rules by specificity', function () {
+            this.ruleBook.add('foo');
+            this.ruleBook.add('foo-bar-lor');
+            this.ruleBook.add('foo-bar/xxx-aaa');
+            this.ruleBook.add('foo-bar');
+            this.ruleBook.add('bar-oof/foo');
+            this.ruleBook.add('bar-oof');
+
+            this.ruleBook.sortRules();
+
+            expect(this.ruleBook.rules.map((rule: Rule) => rule.name)).to.deep.equal([
+                'bar-oof',
+                'foo',
+                'foo-bar',
+                'foo-bar-lor',
+                'bar-oof/foo',
+                'foo-bar/xxx-aaa',
+            ]);
+        });
+    });
+
     describe('add', function () {
         beforeEach(function () {
             this.ruleBook = new Rulebook(rulebookConfigDefault);
@@ -130,24 +156,6 @@ describe('The class Rulebook', function () {
             this.ruleBook.add('foo');
 
             expect(this.ruleBook.rules[0].config().bar).to.equal('fizz');
-        });
-
-        it('orders the rules by specificity', function () {
-            this.ruleBook.add('foo');
-            this.ruleBook.add('foo-bar-lor');
-            this.ruleBook.add('foo-bar/xxx-aaa');
-            this.ruleBook.add('foo-baz');
-            this.ruleBook.add('bar-oof/foo');
-            this.ruleBook.add('bar-oof');
-
-            expect(this.ruleBook.rules.map((rule: Rule) => rule.name)).to.deep.equal([
-                'foo',
-                'foo-baz',
-                'bar-oof',
-                'foo-bar-lor',
-                'bar-oof/foo',
-                'foo-bar/xxx-aaa',
-            ]);
         });
 
         it(
@@ -277,6 +285,25 @@ describe('The class Rulebook', function () {
     describe('enforce', function () {
         beforeEach(function () {
             this.ruleBook = new Rulebook(rulebookConfigDefault);
+        });
+
+        it('sorts before enforcing', async function () {
+            const sortSpy = sinon.spy(this.ruleBook, 'sortRules');
+
+            this.ruleBook.rulesSorted = false;
+
+            this.ruleBook.add('foo').define(() => true);
+            await this.ruleBook.enforce('foo');
+
+            expect(sortSpy.callCount).to.equal(1);
+            expect(this.ruleBook.rulesSorted).to.be.true;
+
+            await this.ruleBook.enforce('foo');
+
+            expect(sortSpy.callCount).to.equal(1);
+            expect(this.ruleBook.rulesSorted).to.be.true;
+
+            sortSpy.restore();
         });
 
         it('logs a warning when there are no rules in the set', async function () {
