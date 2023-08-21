@@ -1,7 +1,8 @@
 import { isUndefined } from 'lodash-es';
+import { OasRuleParametersString } from '.';
 import { Rulebook } from '../../../../src/rulebook';
 
-export default (rulebook: Rulebook) => {
+export default (rulebook: Rulebook<OasRuleParametersString>) => {
     return rulebook
         .add('openapi-schema/string/max-length')
         .describe(
@@ -11,7 +12,7 @@ export default (rulebook: Rulebook) => {
             https://swagger.io/docs/specification/data-models/data-types/#string
         `
         )
-        .define(async function (string, schema) {
+        .define(async function ({ string, schema }) {
             if (isUndefined(schema.maxLength)) {
                 return true;
             }

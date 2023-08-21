@@ -1,3 +1,4 @@
+import { GlobSpecificity } from 'glob-specificity';
 import { logLevelNames } from '../log';
 
 export interface RuleConfig {
@@ -6,9 +7,9 @@ export interface RuleConfig {
     /**
      * Define the required of the rule.
      * note: `omit` will always result in the rule not being enforced
-     * @default must
+     * @default 'must'
      */
-    required: 'must' | 'should' | 'may' | 'optional' | 'omit';
+    required: 'must' | 'should' | 'may' | 'optional' | 'omit' | null;
 }
 
 export interface ParsedRuleConfig extends RuleConfig {
@@ -16,9 +17,10 @@ export interface ParsedRuleConfig extends RuleConfig {
      * Define the behaviour of a failure.
      * @private
      */
-    _throw?: severityLevel;
+    _throw: severityLevel;
 
     /**
+     * Used for config cascading
      * @private
      */
     _name: string;
@@ -27,14 +29,16 @@ export interface ParsedRuleConfig extends RuleConfig {
      * Specificity level used to cascase configurations
      * @private
      */
-    _specificity: number;
+    _specificity: GlobSpecificity;
 }
 
 export type severityLevel = 'error' | 'warn' | 'info' | null;
 
 export interface RulebookConfig {
     /**
-     * Define what log level you want to output
+     * What log level you want to output to the console
+     *
+     * @default 'info'
      */
     verboseness: logLevelNames;
 
@@ -64,10 +68,25 @@ export interface RulebookConfig {
     };
 
     /**
+     * Paralellize enforcing rules
+     *
+     * This can speed up enforcement when you have rules that use a lots of I/O.
+     *
+     * If `true`: All rules will be enforced asynchrounously without waiting on eachother. Order of
+     * enforcing is not guaranteed in any way.
+     *
+     * If `false`: Each rule is enforced after the previous is done enforcing. Enforcing is done in
+     * order of rule specificity (least specific to most specific).
+     *
+     * @default false
+     */
+    enforceParallel: boolean;
+
+    /**
      * List of rule configurations
      */
     rules: {
-        [ruleName: string]: RuleConfig;
+        [ruleName: string]: Partial<RuleConfig>;
     };
 }
 

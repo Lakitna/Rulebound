@@ -1,15 +1,20 @@
 import { Rulebook } from '../../src/rulebook';
 
-export default (rulebook: Rulebook) => {
+export interface RuleParameters {
+    number: number;
+    factor: number;
+}
+
+export default (rulebook: Rulebook<RuleParameters>) => {
     rulebook
         .add('is-devisible', {
             required: 'should',
             foo: 'bar',
         })
-        .define((number, factor) => {
+        .define(({ number, factor }) => {
             return number % factor === 0;
         })
-        .punishment((input) => {
-            throw new Error(`${input[0]} is not devisible by ${input[1]}`);
+        .punishment(({ number, factor }) => {
+            throw new Error(`${number} is not devisible by ${factor}`);
         });
 };

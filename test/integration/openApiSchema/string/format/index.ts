@@ -1,10 +1,11 @@
 import { isUndefined } from 'lodash-es';
+import { OasRuleParametersString } from '..';
 import { Rulebook } from '../../../../../src/rulebook';
 
-export default async (rulebook: Rulebook) => {
+export default async (rulebook: Rulebook<OasRuleParametersString>) => {
     const formats = ['date', 'date-time'];
 
-    const rulebookChapter = new Rulebook(rulebook.config.full);
+    const rulebookChapter = new Rulebook<OasRuleParametersString>(rulebook.config.full);
     for (const format of formats) {
         const module = await import(`./${format}`);
         await module.default(rulebookChapter);
@@ -24,13 +25,17 @@ export default async (rulebook: Rulebook) => {
             https://swagger.io/docs/specification/data-models/data-types/#format
         `
         )
-        .define(async function (string, schema) {
+        .define(async function (inp, config) {
+            // @ts-expect-error type boundry
+            const string = inp.json;
+            const schema = inp.schema;
+
             if (isUndefined(schema.format)) {
                 // No format, nothing to test
                 return true;
             } else if (formats.includes(schema.format)) {
-                await rulebookChapter.enforce(`${this.name}/${schema.format}`, string, schema);
-            } else if (!this.config.allowUnkown) {
+                await rulebookChapter.enforce(`${this.name}/${schema.format}`, { string, schema });
+            } else if (!config.allowUnkown) {
                 throw new Error(
                     `Unkown format '${schema.format}'. ` +
                         `Expected one of [${formats.join(', ')}]` +

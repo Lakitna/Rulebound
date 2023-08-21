@@ -1,39 +1,33 @@
 import c from 'ansi-colors';
+import { ParsedRuleConfig, severityLevel } from '../config/types';
 import { Rule } from '../rule';
-import { ParsedRuleConfig } from '../config/types';
 
 export class RuleError extends Error {
     /**
      * The rule that threw the error
      */
-    public rule: Rule;
-
-    /**
-     * Original message. Used when logging error without throwing
-     */
-    public _message: string;
+    public rule: string;
 
     /**
      * The required level with which the error was thrown
      */
-    public required: ParsedRuleConfig['required'] | '';
+    public required: Exclude<ParsedRuleConfig['required'], null>;
+    public severity: severityLevel;
+    public description?: string;
 
     public constructor(rule: Rule, ...message: string[]) {
-        const _message = message.join(' ');
+        const message_ = message.join('\n');
+        super(message_);
 
-        if (rule.description) {
-            message.push('\n' + c.yellow(rule.description));
-        }
+        this.rule = rule.name;
+        this.required = rule.config().required || 'omit';
+        this.severity = rule.severity;
+        this.description = rule.description;
 
-        super(message.join(' '));
-
-        this.rule = rule;
-        this.required = this.rule.config.required || '';
-        this.name = `RuleError | ${this.required.toUpperCase()} ${this.rule.name}`;
-        this._message = _message;
+        this.name = `RuleError | ${this.required.toUpperCase()} ${this.rule}`;
     }
 
     public toString() {
-        return `${c.grey(this.required.toUpperCase())} ${this._message}`;
+        return `${c.grey(this.required.toUpperCase())} ${this.message}`;
     }
 }
