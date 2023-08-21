@@ -534,14 +534,16 @@ export class Rule<I = unknown> {
         }
 
         // eslint-disable-next-line unicorn/no-array-callback-reference
-        const aliased = this.rulebook.filter(aliasName);
-        for (const rule of aliased.rules) {
-            // Tell the rule it's being enforced as an alias
-            rule.config({ _asAlias: true });
-
-            // We are not copying the config of the current rule to the alias.
-            // We may want to add that at some point, but I quite frankly don't
-            // see why it's worth the effort.
+        const aliasedRules = this.rulebook.getRules(aliasName);
+        for (const aliasedRule of aliasedRules) {
+            const originalConfig = aliasedRule.config();
+            const aliasConfig = defaultsDeep(
+                // Tell the rule it's being enforced as an alias
+                { _asAlias: true, _originalConfig: originalConfig },
+                this.config(),
+                originalConfig
+            );
+            aliasedRule.config(aliasConfig);
         }
 
         try {
@@ -555,9 +557,11 @@ export class Rule<I = unknown> {
             }
             throw error;
         } finally {
-            // Reset the alias flag behind ourselves
-            for (const rule of aliased.rules) {
-                rule.config({ _asAlias: false });
+            // Reset the alias config behind ourselves
+            for (const aliasedRule of aliasedRules) {
+                aliasedRule.config({ _asAlias: false });
+                const originalConfig = aliasedRule._config._originalConfig;
+                aliasedRule.config(originalConfig);
             }
         }
     }

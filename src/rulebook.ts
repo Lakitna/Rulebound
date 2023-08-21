@@ -156,6 +156,21 @@ export class Rulebook<RI = unknown> {
     }
 
     /**
+     * Return rules matching the filter
+     */
+    public getRules(globPattern: string): Rule<RI>[] {
+        const matcher = micromatch.matcher(globPattern);
+
+        const set = [];
+        for (const rule of this.rules) {
+            if (matcher(rule.name)) {
+                set.push(rule);
+            }
+        }
+        return set;
+    }
+
+    /**
      * Enforce rules in the set
      */
     public async enforce(globPattern: string, input: RI) {
