@@ -1,10 +1,11 @@
 import { defaultsDeep, isFunction } from 'lodash-es';
 import micromatch from 'micromatch';
 
+import { GlobSpecificity, sortByGlobSpecificity } from 'glob-specificity';
 import { ConfigManager } from './config/manager';
-import { RulebookConfig, RuleConfig } from './config/types';
+import { RuleConfig, RulebookConfig } from './config/types';
 import { RulebookError } from './errors';
-import { logger, Logger } from './log';
+import { Logger, logger } from './log';
 import { Rule } from './rule';
 
 /**
@@ -106,7 +107,7 @@ export class Rulebook<RI = unknown> {
         let config = this.config.get(normalizedRule.name);
         if (ruleDefaultConfig) {
             config =
-                config._specificity === 0
+                config._specificity.compareTo(new GlobSpecificity(0, 0, 0, 0, 0)) === 0
                     ? defaultsDeep(ruleDefaultConfig, config)
                     : defaultsDeep(config, ruleDefaultConfig);
         }

@@ -1,3 +1,4 @@
+import { GlobSpecificity, globSpecificity } from 'glob-specificity';
 import {
     cloneDeep,
     defaultsDeep,
@@ -13,9 +14,8 @@ import util from 'node:util';
 import { ruleConfigDefault } from './config/defaults';
 import { ParsedRuleConfig, RuleConfig, severityLevel } from './config/types';
 import { ConfigError, RuleError } from './errors';
-import { logger, Logger } from './log';
+import { Logger, logger } from './log';
 import { Rulebook } from './rulebook';
-import { specificity } from './utils';
 
 type enableHandler<I> = (
     this: Rule<I>,
@@ -82,7 +82,7 @@ export class Rule<I = unknown> {
     public name: string;
     public description?: string;
     public rulebook?: Rulebook;
-    public specificity: number;
+    public specificity: GlobSpecificity;
 
     private _alias: string | null;
     private _config: ParsedRuleConfig;
@@ -122,7 +122,7 @@ export class Rule<I = unknown> {
         this.name = this.validateName(name);
         this._alias = null;
         this.rulebook = rulebook;
-        this.specificity = specificity(name);
+        this.specificity = globSpecificity(name);
 
         this._log = logger.child({ rule: name });
         this._config = ruleConfigDefault;

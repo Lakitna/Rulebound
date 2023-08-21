@@ -1,6 +1,7 @@
 import { expect } from 'chai';
+import { GlobSpecificity, globSpecificity } from 'glob-specificity';
 import { cloneDeep } from 'lodash-es';
-import { rulebookConfigDefault, ruleConfigDefault } from '../../../src/config/defaults';
+import { ruleConfigDefault, rulebookConfigDefault } from '../../../src/config/defaults';
 import { ConfigManager } from '../../../src/config/manager';
 
 describe('The class ConfigManager', function () {
@@ -129,23 +130,28 @@ describe('The class ConfigManager', function () {
 
         it('sorts an array of objects by a delimited key string', function () {
             const unordered = [
-                { key: 'somewhat-specific' },
-                { key: 'unspecific' },
-                { key: 'actually-quite-specific' },
-                { key: 'somewhat-specific' },
-            ];
+                'somewhat/specific',
+                'unspecific',
+                'actually/quite/specific',
+                'somewhat/specific',
+            ].map((glob) => {
+                return {
+                    _name: glob,
+                    _specificity: globSpecificity(glob),
+                };
+            });
 
             const expectedOrder = [
                 'unspecific',
-                'somewhat-specific',
-                'somewhat-specific',
-                'actually-quite-specific',
+                'somewhat/specific',
+                'somewhat/specific',
+                'actually/quite/specific',
             ];
 
-            const sorted = this.manager._sortBySpecificity(unordered, 'key');
+            const sorted = this.manager._sortBySpecificity(unordered);
 
             sorted.forEach((object: any, index: number) => {
-                expect(object.key).to.equal(expectedOrder[index]);
+                expect(object._name).to.equal(expectedOrder[index]);
             });
         });
     });
@@ -168,7 +174,7 @@ describe('The class ConfigManager', function () {
             expect(config._rules[0]).to.deep.equal({
                 bar: true,
                 _name: 'foo',
-                _specificity: 1,
+                _specificity: new GlobSpecificity(2, 0, 0, 0, 0),
             });
         });
 
@@ -187,19 +193,19 @@ describe('The class ConfigManager', function () {
             expect(config._rules[0]).to.deep.equal({
                 bar: true,
                 _name: 'foo-*',
-                _specificity: 1,
+                _specificity: new GlobSpecificity(2, -1, 0, 0, 0),
             });
             expect(config._rules[1]).to.deep.equal({
                 bar: true,
                 fizz: 12,
                 _name: 'foo-bar',
-                _specificity: 2,
+                _specificity: new GlobSpecificity(2, 0, 0, 0, 0),
             });
             expect(config._rules[2]).to.deep.equal({
                 bar: true,
                 buzz: 'lorum',
                 _name: 'foo-buzz',
-                _specificity: 2,
+                _specificity: new GlobSpecificity(2, 0, 0, 0, 0),
             });
         });
 
@@ -208,13 +214,13 @@ describe('The class ConfigManager', function () {
                 _rules: [
                     {
                         _name: 'foo',
-                        _specificity: 1,
+                        _specificity: new GlobSpecificity(2, 0, 0, 0, 0),
                         existing: 'val',
                         overwritten: false,
                     },
                     {
                         _name: 'foo-bar',
-                        _specificity: 2,
+                        _specificity: new GlobSpecificity(2, 0, 0, 0, 0),
                     },
                 ],
                 rules: {
@@ -226,14 +232,14 @@ describe('The class ConfigManager', function () {
             expect(config._rules).to.be.lengthOf(2);
             expect(config._rules[0]).to.deep.equal({
                 _name: 'foo',
-                _specificity: 1,
+                _specificity: new GlobSpecificity(2, 0, 0, 0, 0),
                 existing: 'val',
                 overwritten: true,
                 bar: true,
             });
             expect(config._rules[1]).to.deep.equal({
                 _name: 'foo-bar',
-                _specificity: 2,
+                _specificity: new GlobSpecificity(2, 0, 0, 0, 0),
             });
         });
 
@@ -242,15 +248,15 @@ describe('The class ConfigManager', function () {
                 _rules: [
                     {
                         _name: 'foo-buzz',
-                        _specificity: 2,
+                        _specificity: new GlobSpecificity(2, 0, 0, 0, 0),
                     },
                     {
                         _name: 'foo-bar',
-                        _specificity: 2,
+                        _specificity: new GlobSpecificity(2, 0, 0, 0, 0),
                     },
                     {
                         _name: 'fizz',
-                        _specificity: 1,
+                        _specificity: new GlobSpecificity(2, 0, 0, 0, 0),
                     },
                 ],
                 rules: {
@@ -261,22 +267,22 @@ describe('The class ConfigManager', function () {
             expect(config.rules).to.be.empty;
             expect(config._rules).to.be.lengthOf(4);
             expect(config._rules[0]).to.deep.equal({
-                _name: 'fizz',
-                _specificity: 1,
-            });
-            expect(config._rules[1]).to.deep.equal({
                 _name: 'foo-*',
-                _specificity: 1,
+                _specificity: new GlobSpecificity(2, -1, 0, 0, 0),
                 overwritten: true,
             });
+            expect(config._rules[1]).to.deep.equal({
+                _name: 'fizz',
+                _specificity: new GlobSpecificity(2, 0, 0, 0, 0),
+            });
             expect(config._rules[2]).to.deep.equal({
-                _name: 'foo-buzz',
-                _specificity: 2,
+                _name: 'foo-bar',
+                _specificity: new GlobSpecificity(2, 0, 0, 0, 0),
                 overwritten: true,
             });
             expect(config._rules[3]).to.deep.equal({
-                _name: 'foo-bar',
-                _specificity: 2,
+                _name: 'foo-buzz',
+                _specificity: new GlobSpecificity(2, 0, 0, 0, 0),
                 overwritten: true,
             });
         });

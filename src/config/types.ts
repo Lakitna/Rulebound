@@ -1,3 +1,4 @@
+import { GlobSpecificity } from 'glob-specificity';
 import { logLevelNames } from '../log';
 
 export interface RuleConfig {
@@ -27,7 +28,7 @@ export interface ParsedRuleConfig extends RuleConfig {
      * Specificity level used to cascase configurations
      * @private
      */
-    _specificity: number;
+    _specificity: GlobSpecificity;
 }
 
 export type severityLevel = 'error' | 'warn' | 'info' | null;

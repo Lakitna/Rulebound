@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 
 import c from 'ansi-colors';
+import { GlobSpecificity } from 'glob-specificity';
 import { RuleConfig } from '../../src';
 import { RuleError } from '../../src/errors/rule-error';
 import { Rule } from '../../src/rule';
@@ -79,7 +80,7 @@ describe('The class Rule', function () {
                 required: 'must',
                 _name: '*',
                 _throw: 'error',
-                _specificity: 0,
+                _specificity: new GlobSpecificity(0, 0, 0, 0, 0),
             });
         });
 

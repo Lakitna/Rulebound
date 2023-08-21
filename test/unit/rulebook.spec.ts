@@ -311,7 +311,7 @@ describe('The class Rulebook', function () {
 
             this.ruleBook.add('fizz-bar-buzz').define(() => {
                 order++;
-                expect(order).to.equal(3);
+                expect(order).to.equal(2);
                 return true;
             });
 
@@ -323,7 +323,7 @@ describe('The class Rulebook', function () {
 
             this.ruleBook.add('fizz-buzz').define(() => {
                 order++;
-                expect(order).to.equal(2);
+                expect(order).to.equal(3);
                 return true;
             });
 
