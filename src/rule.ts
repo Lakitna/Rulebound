@@ -507,7 +507,14 @@ export class Rule<I = unknown> {
             return this.raiseEvent('pass', defaultPassHandler, input);
         }
 
-        return this.raiseEvent('fail', defaultFailHandler, input, results);
+        try {
+            return await this.raiseEvent('fail', defaultFailHandler, input, results);
+        } catch (error) {
+            if (error instanceof RuleError) {
+                throw error;
+            }
+            this.throw(error);
+        }
     }
 
     /**
