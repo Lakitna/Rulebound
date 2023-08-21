@@ -181,7 +181,7 @@ export class Rulebook<RI = unknown> {
             this.log.warn('No rules to enforce. Rulebook is empty');
             return this;
         }
-        if (this.rulesSorted === false) {
+        if (this.rulesSorted === false && this.config.generic.enforceParallel === false) {
             this.sortRules();
         }
 
