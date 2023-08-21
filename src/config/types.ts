@@ -7,9 +7,9 @@ export interface RuleConfig {
     /**
      * Define the required of the rule.
      * note: `omit` will always result in the rule not being enforced
-     * @default must
+     * @default 'must'
      */
-    required: 'must' | 'should' | 'may' | 'optional' | 'omit';
+    required: 'must' | 'should' | 'may' | 'optional' | 'omit' | null;
 }
 
 export interface ParsedRuleConfig extends RuleConfig {
@@ -20,6 +20,7 @@ export interface ParsedRuleConfig extends RuleConfig {
     _throw: severityLevel;
 
     /**
+     * Used for config cascading
      * @private
      */
     _name: string;
@@ -85,7 +86,7 @@ export interface RulebookConfig {
      * List of rule configurations
      */
     rules: {
-        [ruleName: string]: RuleConfig;
+        [ruleName: string]: Partial<RuleConfig>;
     };
 }
 

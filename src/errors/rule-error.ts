@@ -11,7 +11,7 @@ export class RuleError extends Error {
     /**
      * The required level with which the error was thrown
      */
-    public required: ParsedRuleConfig['required'];
+    public required: Exclude<ParsedRuleConfig['required'], null>;
     public severity: severityLevel;
     public description?: string;
 
@@ -20,7 +20,7 @@ export class RuleError extends Error {
         super(message_);
 
         this.rule = rule.name;
-        this.required = rule.config().required;
+        this.required = rule.config().required || 'omit';
         this.severity = rule.severity;
         this.description = rule.description;
 

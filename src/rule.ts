@@ -149,12 +149,15 @@ export class Rule<I = unknown> {
 
         this._config = defaultsDeep(config, this._config);
 
-        if (this._config.required === null) {
+        if (this._config.required === null || this._config.required === 'omit') {
             this._config._throw = null;
             return this;
         }
 
-        this._config.required = this._config.required.toLowerCase() as RuleConfig['required'];
+        this._config.required = this._config.required.toLowerCase() as Exclude<
+            RuleConfig['required'],
+            'omit' | null
+        >;
 
         if (this.rulebook?.config) {
             const rulebookConfig = this.rulebook.config.generic;
@@ -211,7 +214,7 @@ export class Rule<I = unknown> {
             ? passHandler<I>
             : never
     ) {
-        this._log.debug(`Handler added for event '${event}'`);
+        this._log.trace(`Handler added for event '${event}'`);
 
         Object.defineProperty(function_, 'name', { value: event });
 
@@ -219,7 +222,7 @@ export class Rule<I = unknown> {
             throw new RuleError(this as Rule, `You tried to subscribe to unkown event '${event}'`);
         }
 
-        const handlers = this._handler[event] as typeof function_[];
+        const handlers = this._handler[event] as (typeof function_)[];
         handlers.push(function_);
 
         return this;
@@ -333,6 +336,7 @@ export class Rule<I = unknown> {
     public async enforce(input: I) {
         if (this._config._throw === null && !this._config._asAlias) {
             // Skip rule
+            this.handleEnableResult([`Rule config "required: ${this._config.required}"`]);
             return this;
         }
 
@@ -381,7 +385,7 @@ export class Rule<I = unknown> {
      * Rule.throw('An error has occured');
      */
     public throw(...message: (any | Error)[]) {
-        this._log.debug(`Throwing error`);
+        this._log.trace(`Throwing error`);
 
         let ruleError: RuleError | undefined = message.find((partialMessage) => {
             return partialMessage instanceof RuleError;
@@ -427,9 +431,9 @@ export class Rule<I = unknown> {
         input: I,
         enforceResults?: E extends 'fail' ? Error | unknown[] : undefined
     ): Promise<unknown[]> {
-        this._log.debug(`Event: '${event}'`);
+        this._log.trace(`Event: '${event}'`);
 
-        const handlers = this._handler[event] as typeof defaultHandler[];
+        const handlers = this._handler[event] as (typeof defaultHandler)[];
         if (handlers.length === 0) {
             handlers.push(defaultHandler);
         }
@@ -478,7 +482,7 @@ export class Rule<I = unknown> {
             } else if (isError(result)) {
                 this._log.error('Rule disabled: ' + result.message);
             } else {
-                this._log.info(
+                this._log.debug(
                     'Rule disabled: ' + (isString(result) ? result : util.inspect(result))
                 );
             }
