@@ -9,7 +9,7 @@ import {
     keys,
     omitBy,
 } from 'lodash-es';
-import util from 'node:util';
+import { inspect } from 'node:util';
 
 import { ruleConfigDefault } from './config/defaults';
 import { ParsedRuleConfig, RuleConfig, severityLevel } from './config/types';
@@ -458,9 +458,7 @@ export class Rule<I = unknown> {
             } else if (isError(result)) {
                 this._log.error('Rule disabled: ' + result.message);
             } else {
-                this._log.debug(
-                    'Rule disabled: ' + (isString(result) ? result : util.inspect(result))
-                );
+                this._log.debug('Rule disabled: ' + (isString(result) ? result : inspect(result)));
             }
             break;
         }

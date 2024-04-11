@@ -45,6 +45,7 @@ module.exports = {
         '@typescript-eslint/no-use-before-define': 'off',
 
         'unicorn/no-null': 'off',
+        'unicorn/prefer-string-replace-all': 'off',
     },
     overrides: [
         {
@@ -65,6 +66,7 @@ module.exports = {
                 'unicorn/consistent-function-scoping': 'off',
                 'unicorn/no-array-for-each': 'off',
                 'unicorn/no-array-callback-reference': 'off',
+                'unicorn/no-anonymous-default-export': 'off',
             },
         },
     ],
