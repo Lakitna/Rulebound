@@ -366,20 +366,22 @@ export class Rule<I = unknown> {
      * @example
      * Rule.throw('An error has occured');
      */
-    public throw(...message: (any | Error)[]) {
+    public throw(...message: (unknown | Error)[]) {
         this._log.trace(`Throwing error`);
 
-        let ruleError: RuleError | undefined = message.find((partialMessage) => {
+        let ruleError = message.find((partialMessage): partialMessage is RuleError => {
             return partialMessage instanceof RuleError;
         });
+
         if (isUndefined(ruleError)) {
-            const errorMessages = message.flat().map((value: any) => {
+            const errorMessages: string[] = message.flat().map((value: unknown) => {
                 if (isError(value)) {
                     return value.message;
-                } else if (!isString(value)) {
-                    return value.toString();
                 }
-                return value;
+                if (isString(value)) {
+                    return value;
+                }
+                return String(value);
             });
 
             ruleError = new RuleError(this as Rule, ...errorMessages);
@@ -401,15 +403,7 @@ export class Rule<I = unknown> {
 
     private async raiseEvent<E extends keyof ruleEventHandlers<I>>(
         event: E,
-        defaultHandler: E extends 'enable'
-            ? enableHandler<I>
-            : E extends 'enforce'
-            ? enforceHandler<I>
-            : E extends 'fail'
-            ? failHandler<I>
-            : E extends 'pass'
-            ? passHandler<I>
-            : never,
+        defaultHandler: ruleEventHandlers<I>[E][0],
         input: I,
         enforceResults?: E extends 'fail' ? Error | unknown[] : undefined
     ): Promise<unknown[]> {
@@ -423,15 +417,15 @@ export class Rule<I = unknown> {
         let result: Error | unknown[];
         try {
             result = await Promise.all(
-                handlers.map((handler) =>
-                    handler.call(
+                handlers.map((handler) => {
+                    return handler.call(
                         this as Rule<I>,
                         input,
                         this.config(),
                         // @ts-expect-error TS being overeager
                         enforceResults
-                    )
-                )
+                    );
+                })
             );
         } catch (error) {
             if (isError(error)) {
