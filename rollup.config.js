@@ -3,7 +3,7 @@ import typescript from '@rollup/plugin-typescript';
 import dts from 'rollup-plugin-dts';
 import cleanup from 'rollup-plugin-cleanup';
 import del from 'rollup-plugin-delete';
-import { externals } from 'rollup-plugin-node-externals';
+import externals from 'rollup-plugin-node-externals';
 
 /**
  * @type {import('rollup').RollupOptions[]}
