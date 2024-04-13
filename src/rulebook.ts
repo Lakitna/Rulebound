@@ -87,10 +87,11 @@ export class Rulebook<RI = unknown> {
         rule: string | Rule<RI> | (() => Rule<RI> | string),
         ruleDefaultConfig?: Partial<RuleConfig>
     ): Rule<RI> {
-        let normalizedRule: Rule<RI>;
         if (isFunction(rule)) {
             rule = rule();
         }
+
+        let normalizedRule: Rule<RI>;
         if (rule instanceof Rule) {
             normalizedRule = rule.rulebook instanceof Rulebook ? rule.clone() : rule;
             normalizedRule.rulebook = this as Rulebook;
@@ -206,6 +207,9 @@ export class Rulebook<RI = unknown> {
         return this;
     }
 
+    /**
+     * Sort the rules in place
+     */
     private sortRules() {
         const sortObjects = this.rules.map((rule) => {
             return {
