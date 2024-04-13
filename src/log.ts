@@ -2,29 +2,29 @@ import c from 'ansi-colors';
 
 export type logLevelNames = keyof typeof levels;
 interface LogLevel {
-    marker: () => string;
+    marker: string;
     rank: number;
 }
 
 const levels = {
     trace: {
-        marker: () => c.grey('-'),
+        marker: c.grey('-'),
         rank: 0,
     } as LogLevel,
     debug: {
-        marker: () => c.grey('»'),
+        marker: c.grey('»'),
         rank: 1,
     } as LogLevel,
     info: {
-        marker: () => c.blueBright('i'),
+        marker: c.blueBright('i'),
         rank: 2,
     } as LogLevel,
     warn: {
-        marker: () => c.bgYellow.black(` WARN `),
+        marker: c.bgYellow.black(` WARN `),
         rank: 3,
     } as LogLevel,
     error: {
-        marker: () => '\n' + c.bgRed.black(` ERROR `),
+        marker: '\n' + c.bgRed.black(` ERROR `),
         rank: 4,
     } as LogLevel,
 } as const;
@@ -72,7 +72,7 @@ export class Logger<M extends Record<string, string | number> = Record<string, s
             return;
         }
 
-        const logLine = level.marker() + ' ' + message;
+        const logLine = level.marker + ' ' + message;
 
         if (this.meta?.rule) {
             console.log(this._logLineLeftRight(logLine, c.grey(`${this.meta.rule}`)));
