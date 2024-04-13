@@ -162,7 +162,7 @@ export class Rule<I = unknown> {
                 throw new ConfigError(
                     `Found unkown required level '${this._config.required}' in the`,
                     `configuration for rule '${this.name}'. Expected one of`,
-                    `['${keys(rulebookConfig.severity).join("', '")}', null]`
+                    `['${keys(rulebookConfig.severity).join("', '")}', 'omit', null]`
                 );
             }
 
@@ -452,9 +452,12 @@ export class Rule<I = unknown> {
             if (result === false) {
                 this._log.debug('Rule disabled');
             } else if (isError(result)) {
+                // eslint-disable-next-line sonarjs/no-duplicate-string
                 this._log.error('Rule disabled: ' + result.message);
+            } else if (isString(result)) {
+                this._log.debug('Rule disabled: ' + result);
             } else {
-                this._log.debug('Rule disabled: ' + (isString(result) ? result : inspect(result)));
+                this._log.debug('Rule disabled: ' + inspect(result));
             }
             break;
         }
@@ -503,7 +506,6 @@ export class Rule<I = unknown> {
             throw new RuleError(this as Rule, `Could not find alias rule named '${aliasName}'`);
         }
 
-        // eslint-disable-next-line unicorn/no-array-callback-reference
         const aliasedRules = this.rulebook.getRules(aliasName);
         for (const aliasedRule of aliasedRules) {
             const originalConfig = aliasedRule.config();
@@ -518,7 +520,7 @@ export class Rule<I = unknown> {
 
         try {
             await this.rulebook.enforce(aliasName, input);
-            this._log.debug('Alias rule uphold');
+            this._log.debug('Alias rule upheld');
         } catch (error) {
             if (error instanceof RuleError) {
                 this._log.debug(`Alias rule broken`);
@@ -545,7 +547,7 @@ export class Rule<I = unknown> {
                 'Lowercase letters',
                 'Uppercase letters',
                 'Numbers',
-                'These symbols: /-_|@',
+                'These symbols: /-|@',
             ];
 
             throw new Error(
