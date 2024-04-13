@@ -95,9 +95,6 @@ export class Rule<I = unknown> {
     public context: {
         [key: string]: any;
     };
-    public ctx: {
-        [key: string]: any;
-    };
 
     /**
      * A testing rule
@@ -135,7 +132,6 @@ export class Rule<I = unknown> {
         };
 
         this.context = {};
-        this.ctx = this.context;
     }
 
     public config(): RuleConfig;
