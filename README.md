@@ -240,9 +240,13 @@ A few things to keep in mind when testing rules:
 
 ## Rule enforce order
 
-When you enforce a Rulebook, it will enforce the rules in a fixed order. The order is from least
-specific to most specific. Specificity is defined by the rule name. For details on how specificity
-is calculated, see [glob-specificity](https://github.com/Lakitna/glob-specificity).
+When you enforce a Rulebook with `enforceParallel: false` (= default), it will enforce the rules in
+a fixed order. The order is from least specific to most specific. Specificity is defined by the rule
+name. For details on how specificity is calculated, see
+[glob-specificity](https://github.com/Lakitna/glob-specificity).
+
+when you enforce a Rulebook with `enforceParallel: true`, the enforce order is not guaranteed in any
+way.
 
 ## Contributing
 
