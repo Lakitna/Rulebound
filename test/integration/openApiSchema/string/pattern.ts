@@ -1,7 +1,8 @@
 import { isUndefined } from 'lodash-es';
+import { OasRuleParametersString } from '.';
 import { Rulebook } from '../../../../src/rulebook';
 
-export default (rulebook: Rulebook) => {
+export default (rulebook: Rulebook<OasRuleParametersString>) => {
     return rulebook
         .add('openapi-schema/string/pattern', {
             flags: 'g',
@@ -13,15 +14,14 @@ export default (rulebook: Rulebook) => {
             https://swagger.io/docs/specification/data-models/data-types/#pattern
         `
         )
-        .define(async function (string, schema) {
+        .define(async function ({ string, schema }, config) {
             if (isUndefined(schema.pattern)) {
                 return true;
             }
 
-            if (!new RegExp(schema.pattern, this.config.flags).test(string)) {
+            if (!new RegExp(schema.pattern, config.flags).test(string)) {
                 throw new Error(
-                    `'${string}' does not match pattern ` +
-                        `/${schema.pattern}/${this.config.flags}`
+                    `'${string}' does not match pattern /${schema.pattern}/${config.flags}`
                 );
             }
 

@@ -3,10 +3,7 @@
     "editor.formatOnSave": true,
     "[typescript]": {
         "editor.codeActionsOnSave": {
-            "source.organizeImports": true
+            "source.organizeImports": "explicit"
         }
-    },
-    "[xml]": {
-        "editor.defaultFormatter": "DotJoshJohnson.xml"
     }
 }

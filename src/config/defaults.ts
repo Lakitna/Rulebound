@@ -1,4 +1,5 @@
-import { RulebookConfig, ParsedRuleConfig } from './types';
+import { GlobSpecificity } from 'glob-specificity';
+import { ParsedRuleConfig, RulebookConfig } from './types';
 
 export const rulebookConfigDefault: RulebookConfig = {
     verboseness: 'info',
@@ -8,12 +9,13 @@ export const rulebookConfigDefault: RulebookConfig = {
         may: 'info',
         optional: 'info',
     },
+    enforceParallel: false,
     rules: {},
 };
 
 export const ruleConfigDefault: ParsedRuleConfig = {
     required: 'must',
     _name: '*',
-    _specificity: 0,
+    _specificity: new GlobSpecificity(0, 0, 0, 0, 0),
     _throw: 'error',
 };

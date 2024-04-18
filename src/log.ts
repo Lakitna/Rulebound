@@ -1,32 +1,35 @@
 import c from 'ansi-colors';
 
-export type logLevelNames = 'debug' | 'info' | 'warn' | 'error';
+export type logLevelNames = keyof typeof levels;
 interface LogLevel {
-    marker: () => string;
+    marker: string;
     rank: number;
 }
 
-const levels: Record<logLevelNames, LogLevel> = {
-    debug: {
-        marker: () => c.grey('»'),
+const levels = {
+    trace: {
+        marker: c.grey('-'),
         rank: 0,
-    },
-    info: {
-        marker: () => c.blueBright('i'),
+    } as LogLevel,
+    debug: {
+        marker: c.grey('»'),
         rank: 1,
-    },
-    warn: {
-        marker: () => '\n' + c.bgYellow.black(` WARN `),
+    } as LogLevel,
+    info: {
+        marker: c.blueBright('i'),
         rank: 2,
-    },
-    error: {
-        marker: () => '\n' + c.bgRed.black(` ERROR `),
+    } as LogLevel,
+    warn: {
+        marker: c.bgYellow.black(` WARN `),
         rank: 3,
-    },
+    } as LogLevel,
+    error: {
+        marker: '\n' + c.bgRed.black(` ERROR `),
+        rank: 4,
+    } as LogLevel,
 } as const;
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-export class Logger<M extends Record<string, string | number> = {}> {
+export class Logger<M extends Record<string, string | number> = Record<string, string | number>> {
     public level: logLevelNames;
     public rank: number;
     private meta?: M;
@@ -40,8 +43,12 @@ export class Logger<M extends Record<string, string | number> = {}> {
     /**
      * Returns a child logger
      */
-    child(meta: M): Logger<M> {
+    child<CM extends M>(meta: CM): Logger<CM> {
         return new Logger(this.level, meta);
+    }
+
+    trace(message: string) {
+        return this._log(levels.trace, message);
     }
 
     debug(message: string) {
@@ -65,7 +72,7 @@ export class Logger<M extends Record<string, string | number> = {}> {
             return;
         }
 
-        const logLine = level.marker() + ' ' + message;
+        const logLine = level.marker + ' ' + message;
 
         if (this.meta?.rule) {
             console.log(this._logLineLeftRight(logLine, c.grey(`${this.meta.rule}`)));

@@ -1,7 +1,8 @@
 import { isUndefined } from 'lodash-es';
+import { OasRuleParametersString } from '.';
 import { Rulebook } from '../../../../src/rulebook';
 
-export default (rulebook: Rulebook) => {
+export default (rulebook: Rulebook<OasRuleParametersString>) => {
     return rulebook
         .add('openapi-schema/string/enum')
         .describe(
@@ -14,7 +15,7 @@ export default (rulebook: Rulebook) => {
             https://swagger.io/docs/specification/data-models/enums/
         `
         )
-        .define(async function (string, schema) {
+        .define(async function ({ string, schema }) {
             if (isUndefined(schema.enum)) {
                 return true;
             }

@@ -1,8 +1,9 @@
 import { isUndefined } from 'lodash-es';
 import assert from 'node:assert';
+import { OasRuleParametersString } from '..';
 import { Rulebook } from '../../../../../src/rulebook';
 
-export default (rulebook: Rulebook) => {
+export default async (rulebook: Rulebook<OasRuleParametersString>) => {
     return rulebook
         .add('openapi-schema/string/format/date-time')
         .describe(
@@ -12,7 +13,7 @@ export default (rulebook: Rulebook) => {
             https://swagger.io/docs/specification/data-models/data-types/#format
         `
         )
-        .define(async function (string) {
+        .define(async function ({ string, schema }) {
             const split = string.split('T');
             assert(split.length == 2);
 
@@ -20,7 +21,10 @@ export default (rulebook: Rulebook) => {
             let time = split[1];
 
             try {
-                await this.rulebook.enforce('openapi-schema/string/format/date', date);
+                await rulebook.enforce('openapi-schema/string/format/date', {
+                    string: date,
+                    schema,
+                });
             } catch {
                 return false;
             }
@@ -55,8 +59,8 @@ export default (rulebook: Rulebook) => {
 
             return true;
         })
-        .punishment(function (inputs) {
-            this.throw(`'${inputs[0]}' is not valid date-time`);
+        .punishment(function ({ string }) {
+            this.throw(`'${string}' is not valid date-time`);
         });
 };
 

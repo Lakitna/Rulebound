@@ -11,29 +11,30 @@ A flexible framework for rule-based testing.
     - [Description _{string}_](#description-string)
     - [Alias _{string}_](#alias-string)
     - [Definition _{function}_](#definition-function)
-      - [Definition function arguments](#definition-function-arguments)
+      - [Input value](#input-value)
       - [Breaking a rule](#breaking-a-rule)
       - [Upholding the rule](#upholding-the-rule)
     - [Punishment _{function}_](#punishment-function)
-      - [Punishment function arguments](#punishment-function-arguments)
     - [Reward _{function}_](#reward-function)
-      - [Reward function arguments](#reward-function-arguments)
   - [Testing rules](#testing-rules)
+  - [Rule enforce order](#rule-enforce-order)
   - [Contributing](#contributing)
   - [Testing Rulebound](#testing-rulebound)
 
 ## Why
 
-Rule-based testing is awesome! It forces you to look at problems from a different angle while promoting reuse and testability of your test code.
+Rule-based testing is awesome! It forces you to look at problems from a different angle while
+promoting reuse and testability of your test code.
 
-I’ve made this package because I could not find a suitable, existing framework written for rule-based testing.
+I’ve made this package because I could not find an existing framework written for rule-based
+testing.
 
 ## Getting started
 
 First, add Rulebound to your project
 
 ```shell
-npm install rulebound --save-dev
+npm install rulebound
 ```
 
 Rulebound is written in Typescript and therefore supports both Javascript and Typescript.
@@ -59,10 +60,9 @@ import { Rulebook } from 'rulebound';
 
 const rulebook = new Rulebook();
 
-rulebook.add('is-divisible')
-    .define((number, factor) => {
-        return (number % factor) === 0;
-    });
+rulebook.add('is-divisible').define(({ number, factor }) => {
+  return number % factor === 0;
+});
 
 await rulebook.enforce('is-divisible', 21, 7);
 await rulebook.enforce('is-divisible', 11, 2); // => throws error
@@ -89,13 +89,15 @@ A rule name is a unique identifier that...
 
 ```typescript
 rulebook.add('string/max-length', {
-    maximum: 12,
+  maximum: 12,
 });
 ```
 
-A rule MAY have a rule-specific configuration. The default rule-specific configuration can be defined as above. The user can overwrite this via the Rulebound configuration file.
+A rule MAY have a rule-specific configuration. The default rule-specific configuration can be
+defined as above. The user can overwrite this via the Rulebook config.
 
-The parsed configuration can be accessed with `this.config` in the definition, punishment, and reward callback functions.
+The parsed configuration can be accessed as the second argument in the definition, punishment, and
+reward callback functions.
 
 The precedence of configuration is as below where the bottom of the list overwrites the top.
 
@@ -112,7 +114,9 @@ rule.describe(`
 `);
 ```
 
-A description SHOULD be added to the rule so humans know what the purpose of that rule is and what logic it contains. Putting some effort in this will make things a lot simpler for someone who has not written the rule.
+A description SHOULD be added to the rule so humans know what the purpose of that rule is and what
+logic it contains. Putting some effort in this will make things a lot simpler for someone who has
+not written the rule.
 
 ### Alias _{string}_
 
@@ -122,7 +126,9 @@ rule.alias('some-rule-name');
 
 A rule MAY have an alias. This is defined by providing the name of another rule like above.
 
-A rule with alias defined SHOULD NOT have any definitions as these will be ignored. When enforcing the definitions, punishments, and rewards of the target rule will be used after which the punishments and rewards of the rule with alias will be executed.
+A rule with alias defined SHOULD NOT have any definitions as these will be ignored. When enforcing
+the definitions, punishments, and rewards of the target rule will be used after which the
+punishments and rewards of the rule with alias will be executed.
 
 This allows you to use the same rule in different namespaces.
 
@@ -130,33 +136,35 @@ This allows you to use the same rule in different namespaces.
 
 ```typescript
 // Semantic syntax
-rule.define(function(inputValue) {
-    return true;
+rule.define(function (inputValue, ruleConfig) {
+  return true;
 });
 ```
 
 ```typescript
 // Event based syntax
-rule.on('enforce', function(inputValue) {
-    return true;
+rule.on('enforce', function (inputValue, ruleConfig) {
+  return true;
 });
 ```
 
-A rule MUST have a definition. It's the part that is used to enforce it. A rule MAY have multiple definitions. A definition MAY have multiple arguments.
+A rule MUST have a definition. It's the part that is used to enforce it. A rule MAY have multiple
+definitions.
 
-A rule can be defined with two distinct syntaxes (as above). There is no technical difference between these syntaxes.
+A rule can be defined with two distinct syntaxes (as above). There is no technical difference
+between them.
 
-#### Definition function arguments
+#### Input value
 
-When `enforce` is called the given arguments will be passed to the definition.
+When `enforce` is called the given input argument will be passed to the definition.
 
 ```typescript
-rulebook.add('some-rule')
-    .define(function(a, b) {
-        console.log(a); // => 'someValue'
-        console.log(b); // => 123
-    })
-    .enforce('some-rule', 'someValue', 123);
+rulebook
+  .add('some-rule')
+  .define(function (inputValue) {
+    console.log(inputValue); // => 'someValue'
+  })
+  .enforce('some-rule', 'someValue');
 ```
 
 #### Breaking a rule
@@ -173,71 +181,77 @@ A rule is considered upheld when the definition returns the boolean `true`.
 ### Punishment _{function}_
 
 ```typescript
-rule.punishment(function(input, result) {
-    throw new Error('Something bad happened');
+rule.punishment(function (inputValue, ruleConfig, result) {
+  throw new Error('Something bad happened');
 });
 ```
 
 ```typescript
-rule.on('fail', function(input, result) {
-    throw new Error('Something bad happened');
+rule.on('fail', function (inputValue, ruleConfig, result) {
+  throw new Error('Something bad happened');
 });
 ```
 
-A rule MAY have one or more punishments. When a rule is broken the defined punishments are automatically executed. When no punishment is provided the default punishment will be used.
+A rule MAY have one or more punishments. When a rule is broken the defined punishments are executed.
+When no punishment is provided the default punishment will be used.
 
-Punishments can be defined with two distinct syntaxes (as above). There is no technical difference between these syntaxes.
-
-#### Punishment function arguments
-
-The following arguments are passed to the callback function:
-
-| name    | type    | description    |
-|---------|---------|----------------|
-| `input` | `any[]` | An array of the arguments passed to the `enforce` function |
-| `result` | `any[] | Error` | An array containing the results of all `define` functions **or** a thrown error |
+Punishments can be defined with two distinct syntaxes (as above). There is no technical difference
+between them.
 
 ### Reward _{function}_
 
 ```typescript
-rule.reward(function(input, result) {
-    console.log('Yay, the rule is upheld!');
+rule.reward(function (inputValue, ruleConfig) {
+  console.log('Yay, the rule is upheld!');
 });
 ```
 
 ```typescript
-rule.on('pass', function(input, result) {
-    console.log('Yay, the rule is upheld!');
+rule.on('pass', function (inputValue, ruleConfig) {
+  console.log('Yay, the rule is upheld!');
 });
 ```
 
-A rule MAY have one or more rewards. When a rule is upheld the defined rewards are automatically executed. When no reward is provided nothing will happen.
+A rule MAY have one or more rewards. When a rule is upheld the defined rewards are executed. When no
+reward is provided nothing will happen.
 
-Rewards can be defined with two distinct syntaxes (as above). There is no technical difference between these syntaxes.
-
-#### Reward function arguments
-
-The following arguments are passed to the callback function:
-
-| name    | type    | description    |
-|---------|---------|----------------|
-| `input` | `any[]` | An array of the arguments passed to the `enforce` function |
+Rewards can be defined with two distinct syntaxes (as above). There is no technical difference
+between them.
 
 ## Testing rules
 
-Since rules are self-contained pieces of code you can easily test them and the logic within. Doing this will take little execution time, as they're essentially unit tests, but will increase the quality of your tests tremendously.
+Since rules are self-contained pieces of code you can easily test them and the logic within. Doing
+so will take little execution time, as they're essentially unit tests, but will increase the quality
+of your rules tremendously.
 
-The easiest way to show you how to test rules is with an example. The easiest way to do that is to [link to the integration tests of this repository](./test/integration). All the `*.spec.ts` files in the linked folder are testing their corresponding rule. In this repository, Mocha is used as the test runner and Chai as the assertion framework but the patterns transfer well to other test runners.
+The easiest way to show you how to test rules is with an example. The easiest way to do that is to
+[link to the integration tests of this repository](./test/integration). All the `*.spec.ts` files in
+the linked folder are testing their corresponding rule. In this repository, Mocha is used as the
+test runner and Chai as the assertion framework but the patterns transfer well to other test
+runners.
 
 A few things to keep in mind when testing rules:
 
-- Make sure a broken rule always results in an error. It would be a shame to have a rule punish but the test framework not failing the test. The easiest way to do this is to set `required: 'must'` for the duration of the test.
-- Test the rule specific configuration and things related to it.
+- Ensure that a broken rule results in an error. It would be a shame to have a rule punish but the
+  test framework not failing the test. The easiest way to do this is to set `required: 'must'` for
+  the duration of the test.
+- Test the rule-specific configuration and the logic it relates to.
 - Enforcing is async. Don't forget to `await`.
+
+## Rule enforce order
+
+When you enforce a Rulebook with `enforceParallel: false` (= default), it will enforce the rules in
+a fixed order. The order is from least specific to most specific. Specificity is defined by the rule
+name. For details on how specificity is calculated, see
+[glob-specificity](https://github.com/Lakitna/glob-specificity).
+
+when you enforce a Rulebook with `enforceParallel: true`, the enforce order is not guaranteed in any
+way.
 
 ## Contributing
 
-Contributors are always welcome! I don't care if you are a beginner or an expert, all help is welcome.
+Contributors are always welcome! I don't care if you are a beginner or an expert, all help is
+welcome.
 
 ## Testing Rulebound
 
