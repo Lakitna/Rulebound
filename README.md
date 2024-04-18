@@ -23,11 +23,11 @@ A flexible framework for rule-based testing.
 
 ## Why
 
-Rule-based testing is awesome! It forces you to look at problems from a different angle whil
+Rule-based testing is awesome! It forces you to look at problems from a different angle while
 promoting reuse and testability of your test code.
 
-I’ve made this package because I could not find a suitable, existing framework written for
-rule-based testing.
+I’ve made this package because I could not find an existing framework written for rule-based
+testing.
 
 ## Getting started
 
